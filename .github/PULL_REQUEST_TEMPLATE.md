@@ -12,7 +12,6 @@
 ## Essential Checklist
 <!-- Please tick the relevant boxes by putting an "x" in them. -->
 - [ ] The PR title and explanation each start with "Fix #bugnum: " (If this PR fixes part of an issue, prefix the title with "Fix part of #bugnum: ...".)
-- [ ] The PR follows the [style guide](https://github.com/oppia/oppia-android/wiki/Coding-style-guide).
-- [ ] The PR does not contain any unnecessary code changes from Code Editor.
+- [ ] The PR does not contain any unnecessary code changes from code editor.
 - [ ] The PR is made from a branch that's **not** called "develop" and is up-to-date with "develop".
 - [ ] The PR is **assigned** to the appropriate reviewers.
