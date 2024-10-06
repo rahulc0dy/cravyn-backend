@@ -14,6 +14,7 @@
     "prettier": "^3.3.3"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.9.5",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
