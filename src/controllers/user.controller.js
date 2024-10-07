@@ -1,5 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import { sql } from "../db/database.js";
 
 const loginUser = asyncHandler(async (req, res) => {
   const { phoneNumber, password } = req.body;
@@ -21,7 +22,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
     req.body;
 
-  console.log(name);
+  console.log(dateOfBirth);
 
   const requiredFields = [
     { field: name, message: "Name is required." },
@@ -40,14 +41,17 @@ const registerUser = asyncHandler(async (req, res) => {
   const existedUser =
     await sql`SELECT * FROM Customer WHERE phone_number = ${phoneNumber};`;
 
-  if (existedUser) {
+  console.log(existedUser);
+
+  if (existedUser.length > 0) {
     return res
       .status(409)
       .json(new ApiResponse(409, {}, "User already exists."));
   }
 
   const user =
-    await sql`INSERT INTO Customer (name, phone_number, email_address, date_of_birth, refresh_token, profile_image_url) VALUES ('${name}', ${phoneNumber}, '${email}', '${dateOfBirth}', 'some_refresh_token', '${email}');`;
+    await sql`insert into Customer(name,phone_number,email_address,date_of_birth,refresh_token,profile_image_url,password)
+values('${name}','${phoneNumber}','${email}','"${dateOfBirth}"','Dash dash','www.cloudinary.com/Souvik','${password}');`;
 
   if (!user) {
     return res
