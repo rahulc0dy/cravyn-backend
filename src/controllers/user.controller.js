@@ -49,9 +49,31 @@ const registerUser = asyncHandler(async (req, res) => {
       .json(new ApiResponse(409, {}, "User already exists."));
   }
 
-  const user =
-    await sql`insert into Customer(name,phone_number,email_address,date_of_birth,refresh_token,profile_image_url,password)
-values('${name}','${phoneNumber}','${email}','"${dateOfBirth}"','Dash dash','www.cloudinary.com/Souvik','${password}');`;
+  // Format date if needed (e.g., as 'YYYY-MM-DD')
+  const formattedDateOfBirth = new Date(dateOfBirth)
+    .toISOString()
+    .split("T")[0];
+
+  // Insert new user into the database
+  var user;
+
+  try {
+    user = await sql`
+         INSERT INTO Customer (name, phone_number, email_address, date_of_birth, refresh_token, profile_image_url, password)
+         VALUES (${name}, ${phoneNumber}, ${email}, ${formattedDateOfBirth}, 'some_refresh_token', 'www.cloudinary.com/Souvik', ${password})
+         RETURNING *;
+       `;
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { ...error },
+          "Something went wrong while registering the user."
+        )
+      );
+  }
 
   if (!user) {
     return res
