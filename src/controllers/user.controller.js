@@ -1,35 +1,15 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
-import { sql } from "../db/database.js";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-
-const generateAccessToken = function (user) {
-  return jwt.sign(
-    {
-      id: user.customer_id,
-      email: user.email_address,
-      phone: user.phone_number,
-      name: user.name,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-    }
-  );
-};
-
-const generateRefreshToken = function (user) {
-  return jwt.sign(
-    {
-      id: user.customer_id,
-    },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-    }
-  );
-};
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/tokenGenerator.js";
+import {
+  getUserByPhoneNo,
+  setRefreshToken,
+  createUser,
+} from "../db/user.query.js";
 
 const loginUser = asyncHandler(async (req, res) => {
   const { phoneNumber, password } = req.body;
@@ -41,13 +21,27 @@ const loginUser = asyncHandler(async (req, res) => {
 
   for (const { field, message } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, {}, message));
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, { reason: `${field} is required` }, message)
+        );
     }
   }
 
-  var user =
-    await sql`SELECT * FROM Customer WHERE phone_number = ${phoneNumber};`;
+  let user = await getUserByPhoneNo(phoneNumber);
 
+  if (user.length <= 0) {
+    return res
+      .status(503)
+      .json(
+        new ApiResponse(
+          401,
+          { reason: "User not found" },
+          "Phone number is not registered"
+        )
+      );
+  }
   const correctPassword = user[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
@@ -55,20 +49,21 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!isPasswordCorrect) {
     return res
       .status(401)
-      .json(new ApiResponse(401, {}, "Invalid credentials, please try again."));
+      .json(
+        new ApiResponse(
+          401,
+          { reason: "Incorrect Password" },
+          "Invalid credentials, please try again."
+        )
+      );
   }
-
+  console.log(user[0]);
   const accessToken = generateAccessToken(user[0]);
   const refreshToken = generateRefreshToken(user[0]);
 
   const customerId = user[0].customer_id;
 
-  user = await sql`
-    UPDATE Customer
-    SET refresh_token = ${refreshToken}
-    WHERE customer_id = ${customerId}
-    RETURNING *;
-  `;
+  user = await setRefreshToken(refreshToken, customerId);
 
   const options = {
     httpOnly: true,
@@ -86,7 +81,7 @@ const loginUser = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          user: user[0],
+          user: user,
           accessToken,
           refreshToken,
         },
@@ -109,36 +104,43 @@ const registerUser = asyncHandler(async (req, res) => {
 
   for (const { field, message } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, {}, message));
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, { reason: `${field} is required` }, message)
+        );
     }
   }
+  if (password !== confirmPassword) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          { reason: "Passwords do not match" },
+          "Password confirmation does not match."
+        )
+      );
+  }
 
-  const existedUser =
-    await sql`SELECT * FROM Customer WHERE phone_number = ${phoneNumber};`;
+  const existedUser = await getUserByPhoneNo(phoneNumber);
 
   if (existedUser.length > 0) {
     return res
       .status(409)
-      .json(new ApiResponse(409, {}, "User already exists."));
+      .json(
+        new ApiResponse(
+          409,
+          { reason: "User already registered" },
+          "User already exists."
+        )
+      );
   }
 
-  // Format date if needed (e.g., as 'YYYY-MM-DD')
-  const formattedDateOfBirth = new Date(dateOfBirth)
-    .toISOString()
-    .split("T")[0];
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // Insert new user into the database
-  var user;
+  let user;
 
   try {
-    user = await sql`
-      INSERT INTO Customer (name, phone_number, email_address, date_of_birth, password)
-      VALUES (${name}, ${phoneNumber}, ${email}, ${formattedDateOfBirth}, ${hashedPassword})
-      RETURNING *;
-    `;
-    user = user[0];
+    user = await createUser(name, phoneNumber, email, dateOfBirth, password);
   } catch (error) {
     return res
       .status(500)
@@ -157,8 +159,8 @@ const registerUser = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           500,
-          {},
-          "Something went wrong while registering the user."
+          { reason: "User is not defined" },
+          "Failed to register user"
         )
       );
   }
@@ -169,17 +171,12 @@ const registerUser = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new ApiResponse(200, user, "User registered successfully."));
+    .json(new ApiResponse(201, user, "User registered successfully."));
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
   try {
-    await sql`
-      UPDATE Customer
-      SET refresh_token = NULL
-      WHERE customer_id = ${req.user.customer_id}
-      RETURNING *;
-    `;
+    await setRefreshToken("NULL", req.user.customer_id);
   } catch (error) {
     return res
       .status(500)
