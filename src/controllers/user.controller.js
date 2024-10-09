@@ -6,7 +6,7 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import {
-  getUserByPhoneNo,
+  getUserByEmail,
   setRefreshToken,
   createUser,
   getUserById,
@@ -14,10 +14,10 @@ import {
 import jwt from "jsonwebtoken";
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { phoneNumber, password } = req.body;
+  const { email, password } = req.body;
 
   const requiredFields = [
-    { field: phoneNumber, message: "Phone Number is required." },
+    { field: email, message: "Email Number is required." },
     { field: password, message: "Password is required." },
   ];
 
@@ -31,7 +31,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
   }
 
-  let user = await getUserByPhoneNo(phoneNumber);
+  let user = await getUserByEmail(email);
 
   if (user.length <= 0) {
     return res
@@ -97,7 +97,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const requiredFields = [
     { field: name, message: "Name is required." },
-    { field: phoneNumber, message: "Phone Number is required." },
     { field: dateOfBirth, message: "Date of birth is required." },
     { field: password, message: "Password is required." },
     { field: confirmPassword, message: "Confirm password is required." },
@@ -124,7 +123,7 @@ const registerUser = asyncHandler(async (req, res) => {
       );
   }
 
-  const existedUser = await getUserByPhoneNo(phoneNumber);
+  const existedUser = await getUserByEmail(email);
 
   if (existedUser.length > 0) {
     return res

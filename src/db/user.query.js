@@ -11,6 +11,10 @@ const getUserById = async (user_id) => {
   let user = await sql`SELECT * FROM Customer WHERE customer_id = ${user_id};`;
   return user;
 };
+const getUserByEmail = async (email) => {
+  let user = await sql`SELECT * FROM Customer WHERE email_address = ${email};`;
+  return user;
+};
 
 const setRefreshToken = async (refreshToken, customerId) => {
   const user = await sql`
@@ -43,6 +47,7 @@ const updateUser = (user_id) => {};
 export {
   getUserByPhoneNo,
   getUserById,
+  getUserByEmail,
   setRefreshToken,
   createUser,
   deleteUser,
