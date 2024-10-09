@@ -9,7 +9,9 @@ import {
   getUserByPhoneNo,
   setRefreshToken,
   createUser,
+  getUserById,
 } from "../db/user.query.js";
+import jwt from "jsonwebtoken";
 
 const loginUser = asyncHandler(async (req, res) => {
   const { phoneNumber, password } = req.body;
@@ -57,7 +59,6 @@ const loginUser = asyncHandler(async (req, res) => {
         )
       );
   }
-  console.log(user[0]);
   const accessToken = generateAccessToken(user[0]);
   const refreshToken = generateRefreshToken(user[0]);
 
@@ -201,4 +202,88 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User logged out successfully."));
 });
 
-export { loginUser, registerUser, logoutUser };
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken =
+    req.cookies?.refreshToken || req.body.refreshToken;
+
+  if (!incomingRefreshToken) {
+    res
+      .status(401)
+      .json(
+        ApiResponse(
+          401,
+          { reason: "Request unauthorised" },
+          "Unauthorized request"
+        )
+      );
+  }
+
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    let user = await getUserById(decodedToken.id);
+
+    user = user[0];
+
+    if (!user) {
+      return res
+        .status(500)
+        .json(
+          new ApiResponse(
+            401,
+            { reason: "Token verification failed" },
+            "Invalid refresh token"
+          )
+        );
+    }
+
+    if (incomingRefreshToken !== user?.refresh_token)
+      res
+        .status(401)
+        .json(
+          new ApiResponse(
+            401,
+            { reason: "Tokens do not match" },
+            "Unable to reinstate session"
+          )
+        );
+
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+
+    const accessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", newRefreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            accessToken: accessToken,
+            refreshToken: newRefreshToken,
+          },
+          "Session is reinitialised"
+        )
+      );
+  } catch (error) {
+    res
+      .status(401)
+      .json(
+        new ApiResponse(
+          401,
+          { ...error, reason: "Error occured while trying to refresh token" },
+          error?.message || "Invalid refresh token"
+        )
+      );
+  }
+});
+
+export { loginUser, registerUser, logoutUser, refreshAccessToken };

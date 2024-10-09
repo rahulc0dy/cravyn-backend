@@ -23,18 +23,11 @@ const setRefreshToken = async (refreshToken, customerId) => {
 };
 
 const createUser = async (name, phoneNumber, email, dateOfBirth, password) => {
-  dateOfBirth.split("-");
-  dateOfBirth[0];
-
-  const formattedDateOfBirth = new Date(dateOfBirth)
-    .toISOString()
-    .split("T")[0];
-
   const hashedPassword = await bcrypt.hash(password, 10);
   try {
     const user = await sql`
       INSERT INTO Customer (name, phone_number, email_address, date_of_birth, password)
-      VALUES (${name}, ${phoneNumber}, ${email}, ${formattedDateOfBirth}, ${hashedPassword})
+      VALUES (${name}, ${phoneNumber}, ${email}, ${dateOfBirth}, ${hashedPassword})
       RETURNING *;
     `;
     return user[0];
@@ -44,6 +37,8 @@ const createUser = async (name, phoneNumber, email, dateOfBirth, password) => {
 };
 
 const deleteUser = async (user_id) => {};
+
+const updateUser = (user_id) => {};
 
 export {
   getUserByPhoneNo,

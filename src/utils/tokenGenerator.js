@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 
 const generateAccessToken = function (user) {
-  console.log(process.env.ACCESS_TOKEN_SECRET);
   return jwt.sign(
     {
       id: user.customer_id,
