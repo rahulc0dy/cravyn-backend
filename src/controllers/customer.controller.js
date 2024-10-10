@@ -12,6 +12,7 @@ import {
   getUserById,
   deleteUser,
   updateUser,
+  getNonSensitiveUserInfoById,
 } from "../db/user.query.js";
 import jwt from "jsonwebtoken";
 
@@ -19,7 +20,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const requiredFields = [
-    { field: email, message: "Email Number is required." },
+    { field: email, message: "Email is required." },
     { field: password, message: "Password is required." },
   ];
 
@@ -28,7 +29,11 @@ const loginUser = asyncHandler(async (req, res) => {
       return res
         .status(400)
         .json(
-          new ApiResponse(400, { reason: `${field} is required` }, message)
+          new ApiResponse(
+            400,
+            { reason: `${email ? "Password" : "email"} is required` },
+            message
+          )
         );
     }
   }
@@ -41,8 +46,8 @@ const loginUser = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           401,
-          { reason: "User not found" },
-          "Phone number is not registered"
+          { reason: "No user found with given credentials" },
+          "Phone number is not registered."
         )
       );
   }
@@ -56,7 +61,7 @@ const loginUser = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           401,
-          { reason: "Incorrect Password" },
+          { reason: "Incorrect Password." },
           "Invalid credentials, please try again."
         )
       );
@@ -378,7 +383,6 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
   try {
     await deleteUser(user[0].id);
   } catch (error) {
-    console.log(error);
     return res
       .status(500)
       .json(
@@ -408,10 +412,48 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
     );
 });
 
+const updateUserDetails = asyncHandler(async (req, res) => {
+  let { name, phoneNumber } = req.body;
+
+  const existingDetails = (await getNonSensitiveUserInfoById(req.user.id))[0];
+
+  name = name ?? existingDetails.name;
+  phoneNumber = phoneNumber ?? existingDetails.phone_number;
+
+  let user;
+  try {
+    user = await updateUser(req.user.id, {
+      name,
+      phoneNumber,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { ...error, reason: error.message || "User could not be updated" },
+          "Failed to update user details."
+        )
+      );
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { user, reason: "Update user successful" },
+        "User details updated."
+      )
+    );
+});
+
 export {
   loginUser,
   registerUser,
   logoutUser,
   refreshAccessToken,
   deleteUserAccount,
+  updateUserDetails,
 };

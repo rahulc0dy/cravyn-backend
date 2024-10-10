@@ -60,31 +60,19 @@ const deleteUser = async (userId) => {
   }
 };
 
-const updateUser = async (
-  userId,
-  { name, phoneNumber, email, dateOfBirth, password }
-) => {
-  const fields = [];
-
-  if (name) fields.push(sql`name = ${name}`);
-  if (phoneNumber) fields.push(sql`phone_number = ${phoneNumber}`);
-  if (email) fields.push(sql`email_address = ${email}`);
-  if (dateOfBirth) fields.push(sql`date_of_birth = ${dateOfBirth}`);
-  if (password) fields.push(sql`password = ${password}`);
-
-  if (fields.length === 0) {
-    throw new Error("No fields provided for update");
-  }
+const updateUser = async (userId, { name, phoneNumber }) => {
+  if (!name && !phoneNumber) throw new Error("No update fields provided");
 
   const query = sql`
-    UPDATE Customers 
-    SET ${sql.join(fields, sql`, `)}
-    WHERE id = ${userId}
-    RETURNING *;
+  UPDATE Customer SET name = ${name}, phone_number = ${phoneNumber} WHERE id = ${userId};
   `;
 
-  const user = await query;
-  return user;
+  try {
+    const user = await query;
+    return user;
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 export {
