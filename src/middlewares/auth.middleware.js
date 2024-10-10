@@ -1,8 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
-import { getNonSensitiveUserInfoById } from "../db/user.query.js";
-import { sql } from "../db/database.js";
+import { getNonSensitiveCustomerInfoById } from "../db/customer.query.js";
 
 export const verifyJwt = asyncHandler(async (req, res, next) => {
   const token =
@@ -17,23 +16,23 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
 
   try {
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    const userId = decodedToken?.id;
+    const customerId = decodedToken?.id;
 
-    const user = await getNonSensitiveUserInfoById(userId);
+    const customer = await getNonSensitiveCustomerInfoById(customerId);
 
-    if (user.length === 0) {
+    if (customer.length === 0) {
       return res
         .status(401)
         .json(
           new ApiResponse(
             401,
             { reason: "Invalid Access Token" },
-            "User not found."
+            "Customer not found."
           )
         );
     }
 
-    req.user = user[0]; // Set user details to the request object
+    req.customer = customer[0]; // Set customer details to the request object
     next();
   } catch (error) {
     return res
