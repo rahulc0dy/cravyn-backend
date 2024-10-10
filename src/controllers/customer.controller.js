@@ -6,17 +6,17 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import {
-  getUserByEmail,
+  getCustomerByEmail,
   setRefreshToken,
-  createUser,
-  getUserById,
-  deleteUser,
-  updateUser,
-  getNonSensitiveUserInfoById,
-} from "../db/user.query.js";
+  createCustomer,
+  getCustomerById,
+  deleteCustomer,
+  updateCustomer,
+  getNonSensitiveCustomerInfoById,
+} from "../db/customer.query.js";
 import jwt from "jsonwebtoken";
 
-const loginUser = asyncHandler(async (req, res) => {
+const loginCustomer = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const requiredFields = [
@@ -38,20 +38,20 @@ const loginUser = asyncHandler(async (req, res) => {
     }
   }
 
-  let user = await getUserByEmail(email);
+  let customer = await getCustomerByEmail(email);
 
-  if (user.length <= 0) {
+  if (customer.length <= 0) {
     return res
       .status(503)
       .json(
         new ApiResponse(
           401,
-          { reason: "No user found with given credentials" },
+          { reason: "No customer found with given credentials" },
           "Phone number is not registered."
         )
       );
   }
-  const correctPassword = user[0].password;
+  const correctPassword = customer[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
@@ -66,20 +66,20 @@ const loginUser = asyncHandler(async (req, res) => {
         )
       );
   }
-  const accessToken = generateAccessToken(user[0]);
-  const refreshToken = generateRefreshToken(user[0]);
+  const accessToken = generateAccessToken(customer[0]);
+  const refreshToken = generateRefreshToken(customer[0]);
 
-  const customerId = user[0].id;
+  const customerId = customer[0].id;
 
-  user = await setRefreshToken(refreshToken, customerId);
+  customer = await setRefreshToken(refreshToken, customerId);
 
   const options = {
     httpOnly: true,
     secure: true,
   };
 
-  delete user[0].refresh_token;
-  delete user[0].password;
+  delete customer[0].refresh_token;
+  delete customer[0].password;
 
   return res
     .status(200)
@@ -89,16 +89,16 @@ const loginUser = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          user: user,
+          customer: customer,
           accessToken,
           refreshToken,
         },
-        "User logged in successfully."
+        "Customer logged in successfully."
       )
     );
 });
 
-const registerUser = asyncHandler(async (req, res) => {
+const registerCustomer = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
     req.body;
 
@@ -130,24 +130,30 @@ const registerUser = asyncHandler(async (req, res) => {
       );
   }
 
-  const existedUser = await getUserByEmail(email);
+  const existedCustomer = await getCustomerByEmail(email);
 
-  if (existedUser.length > 0) {
+  if (existedCustomer.length > 0) {
     return res
       .status(409)
       .json(
         new ApiResponse(
           409,
-          { reason: "User already registered" },
-          "User already exists."
+          { reason: "Customer already registered" },
+          "Customer already exists."
         )
       );
   }
 
-  let user;
+  let customer;
 
   try {
-    user = await createUser(name, phoneNumber, email, dateOfBirth, password);
+    customer = await createCustomer(
+      name,
+      phoneNumber,
+      email,
+      dateOfBirth,
+      password
+    );
   } catch (error) {
     return res
       .status(500)
@@ -155,35 +161,35 @@ const registerUser = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           { ...error },
-          "Something went wrong while registering the user."
+          "Something went wrong while registering the customer."
         )
       );
   }
 
-  if (!user) {
+  if (!customer) {
     return res
       .status(500)
       .json(
         new ApiResponse(
           500,
-          { reason: "User is not defined" },
-          "Failed to register user"
+          { reason: "Customer is not defined" },
+          "Failed to register customer"
         )
       );
   }
 
-  delete user.refresh_token;
-  delete user.profile_image_url;
-  delete user.password;
+  delete customer.refresh_token;
+  delete customer.profile_image_url;
+  delete customer.password;
 
   return res
     .status(201)
-    .json(new ApiResponse(201, user, "User registered successfully."));
+    .json(new ApiResponse(201, customer, "Customer registered successfully."));
 });
 
-const logoutUser = asyncHandler(async (req, res) => {
+const logoutCustomer = asyncHandler(async (req, res) => {
   try {
-    await setRefreshToken("NULL", req.user.id);
+    await setRefreshToken("NULL", req.customer.id);
   } catch (error) {
     return res
       .status(500)
@@ -191,7 +197,7 @@ const logoutUser = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           { ...error },
-          "Unable to fetch the logged in user."
+          "Unable to fetch the logged in customer."
         )
       );
   }
@@ -209,7 +215,7 @@ const logoutUser = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Logout successful" },
-        "User logged out successfully."
+        "Customer logged out successfully."
       )
     );
 });
@@ -236,11 +242,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    let user = await getUserById(decodedToken.id);
+    let customer = await getCustomerById(decodedToken.id);
 
-    user = user[0];
+    customer = customer[0];
 
-    if (!user) {
+    if (!customer) {
       return res
         .status(500)
         .json(
@@ -252,7 +258,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         );
     }
 
-    if (incomingRefreshToken !== user?.refresh_token)
+    if (incomingRefreshToken !== customer?.refresh_token)
       res
         .status(401)
         .json(
@@ -268,8 +274,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       secure: true,
     };
 
-    const accessToken = generateAccessToken(user);
-    const newRefreshToken = generateRefreshToken(user);
+    const accessToken = generateAccessToken(customer);
+    const newRefreshToken = generateRefreshToken(customer);
 
     return res
       .status(200)
@@ -298,7 +304,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-const deleteUserAccount = asyncHandler(async (req, res) => {
+const deleteCustomerAccount = asyncHandler(async (req, res) => {
   const { refreshToken, password } = req.body;
 
   const requiredFields = [
@@ -319,25 +325,25 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
       );
     }
   }
-  let user;
+  let customer;
 
   try {
     const decodedToken = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
-    const userId = decodedToken?.id;
+    const customerId = decodedToken?.id;
 
-    user = await getUserById(userId);
+    customer = await getCustomerById(customerId);
 
-    if (user.length === 0) {
+    if (customer.length === 0) {
       return res
         .status(401)
         .json(
           new ApiResponse(
             401,
             { reason: "Invalid Refresh Token." },
-            "User not found"
+            "Customer not found"
           )
         );
     }
@@ -353,18 +359,18 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
       );
   }
 
-  if (user.length <= 0) {
+  if (customer.length <= 0) {
     return res
       .status(503)
       .json(
         new ApiResponse(
           401,
-          { reason: "Unable to get user" },
+          { reason: "Unable to get customer" },
           "Phone number is not registered"
         )
       );
   }
-  const correctPassword = user[0].password;
+  const correctPassword = customer[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
@@ -381,15 +387,15 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
   }
 
   try {
-    await deleteUser(user[0].id);
+    await deleteCustomer(customer[0].id);
   } catch (error) {
     return res
       .status(500)
       .json(
         new ApiResponse(
           500,
-          { ...error, reason: "Unable to fetch the logged in user." },
-          "Failed to delete User"
+          { ...error, reason: "Unable to fetch the logged in customer." },
+          "Failed to delete Customer"
         )
       );
   }
@@ -406,23 +412,25 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { reason: "Deletion successfull" },
-        "User deleted out successfully."
+        { reason: "Deletion successful" },
+        "Customer deleted out successfully."
       )
     );
 });
 
-const updateUserDetails = asyncHandler(async (req, res) => {
+const updateCustomerDetails = asyncHandler(async (req, res) => {
   let { name, phoneNumber } = req.body;
 
-  const existingDetails = (await getNonSensitiveUserInfoById(req.user.id))[0];
+  const existingDetails = (
+    await getNonSensitiveCustomerInfoById(req.customer.id)
+  )[0];
 
   name = name ?? existingDetails.name;
   phoneNumber = phoneNumber ?? existingDetails.phone_number;
 
-  let user;
+  let customer;
   try {
-    user = await updateUser(req.user.id, {
+    customer = await updateCustomer(req.customer.id, {
       name,
       phoneNumber,
     });
@@ -432,8 +440,11 @@ const updateUserDetails = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           500,
-          { ...error, reason: error.message || "User could not be updated" },
-          "Failed to update user details."
+          {
+            ...error,
+            reason: error.message || "Customer could not be updated",
+          },
+          "Failed to update customer details."
         )
       );
   }
@@ -443,17 +454,17 @@ const updateUserDetails = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { user, reason: "Update user successful" },
-        "User details updated."
+        { customer, reason: "Update customer successful" },
+        "Customer details updated."
       )
     );
 });
 
 export {
-  loginUser,
-  registerUser,
-  logoutUser,
+  loginCustomer,
+  registerCustomer,
+  logoutCustomer,
   refreshAccessToken,
-  deleteUserAccount,
-  updateUserDetails,
+  deleteCustomerAccount,
+  updateCustomerDetails,
 };
