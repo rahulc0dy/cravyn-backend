@@ -10,6 +10,8 @@ import {
   setRefreshToken,
   createUser,
   getUserById,
+  deleteUser,
+  updateUser,
 } from "../db/user.query.js";
 import jwt from "jsonwebtoken";
 
@@ -62,7 +64,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const accessToken = generateAccessToken(user[0]);
   const refreshToken = generateRefreshToken(user[0]);
 
-  const customerId = user[0].customer_id;
+  const customerId = user[0].id;
 
   user = await setRefreshToken(refreshToken, customerId);
 
@@ -176,7 +178,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
   try {
-    await setRefreshToken("NULL", req.user.customer_id);
+    await setRefreshToken("NULL", req.user.id);
   } catch (error) {
     return res
       .status(500)
@@ -198,7 +200,13 @@ const logoutUser = asyncHandler(async (req, res) => {
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, {}, "User logged out successfully."));
+    .json(
+      new ApiResponse(
+        200,
+        { reason: "Logout successful" },
+        "User logged out successfully."
+      )
+    );
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
@@ -285,4 +293,125 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-export { loginUser, registerUser, logoutUser, refreshAccessToken };
+const deleteUserAccount = asyncHandler(async (req, res) => {
+  const { refreshToken, password } = req.body;
+
+  const requiredFields = [
+    { field: refreshToken, message: "Invalid Request." },
+    { field: password, message: "Password is required." },
+  ];
+
+  for (const { field, message } of requiredFields) {
+    if (!field) {
+      return res.status(400).json(
+        new ApiResponse(
+          400,
+          {
+            reason: `${field == refreshToken ? "Refresh Token" : "Password"} is required`,
+          },
+          message
+        )
+      );
+    }
+  }
+  let user;
+
+  try {
+    const decodedToken = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+    const userId = decodedToken?.id;
+
+    user = await getUserById(userId);
+
+    if (user.length === 0) {
+      return res
+        .status(401)
+        .json(
+          new ApiResponse(
+            401,
+            { reason: "Invalid Refresh Token." },
+            "User not found"
+          )
+        );
+    }
+  } catch (error) {
+    return res
+      .status(401)
+      .json(
+        new ApiResponse(
+          401,
+          { ...error, reason: "Refresh token could not be verified" },
+          error?.message || "Invalid request"
+        )
+      );
+  }
+
+  if (user.length <= 0) {
+    return res
+      .status(503)
+      .json(
+        new ApiResponse(
+          401,
+          { reason: "Unable to get user" },
+          "Phone number is not registered"
+        )
+      );
+  }
+  const correctPassword = user[0].password;
+
+  const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
+
+  if (!isPasswordCorrect) {
+    return res
+      .status(401)
+      .json(
+        new ApiResponse(
+          401,
+          { reason: "Incorrect Password" },
+          "Invalid credentials, please try again."
+        )
+      );
+  }
+
+  try {
+    await deleteUser(user[0].id);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { ...error, reason: "Unable to fetch the logged in user." },
+          "Failed to delete User"
+        )
+      );
+  }
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+      new ApiResponse(
+        200,
+        { reason: "Deletion successfull" },
+        "User deleted out successfully."
+      )
+    );
+});
+
+export {
+  loginUser,
+  registerUser,
+  logoutUser,
+  refreshAccessToken,
+  deleteUserAccount,
+};
