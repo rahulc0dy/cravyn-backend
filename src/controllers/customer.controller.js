@@ -13,8 +13,11 @@ import {
   deleteCustomer,
   updateCustomer,
   getNonSensitiveCustomerInfoById,
+  updateCustomerImageUrl,
 } from "../db/customer.query.js";
 import jwt from "jsonwebtoken";
+import fs from "fs";
+import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 
 const loginCustomer = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -467,6 +470,53 @@ const updateCustomerDetails = asyncHandler(async (req, res) => {
     );
 });
 
+const updateCustomerImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, {}, "No image file uploaded."));
+    }
+
+    const localFilePath = req.file.path;
+
+    const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
+
+    if (cloudinaryResponse.url) {
+      const customer = await updateCustomerImageUrl(
+        req.customer.id,
+        cloudinaryResponse.url
+      );
+
+      res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            { customer, imageUrl: cloudinaryResponse.url },
+            "Image uploaded successfully."
+          )
+        );
+    } else {
+      throw new Error("Failed to upload image to Cloudinary.");
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { error, reason: error.message || "Image could not be uploaded" },
+          error.message || "Internal server error."
+        )
+      );
+  } finally {
+    if (req.file && req.file.path) {
+      fs.unlinkSync(req.file.path);
+    }
+  }
+};
+
 export {
   loginCustomer,
   registerCustomer,
@@ -474,4 +524,5 @@ export {
   refreshAccessToken,
   deleteCustomerAccount,
   updateCustomerDetails,
+  updateCustomerImage,
 };
