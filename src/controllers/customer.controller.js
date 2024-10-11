@@ -20,21 +20,21 @@ const loginCustomer = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const requiredFields = [
-    { field: email, message: "Email is required." },
-    { field: password, message: "Password is required." },
+    {
+      field: email,
+      message: "Email is required.",
+      reason: "Email is not defined",
+    },
+    {
+      field: password,
+      message: "Password is required.",
+      reason: "Password is not defined",
+    },
   ];
 
-  for (const { field, message } of requiredFields) {
+  for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            { reason: `${email ? "Password" : "email"} is required` },
-            message
-          )
-        );
+      return res.status(400).json(new ApiResponse(400, { reason }, message));
     }
   }
 
@@ -103,21 +103,30 @@ const registerCustomer = asyncHandler(async (req, res) => {
     req.body;
 
   const requiredFields = [
-    { field: name, message: "Name is required." },
-    { field: dateOfBirth, message: "Date of birth is required." },
-    { field: password, message: "Password is required." },
-    { field: confirmPassword, message: "Confirm password is required." },
+    { field: name, message: "name is required.", reason: `name is ${name}` },
+    {
+      field: dateOfBirth,
+      message: "Date of birth is required.",
+      reason: `dateOfBirth is ${dateOfBirth}`,
+    },
+    {
+      field: password,
+      message: "Password is required.",
+      reason: `password is ${password}`,
+    },
+    {
+      field: confirmPassword,
+      message: "Confirm password is required.",
+      reason: `confirmPassword is ${confirmPassword}`,
+    },
   ];
 
-  for (const { field, message } of requiredFields) {
+  for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(400, { reason: `${field} is required` }, message)
-        );
+      return res.status(400).json(new ApiResponse(400, { reason }, message));
     }
   }
+
   if (password !== confirmPassword) {
     return res
       .status(400)
@@ -308,21 +317,21 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
   const { refreshToken, password } = req.body;
 
   const requiredFields = [
-    { field: refreshToken, message: "Invalid Request." },
-    { field: password, message: "Password is required." },
+    {
+      field: refreshToken,
+      message: "Invalid Request.",
+      reason: `refreshToken is ${refreshToken}`,
+    },
+    {
+      field: password,
+      message: "Password is required.",
+      reason: `password is ${password}`,
+    },
   ];
 
-  for (const { field, message } of requiredFields) {
+  for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(
-        new ApiResponse(
-          400,
-          {
-            reason: `${field == refreshToken ? "Refresh Token" : "Password"} is required`,
-          },
-          message
-        )
-      );
+      return res.status(400).json(new ApiResponse(400, { reason }, message));
     }
   }
   let customer;
@@ -435,18 +444,16 @@ const updateCustomerDetails = asyncHandler(async (req, res) => {
       phoneNumber,
     });
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          {
-            ...error,
-            reason: error.message || "Customer could not be updated",
-          },
-          "Failed to update customer details."
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          ...error,
+          reason: error.message || "Customer could not be updated",
+        },
+        "Failed to update customer details."
+      )
+    );
   }
 
   res
