@@ -19,6 +19,38 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 
+const getCustomerAccount = asyncHandler(async (req, res) => {
+  if (!req.customer || !req.customer.id) {
+    res
+      .status(401)
+      .json(
+        new ApiResponse(
+          401,
+          { reason: `req.customer is ${req.customer}` },
+          "Unauthorised Access"
+        )
+      );
+  }
+
+  const customer = (await getNonSensitiveCustomerInfoById(req.customer.id))[0];
+
+  if (!customer) {
+    res
+      .status(404)
+      .json(
+        new ApiResponse(
+          404,
+          { reason: `Customer not found by id` },
+          "User not found."
+        )
+      );
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, { customer }, "Customer obtained successfully"));
+});
+
 const loginCustomer = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -92,7 +124,7 @@ const loginCustomer = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          customer: customer,
+          customer: customer[0],
           accessToken,
           refreshToken,
         },
@@ -524,6 +556,7 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
 });
 
 export {
+  getCustomerAccount,
   loginCustomer,
   registerCustomer,
   logoutCustomer,
