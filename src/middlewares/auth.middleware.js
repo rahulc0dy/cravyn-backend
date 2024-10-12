@@ -11,7 +11,13 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
   if (!token) {
     return res
       .status(401)
-      .json(new ApiResponse(401, {}, "Unauthorized request."));
+      .json(
+        new ApiResponse(
+          401,
+          { reason: `Token is ${token}` },
+          "Unauthorized request."
+        )
+      );
   }
 
   try {

@@ -27,7 +27,7 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
         new ApiResponse(
           401,
           { reason: `req.customer is ${req.customer}` },
-          "Unauthorised Access"
+          "Unauthorised Access."
         )
       );
   }
