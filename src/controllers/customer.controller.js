@@ -11,7 +11,7 @@ import {
   createCustomer,
   getCustomerById,
   deleteCustomer,
-  updateCustomer,
+  updateCustomerNamePhoneNo,
   getNonSensitiveCustomerInfoById,
   updateCustomerImageUrl,
 } from "../db/customer.query.js";
@@ -430,7 +430,7 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
     );
 });
 
-const updateCustomerDetails = asyncHandler(async (req, res) => {
+const updateCustomerAccount = asyncHandler(async (req, res) => {
   let { name, phoneNumber } = req.body;
 
   const existingDetails = (
@@ -442,7 +442,7 @@ const updateCustomerDetails = asyncHandler(async (req, res) => {
 
   let customer;
   try {
-    customer = await updateCustomer(req.customer.id, {
+    customer = await updateCustomerNamePhoneNo(req.customer.id, {
       name,
       phoneNumber,
     });
@@ -464,18 +464,24 @@ const updateCustomerDetails = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { customer, reason: "Update customer successful" },
+        { customer: customer[0] },
         "Customer details updated."
       )
     );
 });
 
-const updateCustomerImage = async (req, res) => {
+const updateCustomerImage = asyncHandler(async (req, res) => {
   try {
     if (!req.file) {
       return res
         .status(400)
-        .json(new ApiResponse(400, {}, "No image file uploaded."));
+        .json(
+          new ApiResponse(
+            400,
+            { reason: `The file passed is ${req.file}` },
+            "No image file uploaded."
+          )
+        );
     }
 
     const localFilePath = req.file.path;
@@ -515,7 +521,7 @@ const updateCustomerImage = async (req, res) => {
       fs.unlinkSync(req.file.path);
     }
   }
-};
+});
 
 export {
   loginCustomer,
@@ -523,6 +529,6 @@ export {
   logoutCustomer,
   refreshAccessToken,
   deleteCustomerAccount,
-  updateCustomerDetails,
+  updateCustomerAccount,
   updateCustomerImage,
 };

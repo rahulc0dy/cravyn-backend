@@ -67,11 +67,11 @@ const deleteCustomer = async (customerId) => {
   }
 };
 
-const updateCustomer = async (customerId, { name, phoneNumber }) => {
+const updateCustomerNamePhoneNo = async (customerId, { name, phoneNumber }) => {
   if (!name && !phoneNumber) throw new Error("No update fields provided");
 
   const query = sql`
-  UPDATE Customer SET name = ${name}, phone_number = ${phoneNumber} WHERE id = ${customerId};
+  UPDATE Customer SET name = ${name}, phone_number = ${phoneNumber} WHERE id = ${customerId} RETURNING *;
   `;
 
   try {
@@ -82,9 +82,9 @@ const updateCustomer = async (customerId, { name, phoneNumber }) => {
   }
 };
 
-const updateCustomerImageUrl = async (customerId, ImageURL) => {
+const updateCustomerImageUrl = async (customerId, ImageUrl) => {
   const query = sql`
-  UPDATE Customer SET profile_image_url = ${ImageURL} WHERE id = ${customerId} RETURNING *;
+  UPDATE Customer SET profile_image_url = ${ImageUrl} WHERE id = ${customerId} RETURNING *;
   `;
 
   try {
@@ -103,6 +103,6 @@ export {
   setRefreshToken,
   createCustomer,
   deleteCustomer,
-  updateCustomer,
+  updateCustomerNamePhoneNo,
   updateCustomerImageUrl,
 };
