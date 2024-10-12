@@ -82,9 +82,9 @@ const updateCustomerNamePhoneNo = async (customerId, { name, phoneNumber }) => {
   }
 };
 
-const updateCustomerImageUrl = async (customerId, ImageUrl) => {
+const updateCustomerImageUrl = async (customerId, imageUrl) => {
   const query = sql`
-  UPDATE Customer SET profile_image_url = ${ImageUrl} WHERE id = ${customerId} RETURNING *;
+  UPDATE Customer SET profile_image_url = ${imageUrl} WHERE id = ${customerId} RETURNING *;
   `;
 
   try {
