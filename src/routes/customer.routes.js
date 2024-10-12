@@ -7,6 +7,7 @@ import {
   deleteCustomerAccount,
   updateCustomerAccount,
   updateCustomerImage,
+  getCustomerAccount,
 } from "../controllers/customer.controller.js";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -20,7 +21,8 @@ router.route("/refresh-token").post(refreshAccessToken);
 router
   .route("/")
   .delete(verifyJwt, deleteCustomerAccount)
-  .patch(verifyJwt, updateCustomerAccount);
+  .patch(verifyJwt, updateCustomerAccount)
+  .get(verifyJwt, getCustomerAccount);
 router
   .route("/profile-image")
   .patch(verifyJwt, upload.single("image"), updateCustomerImage);

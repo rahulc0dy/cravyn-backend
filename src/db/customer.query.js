@@ -20,7 +20,7 @@ const getCustomerByEmail = async (email) => {
 
 const getNonSensitiveCustomerInfoById = async (customerId) => {
   const customer = await sql`
-      SELECT id, name, email_address, phone_number 
+      SELECT id, name, email_address, phone_number, profile_image_url,date_of_birth 
       FROM Customer 
       WHERE id = ${customerId};
     `;
@@ -32,7 +32,7 @@ const setRefreshToken = async (refreshToken, customerId) => {
     UPDATE Customer
     SET refresh_token = ${refreshToken}
     WHERE id = ${customerId}
-    RETURNING *;
+    RETURNING id, name, phone_number, email_address, date_of_birth;
   `;
   return customer;
 };
@@ -49,7 +49,7 @@ const createCustomer = async (
     const customer = await sql`
       INSERT INTO Customer (name, phone_number, email_address, date_of_birth, password)
       VALUES (${name}, ${phoneNumber}, ${email}, ${dateOfBirth}, ${hashedPassword})
-      RETURNING *;
+      RETURNING id, name, phone_number, email_address, date_of_birth;
     `;
     return customer[0];
   } catch (error) {
@@ -60,7 +60,7 @@ const createCustomer = async (
 const deleteCustomer = async (customerId) => {
   try {
     const customer =
-      await sql`DELETE FROM Customer WHERE id=${customerId} RETURNING *`;
+      await sql`DELETE FROM Customer WHERE id=${customerId} RETURNING id, name, phone_number, email_address, date_of_birth`;
     return customer;
   } catch (error) {
     throw new Error(error);
@@ -71,7 +71,7 @@ const updateCustomerNamePhoneNo = async (customerId, { name, phoneNumber }) => {
   if (!name && !phoneNumber) throw new Error("No update fields provided");
 
   const query = sql`
-  UPDATE Customer SET name = ${name}, phone_number = ${phoneNumber} WHERE id = ${customerId} RETURNING *;
+  UPDATE Customer SET name = ${name}, phone_number = ${phoneNumber} WHERE id = ${customerId} RETURNING id, name, phone_number, email_address, date_of_birth;
   `;
 
   try {
@@ -84,7 +84,7 @@ const updateCustomerNamePhoneNo = async (customerId, { name, phoneNumber }) => {
 
 const updateCustomerImageUrl = async (customerId, imageUrl) => {
   const query = sql`
-  UPDATE Customer SET profile_image_url = ${imageUrl} WHERE id = ${customerId} RETURNING *;
+  UPDATE Customer SET profile_image_url = ${imageUrl} WHERE id = ${customerId} RETURNING id, name, phone_number, email_address, date_of_birth;
   `;
 
   try {
