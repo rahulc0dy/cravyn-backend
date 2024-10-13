@@ -22,6 +22,8 @@ describe("health check", () => {
         expect.objectContaining({
           statusCode: 200,
           message: "Status OK.",
+          data: {},
+          success: true,
         })
       );
     });
@@ -40,12 +42,13 @@ describe("health check", () => {
           statusCode: 200,
           data: mockData,
           message: "Database connection is healthy.",
+          success: true,
         })
       );
     });
 
     test("should return 500 if database is not connected", async () => {
-      const mockError = new Error("Database connection failed");
+      const mockError = new Error("Database connection failed.");
       sql.mockRejectedValueOnce(mockError);
 
       await databaseCheck(mockRequest, mockResponse, mockNext);
@@ -53,8 +56,9 @@ describe("health check", () => {
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
           statusCode: 500,
-          message: "Database check failed.",
           data: expect.any(Object),
+          message: "Database check failed.",
+          success: false,
         })
       );
     });
