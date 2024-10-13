@@ -19,6 +19,19 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 
+/**
+ * Retrieves customer account details, excluding sensitive information.
+ *
+ * @async
+ * @function getCustomerAccount
+ * @param {object} req - Express request object, requires `req.customer.id` from the middleware.
+ * @param {object} res - Express response object.
+ * @returns {void} Sends a JSON response with:
+ *
+ * - **200 OK**: Customer details retrieved successfully.
+ * - **401 Unauthorized**: No customer ID found in the request.
+ * - **404 Not Found**: Customer not found by the provided ID.
+ */
 const getCustomerAccount = asyncHandler(async (req, res) => {
   if (!req.customer || !req.customer.id) {
     res
@@ -51,6 +64,20 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, { customer }, "Customer obtained successfully"));
 });
 
+/**
+ * Logs in a customer by verifying email and password, and generates access/refresh tokens.
+ *
+ * @async
+ * @function loginCustomer
+ * @param {object} req - Express request object, expects `email` and `password` in the body.
+ * @param {object} res - Express response object.
+ * @returns {void} Sends a JSON response with:
+ *
+ * - **200 OK**: Customer logged in successfully, access and refresh tokens are provided.
+ * - **400 Bad Request**: Missing email or password fields in the request body.
+ * - **401 Unauthorized**: Incorrect password or no customer found with the provided credentials.
+ * - **503 Service Unavailable**: No customer found for the provided email.
+ */
 const loginCustomer = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -133,6 +160,20 @@ const loginCustomer = asyncHandler(async (req, res) => {
     );
 });
 
+/**
+ * Registers a new customer, ensuring all required fields are provided and valid, and creates the customer account.
+ *
+ * @async
+ * @function registerCustomer
+ * @param {object} req - Express request object, expects `name`, `phoneNumber`, `email`, `dateOfBirth`, `password`, and `confirmPassword` in the body.
+ * @param {object} res - Express response object.
+ * @returns {void} Sends a JSON response with:
+ *
+ * - **201 Created**: Customer registered successfully.
+ * - **400 Bad Request**: Missing or invalid fields such as name, date of birth, password, or password confirmation.
+ * - **409 Conflict**: Customer with the provided email already exists.
+ * - **500 Internal Server Error**: Error occurred during registration or customer creation failed.
+ */
 const registerCustomer = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
     req.body;
@@ -231,6 +272,18 @@ const registerCustomer = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, customer, "Customer registered successfully."));
 });
 
+/**
+ * Logs out a customer by clearing the refresh token from the database and removing authentication cookies.
+ *
+ * @async
+ * @function logoutCustomer
+ * @param {object} req - Express request object, requires `req.customer.id` to identify the logged-in customer.
+ * @param {object} res - Express response object.
+ * @returns {void} Sends a JSON response with:
+ *
+ * - **200 OK**: Customer logged out successfully, access and refresh tokens are cleared.
+ * - **500 Internal Server Error**: Error occurred while logging out or clearing refresh token.
+ */
 const logoutCustomer = asyncHandler(async (req, res) => {
   try {
     await setRefreshToken("NULL", req.customer.id);
@@ -264,6 +317,19 @@ const logoutCustomer = asyncHandler(async (req, res) => {
     );
 });
 
+/**
+ * Refreshes the access token for a logged-in customer using a valid refresh token.
+ *
+ * @async
+ * @function refreshAccessToken
+ * @param {object} req - Express request object, requires `req.cookies.refreshToken` or `req.body.refreshToken` for validation.
+ * @param {object} res - Express response object.
+ * @returns {void} Sends a JSON response with:
+ *
+ * - **200 OK**: Session reinitialized successfully, new access and refresh tokens provided.
+ * - **401 Unauthorized**: Refresh token is missing, invalid, or does not match the stored token.
+ * - **500 Internal Server Error**: An error occurred while retrieving the customer or verifying the token.
+ */
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies?.refreshToken || req.body.refreshToken;
@@ -348,6 +414,20 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * Deletes a customer's account after verifying their identity with a refresh token and password.
+ *
+ * @async
+ * @function deleteCustomerAccount
+ * @param {object} req - Express request object, requires `req.body.refreshToken` and `req.body.password` for validation.
+ * @param {object} res - Express response object.
+ * @returns {void} Sends a JSON response with:
+ *
+ * - **200 OK**: Customer account deleted successfully, cookies cleared.
+ * - **400 Bad Request**: Required fields (refreshToken or password) are missing.
+ * - **401 Unauthorized**: Invalid refresh token, customer not found, or incorrect password.
+ * - **500 Internal Server Error**: An error occurred while attempting to delete the customer account.
+ */
 const deleteCustomerAccount = asyncHandler(async (req, res) => {
   const { refreshToken, password } = req.body;
 
@@ -462,6 +542,19 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
     );
 });
 
+/**
+ * Updates the customer's account details such as name and phone number.
+ * If a field is not provided in the request, the existing value is retained.
+ *
+ * @async
+ * @function updateCustomerAccount
+ * @param {object} req - Express request object, requires `req.body.name` and/or `req.body.phoneNumber`.
+ * @param {object} res - Express response object.
+ * @returns {void} Sends a JSON response with:
+ *
+ * - **200 OK**: Customer details updated successfully.
+ * - **500 Internal Server Error**: An error occurred while attempting to update customer details.
+ */
 const updateCustomerAccount = asyncHandler(async (req, res) => {
   let { name, phoneNumber } = req.body;
 
@@ -502,6 +595,19 @@ const updateCustomerAccount = asyncHandler(async (req, res) => {
     );
 });
 
+/**
+ * Updates the customer's profile image by uploading it to Cloudinary and saving the URL.
+ *
+ * @async
+ * @function updateCustomerImage
+ * @param {object} req - Express request object, expects `req.file` containing the uploaded image file.
+ * @param {object} res - Express response object.
+ * @returns {void} Sends a JSON response with:
+ *
+ * - **200 OK**: Image uploaded successfully, and the new image URL is provided.
+ * - **400 Bad Request**: No image file uploaded in the request.
+ * - **500 Internal Server Error**: An error occurred while attempting to upload the image or update the customer's image URL.
+ */
 const updateCustomerImage = asyncHandler(async (req, res) => {
   try {
     if (!req.file) {
