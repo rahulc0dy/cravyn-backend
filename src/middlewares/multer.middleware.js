@@ -1,3 +1,5 @@
+import multer from "multer";
+
 /**
  * Configuration for file upload using multer.
  *
@@ -13,8 +15,6 @@
  *
  * @returns {Object} - Returns a multer instance configured for disk storage.
  */
-import multer from "multer";
-
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "./public/temp");

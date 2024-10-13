@@ -13,7 +13,7 @@ const mockResponse = {
 };
 const mockNext = jest.fn();
 
-describe("health check", () => {
+describe("healthCheck", () => {
   describe("server", () => {
     test("should return 200 if server is running", async () => {
       await healthCheck(mockRequest, mockResponse, mockNext);
