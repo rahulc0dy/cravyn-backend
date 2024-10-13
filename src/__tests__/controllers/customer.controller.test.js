@@ -1,6 +1,7 @@
 import {
   getCustomerAccount,
   loginCustomer,
+  logoutCustomer,
 } from "../../controllers/customer.controller";
 import {
   getCustomerByEmail,
@@ -197,6 +198,61 @@ describe("customer controllers", () => {
             accessToken: mockAccessToken,
             refreshToken: mockRefreshToken,
           },
+        })
+      );
+    });
+  });
+
+  describe("logoutCustomer", () => {
+    let mockRequest, mockResponse, mockNext;
+
+    beforeEach(() => {
+      mockRequest = {
+        customer: { id: "mockCustomerId" },
+      };
+      mockResponse = {
+        status: jest.fn().mockReturnThis(),
+        clearCookie: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+      mockNext = jest.fn();
+    });
+
+    test("should log out the customer successfully", async () => {
+      setRefreshToken.mockResolvedValue([mockCustomer]);
+
+      await logoutCustomer(mockRequest, mockResponse, mockNext);
+
+      expect(setRefreshToken).toHaveBeenCalledWith("NULL", "mockCustomerId");
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith("accessToken", {
+        httpOnly: true,
+        secure: true,
+      });
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith("refreshToken", {
+        httpOnly: true,
+        secure: true,
+      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 200,
+          message: "Customer logged out successfully.",
+        })
+      );
+    });
+
+    test("should return 500 if an error occurs while clearing the refresh token", async () => {
+      setRefreshToken.mockRejectedValue();
+
+      await logoutCustomer(mockRequest, mockResponse, mockNext);
+
+      expect(setRefreshToken).toHaveBeenCalledWith("NULL", "mockCustomerId");
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 500,
+          message: "Unable to fetch the logged in customer.",
+          success: false,
         })
       );
     });
