@@ -6,41 +6,41 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import {
-  getCustomerByEmail,
+  getManagementTeamById,
+  getManagementTeamByEmail,
+  getNonSensitiveManagementTeamInfoById,
   setRefreshToken,
-  createCustomer,
-  getCustomerById,
-  deleteCustomer,
-  updateCustomerNamePhoneNo,
-  getNonSensitiveCustomerInfoById,
-  updateCustomerImageUrl,
-} from "../db/customer.query.js";
+  createManagementTeam,
+  deleteManagementTeam,
+  updateManagementTeamNamePhoneNo,
+} from "../db/managementTeam.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
-import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 
-const getCustomerAccount = asyncHandler(async (req, res) => {
-  if (!req.customer || !req.customer.id) {
+const getManagementTeamAccount = asyncHandler(async (req, res) => {
+  if (!req.managementTeam || !req.managementTeam.id) {
     res
       .status(401)
       .json(
         new ApiResponse(
           401,
-          { reason: `req.customer is ${req.customer}` },
+          { reason: `req.managementTeam is ${req.managementTeam}` },
           "Unauthorised Access."
         )
       );
   }
 
-  const customer = (await getNonSensitiveCustomerInfoById(req.customer.id))[0];
+  const managementTeam = (
+    await getNonSensitiveManagementTeamInfoById(req.managementTeam.id)
+  )[0];
 
-  if (!customer) {
+  if (!managementTeam) {
     res
       .status(404)
       .json(
         new ApiResponse(
           404,
-          { reason: `Customer not found by id` },
+          { reason: `ManagementTeam not found by id` },
           "User not found."
         )
       );
@@ -48,10 +48,16 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, { customer }, "Customer obtained successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { managementTeam },
+        "ManagementTeam obtained successfully"
+      )
+    );
 });
 
-const loginCustomer = asyncHandler(async (req, res) => {
+const loginManagementTeam = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const requiredFields = [
@@ -73,20 +79,20 @@ const loginCustomer = asyncHandler(async (req, res) => {
     }
   }
 
-  let customer = await getCustomerByEmail(email);
+  let managementTeam = await getManagementTeamByEmail(email);
 
-  if (customer.length <= 0) {
+  if (managementTeam.length <= 0) {
     return res
       .status(503)
       .json(
         new ApiResponse(
           401,
-          { reason: "No customer found with given credentials" },
+          { reason: "No managementTeam found with given credentials" },
           "Phone number is not registered."
         )
       );
   }
-  const correctPassword = customer[0].password;
+  const correctPassword = managementTeam[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
@@ -101,20 +107,20 @@ const loginCustomer = asyncHandler(async (req, res) => {
         )
       );
   }
-  const accessToken = generateAccessToken(customer[0]);
-  const refreshToken = generateRefreshToken(customer[0]);
+  const accessToken = generateAccessToken(managementTeam[0]);
+  const refreshToken = generateRefreshToken(managementTeam[0]);
 
-  const customerId = customer[0].id;
+  const managementTeamId = managementTeam[0].id;
 
-  customer = await setRefreshToken(refreshToken, customerId);
+  managementTeam = await setRefreshToken(refreshToken, managementTeamId);
 
   const options = {
     httpOnly: true,
     secure: true,
   };
 
-  delete customer[0].refresh_token;
-  delete customer[0].password;
+  delete managementTeam[0].refresh_token;
+  delete managementTeam[0].password;
 
   return res
     .status(200)
@@ -124,18 +130,17 @@ const loginCustomer = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          customer: customer[0],
+          managementTeam: managementTeam[0],
           accessToken,
           refreshToken,
         },
-        "Customer logged in successfully."
+        "ManagementTeam logged in successfully."
       )
     );
 });
 
-const registerCustomer = asyncHandler(async (req, res) => {
-  const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
-    req.body;
+const registerManagementTeam = asyncHandler(async (req, res) => {
+  const { name, phoneNumber, email, password, confirmPassword } = req.body;
 
   const requiredFields = [
     { field: name, message: "name is required.", reason: `name is ${name}` },
@@ -145,9 +150,9 @@ const registerCustomer = asyncHandler(async (req, res) => {
       reason: `email is ${email}`,
     },
     {
-      field: dateOfBirth,
-      message: "Date of birth is required.",
-      reason: `dateOfBirth is ${dateOfBirth}`,
+      field: phoneNumber,
+      message: "phoneNumber is required.",
+      reason: `phoneNumber is ${phoneNumber}`,
     },
     {
       field: password,
@@ -179,28 +184,27 @@ const registerCustomer = asyncHandler(async (req, res) => {
       );
   }
 
-  const existedCustomer = await getCustomerByEmail(email);
+  const existedManagementTeam = await getManagementTeamByEmail(email);
 
-  if (existedCustomer.length > 0) {
+  if (existedManagementTeam.length > 0) {
     return res
       .status(409)
       .json(
         new ApiResponse(
           409,
-          { reason: "Customer already registered" },
-          "Customer already exists."
+          { reason: "ManagementTeam already registered" },
+          "ManagementTeam already exists."
         )
       );
   }
 
-  let customer;
+  let managementTeam;
 
   try {
-    customer = await createCustomer(
+    managementTeam = await createManagementTeam(
       name,
       phoneNumber,
       email,
-      dateOfBirth,
       password
     );
   } catch (error) {
@@ -209,36 +213,42 @@ const registerCustomer = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           500,
-          { ...error },
-          "Something went wrong while registering the customer."
+          { reason: error.message || "Management team creation query error" },
+          "Something went wrong while registering the managementTeam."
         )
       );
   }
 
-  if (!customer) {
+  if (!managementTeam) {
     return res
       .status(500)
       .json(
         new ApiResponse(
           500,
-          { reason: "Customer is not defined" },
-          "Failed to register customer"
+          { reason: "ManagementTeam is not defined" },
+          "Failed to register managementTeam"
         )
       );
   }
 
-  delete customer.refresh_token;
-  delete customer.profile_image_url;
-  delete customer.password;
+  delete managementTeam.refresh_token;
+  delete managementTeam.profile_image_url;
+  delete managementTeam.password;
 
   return res
     .status(201)
-    .json(new ApiResponse(201, customer, "Customer registered successfully."));
+    .json(
+      new ApiResponse(
+        201,
+        managementTeam,
+        "ManagementTeam registered successfully."
+      )
+    );
 });
 
-const logoutCustomer = asyncHandler(async (req, res) => {
+const logoutManagementTeam = asyncHandler(async (req, res) => {
   try {
-    await setRefreshToken("NULL", req.customer.id);
+    await setRefreshToken("NULL", req.managementTeam.id);
   } catch (error) {
     return res
       .status(500)
@@ -246,7 +256,7 @@ const logoutCustomer = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           { ...error },
-          "Unable to fetch the logged in customer."
+          "Unable to fetch the logged in managementTeam."
         )
       );
   }
@@ -264,7 +274,7 @@ const logoutCustomer = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Logout successful" },
-        "Customer logged out successfully."
+        "ManagementTeam logged out successfully."
       )
     );
 });
@@ -274,10 +284,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     req.cookies?.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
-    res
+    return res
       .status(401)
       .json(
-        ApiResponse(
+        new ApiResponse(
           401,
           { reason: "Request unauthorised" },
           "Unauthorized request"
@@ -291,11 +301,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    let customer = await getCustomerById(decodedToken.id);
+    let managementTeam = await getManagementTeamById(decodedToken.id);
 
-    customer = customer[0];
+    managementTeam = managementTeam[0];
 
-    if (!customer) {
+    if (!managementTeam) {
       return res
         .status(500)
         .json(
@@ -307,8 +317,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         );
     }
 
-    if (incomingRefreshToken !== customer?.refresh_token)
-      res
+    if (incomingRefreshToken !== managementTeam?.refresh_token)
+      return res
         .status(401)
         .json(
           new ApiResponse(
@@ -323,8 +333,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       secure: true,
     };
 
-    const accessToken = generateAccessToken(customer);
-    const newRefreshToken = generateRefreshToken(customer);
+    const accessToken = generateAccessToken(managementTeam);
+    const newRefreshToken = generateRefreshToken(managementTeam);
 
     return res
       .status(200)
@@ -353,7 +363,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-const deleteCustomerAccount = asyncHandler(async (req, res) => {
+const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
   const { refreshToken, password } = req.body;
 
   const requiredFields = [
@@ -374,25 +384,25 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       return res.status(400).json(new ApiResponse(400, { reason }, message));
     }
   }
-  let customer;
+  let managementTeam;
 
   try {
     const decodedToken = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
-    const customerId = decodedToken?.id;
+    const managementTeamId = decodedToken?.id;
 
-    customer = await getCustomerById(customerId);
+    managementTeam = await getManagementTeamById(managementTeamId);
 
-    if (customer.length === 0) {
+    if (managementTeam.length === 0) {
       return res
         .status(401)
         .json(
           new ApiResponse(
             401,
             { reason: "Invalid Refresh Token." },
-            "Customer not found"
+            "ManagementTeam not found"
           )
         );
     }
@@ -408,18 +418,18 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       );
   }
 
-  if (customer.length <= 0) {
+  if (managementTeam.length <= 0) {
     return res
       .status(503)
       .json(
         new ApiResponse(
           401,
-          { reason: "Unable to get customer" },
+          { reason: "Unable to get managementTeam" },
           "Phone number is not registered"
         )
       );
   }
-  const correctPassword = customer[0].password;
+  const correctPassword = managementTeam[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
@@ -436,15 +446,15 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
   }
 
   try {
-    await deleteCustomer(customer[0].id);
+    await deleteManagementTeam(managementTeam[0].id);
   } catch (error) {
     return res
       .status(500)
       .json(
         new ApiResponse(
           500,
-          { ...error, reason: "Unable to fetch the logged in customer." },
-          "Failed to delete Customer"
+          { ...error, reason: "Unable to fetch the logged in managementTeam." },
+          "Failed to delete ManagementTeam"
         )
       );
   }
@@ -462,36 +472,51 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Deletion successful" },
-        "Customer deleted out successfully."
+        "ManagementTeam deleted out successfully."
       )
     );
 });
 
-const updateCustomerAccount = asyncHandler(async (req, res) => {
+const updateManagementTeamAccount = asyncHandler(async (req, res) => {
   let { name, phoneNumber } = req.body;
 
+  if (!name && !phoneNumber) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          { reason: "No update details provided" },
+          "Please provide details to update"
+        )
+      );
+  }
+
   const existingDetails = (
-    await getNonSensitiveCustomerInfoById(req.customer.id)
+    await getNonSensitiveManagementTeamInfoById(req.managementTeam.id)
   )[0];
 
   name = name ?? existingDetails.name;
   phoneNumber = phoneNumber ?? existingDetails.phone_number;
 
-  let customer;
+  let managementTeam;
   try {
-    customer = await updateCustomerNamePhoneNo(req.customer.id, {
-      name,
-      phoneNumber,
-    });
+    managementTeam = await updateManagementTeamNamePhoneNo(
+      req.managementTeam.id,
+      {
+        name,
+        phoneNumber,
+      }
+    );
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
         500,
         {
           ...error,
-          reason: error.message || "Customer could not be updated",
+          reason: error.message || "ManagementTeam could not be updated",
         },
-        "Failed to update customer details."
+        "Failed to update managementTeam details."
       )
     );
   }
@@ -501,13 +526,13 @@ const updateCustomerAccount = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { customer: customer[0] },
-        "Customer details updated."
+        { managementTeam: managementTeam[0] },
+        "ManagementTeam details updated."
       )
     );
 });
 
-const updateCustomerImage = asyncHandler(async (req, res) => {
+const updateManagementTeamImage = asyncHandler(async (req, res) => {
   try {
     if (!req.file) {
       return res
@@ -526,8 +551,8 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
     const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
 
     if (cloudinaryResponse.url) {
-      const customer = await updateCustomerImageUrl(
-        req.customer.id,
+      const managementTeam = await updateManagementTeamImageUrl(
+        req.managementTeam.id,
         cloudinaryResponse.url
       );
 
@@ -536,7 +561,7 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(
             200,
-            { customer, imageUrl: cloudinaryResponse.url },
+            { managementTeam, imageUrl: cloudinaryResponse.url },
             "Image uploaded successfully."
           )
         );
@@ -561,12 +586,12 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
 });
 
 export {
-  getCustomerAccount,
-  loginCustomer,
-  registerCustomer,
-  logoutCustomer,
+  getManagementTeamAccount,
+  loginManagementTeam,
+  registerManagementTeam,
+  logoutManagementTeam,
   refreshAccessToken,
-  deleteCustomerAccount,
-  updateCustomerAccount,
-  updateCustomerImage,
+  deleteManagementTeamAccount,
+  updateManagementTeamAccount,
+  updateManagementTeamImage,
 };

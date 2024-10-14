@@ -4,19 +4,22 @@ import jwt from "jsonwebtoken";
 import { getNonSensitiveCustomerInfoById } from "../db/customer.query.js";
 import { getNonSensitiveManagementTeamInfoById } from "../db/managementTeam.query.js";
 import { getNonSensitiveRestaurantOwnerInfoById } from "../db/restaurantOwner.query.js";
+import { getNonSensitiveBusinessTeamInfoById } from "../db/businessTeam.query.js";
 
 export const verifyJwt = asyncHandler(async (req, res, next) => {
   const token =
     req.cookies?.accessToken ||
     req.header("Authorization")?.replace("Bearer ", "");
 
-  if (!token) {
+  const userType = req.baseUrl.split("/")[3];
+
+  if (!token || !userType) {
     return res
       .status(401)
       .json(
         new ApiResponse(
           401,
-          { reason: `Token is ${token}` },
+          { reason: `Token is ${token}, userType is ${req.query}` },
           "Unauthorized request."
         )
       );
@@ -24,7 +27,7 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
 
   try {
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    const customerId = decodedToken?.id;
+    const userId = decodedToken?.id;
 
     let user;
     switch (userType) {
@@ -38,7 +41,7 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
         user = await getNonSensitiveManagementTeamInfoById(userId);
         break;
       case "business-team":
-        // user = await getNonSensitiveBusinessTeamInfoById(userId);
+        user = await getNonSensitiveBusinessTeamInfoById(userId);
         break;
 
       default:
@@ -53,18 +56,40 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
           new ApiResponse(
             401,
             { reason: "Invalid Access Token" },
-            "Customer not found."
+            "User not found."
           )
         );
     }
 
-    req.customer = customer[0]; // Set customer details to the request object
+    switch (userType) {
+      case "customer":
+        req.customer = user[0];
+        break;
+      case "restaurant-owner":
+        req.restaurantOwner = user[0];
+        break;
+      case "management-team":
+        req.managementTeam = user[0];
+        break;
+      case "business-team":
+        req.businessTeam = user[0];
+        break;
+
+      default:
+        req.user = user[0];
+        break;
+    }
+
     next();
   } catch (error) {
     return res
       .status(401)
       .json(
-        new ApiResponse(401, {}, error?.message || "Invalid Access Token.")
+        new ApiResponse(
+          401,
+          { reason: error.message || "Error at auth middleware" },
+          error?.message || "Invalid Access Token."
+        )
       );
   }
 });
