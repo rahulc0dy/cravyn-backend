@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import healthCheckRouter from "./routes/healthCheck.routes.js";
 import customerRouter from "./routes/customer.routes.js";
+import managementTeamRouter from "./routes/managementTeam.routes.js";
 
 const app = express();
 
@@ -20,5 +21,6 @@ app.use(cookieParser());
 
 app.use("/api/v1/health-check", healthCheckRouter);
 app.use("/api/v1/customer", customerRouter);
+app.use("/api/v1/management-team", managementTeamRouter);
 
 export { app };
