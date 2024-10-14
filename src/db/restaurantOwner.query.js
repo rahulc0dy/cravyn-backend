@@ -15,7 +15,7 @@ const getRestaurantOwnerById = async (restaurantOwnerId) => {
 
 const getNonSensitiveRestaurantOwnerInfoById = async (restaurantOwnerId) => {
   const restaurantOwner = await sql`
-      SELECT id, name, phone_number, pan_number, restaurants 
+      SELECT id, name, phone_number, email_address, pan_number, restaurants 
       FROM Restaurant_Owner 
       WHERE id = ${restaurantOwnerId};
     `;
@@ -27,7 +27,7 @@ const setRefreshToken = async (refreshToken, restaurantOwnerId) => {
     UPDATE Restaurant_Owner
     SET refresh_token = ${refreshToken}
     WHERE id = ${restaurantOwnerId}
-    RETURNING id, name, phone_number, pan_number, restaurants 
+    RETURNING id, name, phone_number, email_address, pan_number, restaurants 
   `;
   return restaurantOwner;
 };
@@ -35,14 +35,15 @@ const setRefreshToken = async (refreshToken, restaurantOwnerId) => {
 const createRestaurantOwner = async (
   name,
   phoneNumber,
+  email,
   panNumber,
   password
 ) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   try {
     const restaurantOwner = await sql`
-      INSERT INTO Restaurant_Owner ( name, phone_number, pan_number, password)
-      VALUES (${name}, ${phoneNumber}, ${panNumber}, ${hashedPassword})
+      INSERT INTO Restaurant_Owner ( name, phone_number, email_address, pan_number, password)
+      VALUES (${name}, ${phoneNumber}, ${email}, ${panNumber}, ${hashedPassword})
       RETURNING id, name, phone_number, email_address, date_of_birth;
     `;
     return restaurantOwner[0];
@@ -54,7 +55,7 @@ const createRestaurantOwner = async (
 const deleteRestaurantOwner = async (restaurantOwnerId) => {
   try {
     const restaurantOwner =
-      await sql`DELETE FROM Restaurant_Owner WHERE id=${restaurantOwnerId} RETURNING id, name, phone_number, pan_number`;
+      await sql`DELETE FROM Restaurant_Owner WHERE id=${restaurantOwnerId} RETURNING id, name, phone_number, email_address, pan_number`;
     return restaurantOwner;
   } catch (error) {
     throw new Error(error);
@@ -68,7 +69,7 @@ const updateRestaurantOwnerNamePhoneNo = async (
   if (!name && !phoneNumber) throw new Error("No update fields provided");
 
   const query = sql`
-  UPDATE Restaurant_Owner SET name = ${name}, phone_number = ${phoneNumber} WHERE id = ${restaurantOwnerId} RETURNING id, name, phone_number, pan_number;
+  UPDATE Restaurant_Owner SET name = ${name}, phone_number = ${phoneNumber} WHERE id = ${restaurantOwnerId} RETURNING id, name, phone_number, email_address, pan_number;
   `;
 
   try {

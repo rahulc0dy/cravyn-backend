@@ -138,15 +138,15 @@ const loginRestaurantOwner = asyncHandler(async (req, res) => {
 });
 
 const registerRestaurantOwner = asyncHandler(async (req, res) => {
-  const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
+  const { name, phoneNumber, email, panNumber, password, confirmPassword } =
     req.body;
 
   const requiredFields = [
     { field: name, message: "name is required.", reason: `name is ${name}` },
     {
-      field: dateOfBirth,
+      field: panNumber,
       message: "Date of birth is required.",
-      reason: `dateOfBirth is ${dateOfBirth}`,
+      reason: `panNumber is ${panNumber}`,
     },
     {
       field: password,
@@ -199,7 +199,7 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
       name,
       phoneNumber,
       email,
-      dateOfBirth,
+      panNumber,
       password
     );
   } catch (error) {
