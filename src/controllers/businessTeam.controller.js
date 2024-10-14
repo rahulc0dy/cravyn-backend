@@ -15,7 +15,6 @@ import {
   updateBusinessTeamNamePhoneNo,
 } from "../db/businessTeam.query.js";
 import jwt from "jsonwebtoken";
-import fs from "fs";
 
 const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   if (!req.businessTeam || !req.businessTeam.id) {
@@ -524,59 +523,6 @@ const updateBusinessTeamAccount = asyncHandler(async (req, res) => {
     );
 });
 
-const updateBusinessTeamImage = asyncHandler(async (req, res) => {
-  try {
-    if (!req.file) {
-      return res
-        .status(400)
-        .json(
-          new ApiResponse(
-            400,
-            { reason: `The file passed is ${req.file}` },
-            "No image file uploaded."
-          )
-        );
-    }
-
-    const localFilePath = req.file.path;
-
-    const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
-
-    if (cloudinaryResponse.url) {
-      const businessTeam = await updateBusinessTeamImageUrl(
-        req.businessTeam.id,
-        cloudinaryResponse.url
-      );
-
-      res
-        .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            { businessTeam, imageUrl: cloudinaryResponse.url },
-            "Image uploaded successfully."
-          )
-        );
-    } else {
-      throw new Error("Failed to upload image to Cloudinary.");
-    }
-  } catch (error) {
-    res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { error, reason: error.message || "Image could not be uploaded" },
-          error.message || "Internal server error."
-        )
-      );
-  } finally {
-    if (req.file && req.file.path) {
-      fs.unlinkSync(req.file.path);
-    }
-  }
-});
-
 export {
   getBusinessTeamAccount,
   loginBusinessTeam,
@@ -585,5 +531,4 @@ export {
   refreshAccessToken,
   deleteBusinessTeamAccount,
   updateBusinessTeamAccount,
-  updateBusinessTeamImage,
 };

@@ -5,6 +5,7 @@ import { getNonSensitiveCustomerInfoById } from "../db/customer.query.js";
 import { getNonSensitiveManagementTeamInfoById } from "../db/managementTeam.query.js";
 import { getNonSensitiveRestaurantOwnerInfoById } from "../db/restaurantOwner.query.js";
 import { getNonSensitiveBusinessTeamInfoById } from "../db/businessTeam.query.js";
+import { getNonSensitiveDeliveryPartnerInfoById } from "../db/deliveryPartner.query.js";
 
 export const verifyJwt = asyncHandler(async (req, res, next) => {
   const token =
@@ -43,6 +44,9 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
       case "business-team":
         user = await getNonSensitiveBusinessTeamInfoById(userId);
         break;
+      case "delivery-partner":
+        user = await getNonSensitiveDeliveryPartnerInfoById(userId);
+        break;
 
       default:
         user = [];
@@ -74,7 +78,9 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
       case "business-team":
         req.businessTeam = user[0];
         break;
-
+      case "delivery-partner":
+        req.deliveryPartner = user[0];
+        break;
       default:
         req.user = user[0];
         break;

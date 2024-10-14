@@ -204,15 +204,16 @@ const registerCustomer = asyncHandler(async (req, res) => {
       password
     );
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { ...error },
-          "Something went wrong while registering the customer."
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          error,
+          reason: error.message || "Error at customer controller",
+        },
+        "Something went wrong while registering the customer."
+      )
+    );
   }
 
   if (!customer) {

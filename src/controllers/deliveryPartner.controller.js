@@ -6,40 +6,43 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import {
-  getManagementTeamById,
-  getManagementTeamByEmail,
-  getNonSensitiveManagementTeamInfoById,
+  getDeliveryPartnerByEmail,
   setRefreshToken,
-  createManagementTeam,
-  deleteManagementTeam,
-  updateManagementTeamNamePhoneNo,
-} from "../db/managementTeam.query.js";
+  createDeliveryPartner,
+  getDeliveryPartnerById,
+  deleteDeliveryPartner,
+  getNonSensitiveDeliveryPartnerInfoById,
+  updateDeliveryPartnerImageUrl,
+  updateDeliveryPartnerNamePhoneNoVehicleAvailability,
+} from "../db/deliveryPartner.query.js";
 import jwt from "jsonwebtoken";
+import fs from "fs";
+import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 
-const getManagementTeamAccount = asyncHandler(async (req, res) => {
-  if (!req.managementTeam || !req.managementTeam.id) {
+const getDeliveryPartnerAccount = asyncHandler(async (req, res) => {
+  if (!req.deliveryPartner || !req.deliveryPartner.id) {
     res
       .status(401)
       .json(
         new ApiResponse(
           401,
-          { reason: `req.managementTeam is ${req.managementTeam}` },
+          { reason: `req.deliveryPartner is ${req.deliveryPartner}` },
           "Unauthorised Access."
         )
       );
   }
 
-  const managementTeam = (
-    await getNonSensitiveManagementTeamInfoById(req.managementTeam.id)
+  const deliveryPartner = (
+    await getNonSensitiveDeliveryPartnerInfoById(req.deliveryPartner.id)
   )[0];
 
-  if (!managementTeam) {
+  if (!deliveryPartner) {
     res
       .status(404)
       .json(
         new ApiResponse(
           404,
-          { reason: `ManagementTeam not found by id` },
+          { reason: `DeliveryPartner not found by id` },
           "User not found."
         )
       );
@@ -50,13 +53,13 @@ const getManagementTeamAccount = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { managementTeam },
-        "ManagementTeam obtained successfully"
+        { deliveryPartner },
+        "DeliveryPartner obtained successfully"
       )
     );
 });
 
-const loginManagementTeam = asyncHandler(async (req, res) => {
+const loginDeliveryPartner = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const requiredFields = [
@@ -78,20 +81,20 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
     }
   }
 
-  let managementTeam = await getManagementTeamByEmail(email);
+  let deliveryPartner = await getDeliveryPartnerByEmail(email);
 
-  if (managementTeam.length <= 0) {
+  if (deliveryPartner.length <= 0) {
     return res
       .status(503)
       .json(
         new ApiResponse(
           401,
-          { reason: "No managementTeam found with given credentials" },
+          { reason: "No deliveryPartner found with given credentials" },
           "Phone number is not registered."
         )
       );
   }
-  const correctPassword = managementTeam[0].password;
+  const correctPassword = deliveryPartner[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
@@ -106,20 +109,20 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
         )
       );
   }
-  const accessToken = generateAccessToken(managementTeam[0]);
-  const refreshToken = generateRefreshToken(managementTeam[0]);
+  const accessToken = generateAccessToken(deliveryPartner[0]);
+  const refreshToken = generateRefreshToken(deliveryPartner[0]);
 
-  const managementTeamId = managementTeam[0].id;
+  const deliveryPartnerId = deliveryPartner[0].id;
 
-  managementTeam = await setRefreshToken(refreshToken, managementTeamId);
+  deliveryPartner = await setRefreshToken(refreshToken, deliveryPartnerId);
 
   const options = {
     httpOnly: true,
     secure: true,
   };
 
-  delete managementTeam[0].refresh_token;
-  delete managementTeam[0].password;
+  delete deliveryPartner[0].refresh_token;
+  delete deliveryPartner[0].password;
 
   return res
     .status(200)
@@ -129,17 +132,25 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          managementTeam: managementTeam[0],
+          deliveryPartner: deliveryPartner[0],
           accessToken,
           refreshToken,
         },
-        "ManagementTeam logged in successfully."
+        "DeliveryPartner logged in successfully."
       )
     );
 });
 
-const registerManagementTeam = asyncHandler(async (req, res) => {
-  const { name, phoneNumber, email, password, confirmPassword } = req.body;
+const registerDeliveryPartner = asyncHandler(async (req, res) => {
+  const {
+    name,
+    phoneNumber,
+    email,
+    vehicleType,
+    availability,
+    password,
+    confirmPassword,
+  } = req.body;
 
   const requiredFields = [
     { field: name, message: "name is required.", reason: `name is ${name}` },
@@ -150,8 +161,18 @@ const registerManagementTeam = asyncHandler(async (req, res) => {
     },
     {
       field: phoneNumber,
-      message: "phoneNumber is required.",
+      message: "Phone number is required.",
       reason: `phoneNumber is ${phoneNumber}`,
+    },
+    {
+      field: vehicleType,
+      message: "Vehicle type is required.",
+      reason: `vehicleType is ${vehicleType}`,
+    },
+    {
+      field: availability,
+      message: "availability is required.",
+      reason: `availability is ${availability}`,
     },
     {
       field: password,
@@ -183,71 +204,74 @@ const registerManagementTeam = asyncHandler(async (req, res) => {
       );
   }
 
-  const existedManagementTeam = await getManagementTeamByEmail(email);
+  const existedDeliveryPartner = await getDeliveryPartnerByEmail(email);
 
-  if (existedManagementTeam.length > 0) {
+  if (existedDeliveryPartner.length > 0) {
     return res
       .status(409)
       .json(
         new ApiResponse(
           409,
-          { reason: "ManagementTeam already registered" },
-          "ManagementTeam already exists."
+          { reason: "DeliveryPartner already registered" },
+          "DeliveryPartner already exists."
         )
       );
   }
 
-  let managementTeam;
+  let deliveryPartner;
 
   try {
-    managementTeam = await createManagementTeam(
+    deliveryPartner = await createDeliveryPartner({
       name,
       phoneNumber,
       email,
-      password
-    );
+      vehicleType,
+      availability,
+      password,
+    });
   } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          error,
+          reason: error.message || "Error at delivery partner controller",
+        },
+        "Something went wrong while registering the deliveryPartner."
+      )
+    );
+  }
+
+  if (!deliveryPartner) {
     return res
       .status(500)
       .json(
         new ApiResponse(
           500,
-          { reason: error.message || "Management team creation query error" },
-          "Something went wrong while registering the managementTeam."
+          { reason: "DeliveryPartner is not defined" },
+          "Failed to register deliveryPartner"
         )
       );
   }
 
-  if (!managementTeam) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { reason: "ManagementTeam is not defined" },
-          "Failed to register managementTeam"
-        )
-      );
-  }
-
-  delete managementTeam.refresh_token;
-  delete managementTeam.profile_image_url;
-  delete managementTeam.password;
+  delete deliveryPartner.refresh_token;
+  delete deliveryPartner.profile_image_url;
+  delete deliveryPartner.password;
 
   return res
     .status(201)
     .json(
       new ApiResponse(
         201,
-        managementTeam,
-        "ManagementTeam registered successfully."
+        deliveryPartner,
+        "DeliveryPartner registered successfully."
       )
     );
 });
 
-const logoutManagementTeam = asyncHandler(async (req, res) => {
+const logoutDeliveryPartner = asyncHandler(async (req, res) => {
   try {
-    await setRefreshToken("NULL", req.managementTeam.id);
+    await setRefreshToken("NULL", req.deliveryPartner.id);
   } catch (error) {
     return res
       .status(500)
@@ -255,7 +279,7 @@ const logoutManagementTeam = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           { ...error },
-          "Unable to fetch the logged in managementTeam."
+          "Unable to fetch the logged in deliveryPartner."
         )
       );
   }
@@ -273,7 +297,7 @@ const logoutManagementTeam = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Logout successful" },
-        "ManagementTeam logged out successfully."
+        "DeliveryPartner logged out successfully."
       )
     );
 });
@@ -283,10 +307,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     req.cookies?.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
-    return res
+    res
       .status(401)
       .json(
-        new ApiResponse(
+        ApiResponse(
           401,
           { reason: "Request unauthorised" },
           "Unauthorized request"
@@ -300,11 +324,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    let managementTeam = await getManagementTeamById(decodedToken.id);
+    let deliveryPartner = await getDeliveryPartnerById(decodedToken.id);
 
-    managementTeam = managementTeam[0];
+    deliveryPartner = deliveryPartner[0];
 
-    if (!managementTeam) {
+    if (!deliveryPartner) {
       return res
         .status(500)
         .json(
@@ -316,8 +340,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         );
     }
 
-    if (incomingRefreshToken !== managementTeam?.refresh_token)
-      return res
+    if (incomingRefreshToken !== deliveryPartner?.refresh_token)
+      res
         .status(401)
         .json(
           new ApiResponse(
@@ -332,8 +356,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       secure: true,
     };
 
-    const accessToken = generateAccessToken(managementTeam);
-    const newRefreshToken = generateRefreshToken(managementTeam);
+    const accessToken = generateAccessToken(deliveryPartner);
+    const newRefreshToken = generateRefreshToken(deliveryPartner);
 
     return res
       .status(200)
@@ -362,7 +386,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
+const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
   const { refreshToken, password } = req.body;
 
   const requiredFields = [
@@ -383,25 +407,25 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
       return res.status(400).json(new ApiResponse(400, { reason }, message));
     }
   }
-  let managementTeam;
+  let deliveryPartner;
 
   try {
     const decodedToken = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
-    const managementTeamId = decodedToken?.id;
+    const deliveryPartnerId = decodedToken?.id;
 
-    managementTeam = await getManagementTeamById(managementTeamId);
+    deliveryPartner = await getDeliveryPartnerById(deliveryPartnerId);
 
-    if (managementTeam.length === 0) {
+    if (deliveryPartner.length === 0) {
       return res
         .status(401)
         .json(
           new ApiResponse(
             401,
             { reason: "Invalid Refresh Token." },
-            "ManagementTeam not found"
+            "DeliveryPartner not found"
           )
         );
     }
@@ -417,18 +441,18 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
       );
   }
 
-  if (managementTeam.length <= 0) {
+  if (deliveryPartner.length <= 0) {
     return res
       .status(503)
       .json(
         new ApiResponse(
           401,
-          { reason: "Unable to get managementTeam" },
+          { reason: "Unable to get deliveryPartner" },
           "Phone number is not registered"
         )
       );
   }
-  const correctPassword = managementTeam[0].password;
+  const correctPassword = deliveryPartner[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
@@ -445,17 +469,18 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
   }
 
   try {
-    await deleteManagementTeam(managementTeam[0].id);
+    await deleteDeliveryPartner(deliveryPartner[0].id);
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { ...error, reason: "Unable to fetch the logged in managementTeam." },
-          "Failed to delete ManagementTeam"
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          ...error,
+          reason: "Unable to fetch the logged in deliveryPartner.",
+        },
+        "Failed to delete DeliveryPartner"
+      )
+    );
   }
 
   const options = {
@@ -471,40 +496,32 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Deletion successful" },
-        "ManagementTeam deleted out successfully."
+        "DeliveryPartner deleted out successfully."
       )
     );
 });
 
-const updateManagementTeamAccount = asyncHandler(async (req, res) => {
-  let { name, phoneNumber } = req.body;
-
-  if (!name && !phoneNumber) {
-    return res
-      .status(400)
-      .json(
-        new ApiResponse(
-          400,
-          { reason: "No update details provided" },
-          "Please provide details to update"
-        )
-      );
-  }
+const updateDeliveryPartnerAccount = asyncHandler(async (req, res) => {
+  let { name, phoneNumber, vehicleType, availability } = req.body;
 
   const existingDetails = (
-    await getNonSensitiveManagementTeamInfoById(req.managementTeam.id)
+    await getNonSensitiveDeliveryPartnerInfoById(req.deliveryPartner.id)
   )[0];
 
   name = name ?? existingDetails.name;
   phoneNumber = phoneNumber ?? existingDetails.phone_number;
+  vehicleType = vehicleType ?? existingDetails.vehicle_type;
+  availability = availability ?? existingDetails.availability;
 
-  let managementTeam;
+  let deliveryPartner;
   try {
-    managementTeam = await updateManagementTeamNamePhoneNo(
-      req.managementTeam.id,
+    deliveryPartner = await updateDeliveryPartnerNamePhoneNoVehicleAvailability(
+      req.deliveryPartner.id,
       {
         name,
         phoneNumber,
+        vehicleType,
+        availability,
       }
     );
   } catch (error) {
@@ -513,9 +530,9 @@ const updateManagementTeamAccount = asyncHandler(async (req, res) => {
         500,
         {
           ...error,
-          reason: error.message || "ManagementTeam could not be updated",
+          reason: error.message || "DeliveryPartner could not be updated",
         },
-        "Failed to update managementTeam details."
+        "Failed to update deliveryPartner details."
       )
     );
   }
@@ -525,18 +542,72 @@ const updateManagementTeamAccount = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { managementTeam: managementTeam[0] },
-        "ManagementTeam details updated."
+        { deliveryPartner: deliveryPartner[0] },
+        "DeliveryPartner details updated."
       )
     );
 });
 
+const updateDeliveryPartnerImage = asyncHandler(async (req, res) => {
+  try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            { reason: `The file passed is ${req.file}` },
+            "No image file uploaded."
+          )
+        );
+    }
+
+    const localFilePath = req.file.path;
+
+    const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
+
+    if (cloudinaryResponse.url) {
+      const deliveryPartner = await updateDeliveryPartnerImageUrl(
+        req.deliveryPartner.id,
+        cloudinaryResponse.url
+      );
+
+      res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            { deliveryPartner, imageUrl: cloudinaryResponse.url },
+            "Image uploaded successfully."
+          )
+        );
+    } else {
+      throw new Error("Failed to upload image to Cloudinary.");
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { error, reason: error.message || "Image could not be uploaded" },
+          error.message || "Internal server error."
+        )
+      );
+  } finally {
+    if (req.file && req.file.path) {
+      fs.unlinkSync(req.file.path);
+    }
+  }
+});
+
 export {
-  getManagementTeamAccount,
-  loginManagementTeam,
-  registerManagementTeam,
-  logoutManagementTeam,
+  getDeliveryPartnerAccount,
+  loginDeliveryPartner,
+  registerDeliveryPartner,
+  logoutDeliveryPartner,
   refreshAccessToken,
-  deleteManagementTeamAccount,
-  updateManagementTeamAccount,
+  deleteDeliveryPartnerAccount,
+  updateDeliveryPartnerAccount,
+  updateDeliveryPartnerImage,
 };
