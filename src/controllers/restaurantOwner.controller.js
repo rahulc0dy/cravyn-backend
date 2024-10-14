@@ -9,6 +9,7 @@ import {
   setRefreshToken,
   createRestaurantOwner,
   getRestaurantOwnerById,
+  getRestaurantOwnerByEmail,
   deleteRestaurantOwner,
   updateRestaurantOwnerNamePhoneNo,
   getNonSensitiveRestaurantOwnerInfoById,
@@ -145,7 +146,7 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
     { field: name, message: "name is required.", reason: `name is ${name}` },
     {
       field: panNumber,
-      message: "Date of birth is required.",
+      message: "Pan number is required.",
       reason: `panNumber is ${panNumber}`,
     },
     {
@@ -203,15 +204,16 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
       password
     );
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { ...error },
-          "Something went wrong while registering the restaurantOwner."
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          error,
+          reason: error.message || "Error at restaurant owner creation query",
+        },
+        "Something went wrong while registering the restaurantOwner."
+      )
+    );
   }
 
   if (!restaurantOwner) {

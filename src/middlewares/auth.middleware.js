@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 import { getNonSensitiveCustomerInfoById } from "../db/customer.query.js";
 import { getNonSensitiveManagementTeamInfoById } from "../db/managementTeam.query.js";
+import { getNonSensitiveRestaurantOwnerInfoById } from "../db/restaurantOwner.query.js";
 
 export const verifyJwt = asyncHandler(async (req, res, next) => {
   const token =
@@ -39,7 +40,7 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
         user = await getNonSensitiveManagementTeamInfoById(userId);
         break;
       case "business-team":
-        user = await getNonSensitiveBusinessTeamInfoById(userId);
+        // user = await getNonSensitiveBusinessTeamInfoById(userId);
         break;
 
       default:

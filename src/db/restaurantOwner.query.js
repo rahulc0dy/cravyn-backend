@@ -13,9 +13,15 @@ const getRestaurantOwnerById = async (restaurantOwnerId) => {
   return restaurantOwner;
 };
 
+const getRestaurantOwnerByEmail = async (email) => {
+  const customer =
+    await sql`SELECT * FROM Restaurant_Owner WHERE email_address = ${email};`;
+  return customer;
+};
+
 const getNonSensitiveRestaurantOwnerInfoById = async (restaurantOwnerId) => {
   const restaurantOwner = await sql`
-      SELECT id, name, phone_number, email_address, pan_number, restaurants 
+      SELECT id, name, phone_number, email_address, pan_number 
       FROM Restaurant_Owner 
       WHERE id = ${restaurantOwnerId};
     `;
@@ -27,7 +33,7 @@ const setRefreshToken = async (refreshToken, restaurantOwnerId) => {
     UPDATE Restaurant_Owner
     SET refresh_token = ${refreshToken}
     WHERE id = ${restaurantOwnerId}
-    RETURNING id, name, phone_number, email_address, pan_number, restaurants 
+    RETURNING id, name, phone_number, email_address, pan_number 
   `;
   return restaurantOwner;
 };
@@ -44,7 +50,7 @@ const createRestaurantOwner = async (
     const restaurantOwner = await sql`
       INSERT INTO Restaurant_Owner ( name, phone_number, email_address, pan_number, password)
       VALUES (${name}, ${phoneNumber}, ${email}, ${panNumber}, ${hashedPassword})
-      RETURNING id, name, phone_number, email_address, date_of_birth;
+      RETURNING id, name, phone_number, email_address, pan_number;
     `;
     return restaurantOwner[0];
   } catch (error) {
@@ -83,6 +89,7 @@ const updateRestaurantOwnerNamePhoneNo = async (
 export {
   getRestaurantOwnerByPhoneNo,
   getRestaurantOwnerById,
+  getRestaurantOwnerByEmail,
   getNonSensitiveRestaurantOwnerInfoById,
   setRefreshToken,
   createRestaurantOwner,
