@@ -2,6 +2,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 import { getNonSensitiveCustomerInfoById } from "../db/customer.query.js";
+import { getNonSensitiveManagementTeamInfoById } from "../db/managementTeam.query.js";
+import { getNonSensitiveRestaurantOwnerInfoById } from "../db/restaurantOwner.query.js";
 
 export const verifyJwt = asyncHandler(async (req, res, next) => {
   const token =
@@ -24,9 +26,27 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const customerId = decodedToken?.id;
 
-    const customer = await getNonSensitiveCustomerInfoById(customerId);
+    let user;
+    switch (userType) {
+      case "customer":
+        user = await getNonSensitiveCustomerInfoById(userId);
+        break;
+      case "restaurant-owner":
+        user = await getNonSensitiveRestaurantOwnerInfoById(userId);
+        break;
+      case "management-team":
+        user = await getNonSensitiveManagementTeamInfoById(userId);
+        break;
+      case "business-team":
+        // user = await getNonSensitiveBusinessTeamInfoById(userId);
+        break;
 
-    if (customer.length === 0) {
+      default:
+        user = [];
+        break;
+    }
+
+    if (user.length === 0) {
       return res
         .status(401)
         .json(
