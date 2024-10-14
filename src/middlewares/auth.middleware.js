@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { getNonSensitiveCustomerInfoById } from "../db/customer.query.js";
 import { getNonSensitiveManagementTeamInfoById } from "../db/managementTeam.query.js";
 import { getNonSensitiveRestaurantOwnerInfoById } from "../db/restaurantOwner.query.js";
+import { getNonSensitiveBusinessTeamInfoById } from "../db/businessTeam.query.js";
 
 export const verifyJwt = asyncHandler(async (req, res, next) => {
   const token =
@@ -40,7 +41,7 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
         user = await getNonSensitiveManagementTeamInfoById(userId);
         break;
       case "business-team":
-        // user = await getNonSensitiveBusinessTeamInfoById(userId);
+        user = await getNonSensitiveBusinessTeamInfoById(userId);
         break;
 
       default:
@@ -55,7 +56,7 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
           new ApiResponse(
             401,
             { reason: "Invalid Access Token" },
-            "Customer not found."
+            "User not found."
           )
         );
     }
