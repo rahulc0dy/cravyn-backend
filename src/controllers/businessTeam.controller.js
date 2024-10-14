@@ -10,9 +10,12 @@ import {
   getBusinessTeamByEmail,
   getNonSensitiveBusinessTeamInfoById,
   setRefreshToken,
+  createBusinessTeam,
   deleteBusinessTeam,
+  updateBusinessTeamNamePhoneNo,
 } from "../db/businessTeam.query.js";
 import jwt from "jsonwebtoken";
+import fs from "fs";
 
 const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   if (!req.businessTeam || !req.businessTeam.id) {
@@ -132,6 +135,108 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
           refreshToken,
         },
         "BusinessTeam logged in successfully."
+      )
+    );
+});
+
+const registerBusinessTeam = asyncHandler(async (req, res) => {
+  const { name, phoneNumber, email, password, confirmPassword } = req.body;
+
+  const requiredFields = [
+    { field: name, message: "name is required.", reason: `name is ${name}` },
+    {
+      field: email,
+      message: "email is required.",
+      reason: `email is ${email}`,
+    },
+    {
+      field: phoneNumber,
+      message: "phoneNumber is required.",
+      reason: `phoneNumber is ${phoneNumber}`,
+    },
+    {
+      field: password,
+      message: "Password is required.",
+      reason: `password is ${password}`,
+    },
+    {
+      field: confirmPassword,
+      message: "Confirm password is required.",
+      reason: `confirmPassword is ${confirmPassword}`,
+    },
+  ];
+
+  for (const { field, message, reason } of requiredFields) {
+    if (!field) {
+      return res.status(400).json(new ApiResponse(400, { reason }, message));
+    }
+  }
+
+  if (password !== confirmPassword) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          { reason: "Passwords do not match" },
+          "Password confirmation does not match."
+        )
+      );
+  }
+
+  const existedBusinessTeam = await getBusinessTeamByEmail(email);
+
+  if (existedBusinessTeam.length > 0) {
+    return res
+      .status(409)
+      .json(
+        new ApiResponse(
+          409,
+          { reason: "BusinessTeam already registered" },
+          "BusinessTeam already exists."
+        )
+      );
+  }
+
+  let businessTeam;
+
+  try {
+    businessTeam = await createBusinessTeam(name, phoneNumber, email, password);
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { reason: error.message || "Business team creation query error" },
+          "Something went wrong while registering the businessTeam."
+        )
+      );
+  }
+
+  if (!businessTeam) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { reason: "BusinessTeam is not defined" },
+          "Failed to register businessTeam"
+        )
+      );
+  }
+
+  delete businessTeam.refresh_token;
+  delete businessTeam.profile_image_url;
+  delete businessTeam.password;
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        businessTeam,
+        "BusinessTeam registered successfully."
       )
     );
 });
@@ -367,10 +472,118 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
     );
 });
 
+const updateBusinessTeamAccount = asyncHandler(async (req, res) => {
+  let { name, phoneNumber } = req.body;
+
+  if (!name && !phoneNumber) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          { reason: "No update details provided" },
+          "Please provide details to update"
+        )
+      );
+  }
+
+  const existingDetails = (
+    await getNonSensitiveBusinessTeamInfoById(req.businessTeam.id)
+  )[0];
+
+  name = name ?? existingDetails.name;
+  phoneNumber = phoneNumber ?? existingDetails.phone_number;
+
+  let businessTeam;
+  try {
+    businessTeam = await updateBusinessTeamNamePhoneNo(req.businessTeam.id, {
+      name,
+      phoneNumber,
+    });
+  } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          ...error,
+          reason: error.message || "BusinessTeam could not be updated",
+        },
+        "Failed to update businessTeam details."
+      )
+    );
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { businessTeam: businessTeam[0] },
+        "BusinessTeam details updated."
+      )
+    );
+});
+
+const updateBusinessTeamImage = asyncHandler(async (req, res) => {
+  try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            { reason: `The file passed is ${req.file}` },
+            "No image file uploaded."
+          )
+        );
+    }
+
+    const localFilePath = req.file.path;
+
+    const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
+
+    if (cloudinaryResponse.url) {
+      const businessTeam = await updateBusinessTeamImageUrl(
+        req.businessTeam.id,
+        cloudinaryResponse.url
+      );
+
+      res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            { businessTeam, imageUrl: cloudinaryResponse.url },
+            "Image uploaded successfully."
+          )
+        );
+    } else {
+      throw new Error("Failed to upload image to Cloudinary.");
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { error, reason: error.message || "Image could not be uploaded" },
+          error.message || "Internal server error."
+        )
+      );
+  } finally {
+    if (req.file && req.file.path) {
+      fs.unlinkSync(req.file.path);
+    }
+  }
+});
+
 export {
   getBusinessTeamAccount,
   loginBusinessTeam,
+  registerBusinessTeam,
   logoutBusinessTeam,
   refreshAccessToken,
   deleteBusinessTeamAccount,
+  updateBusinessTeamAccount,
+  updateBusinessTeamImage,
 };

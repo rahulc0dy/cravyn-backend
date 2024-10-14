@@ -10,9 +10,12 @@ import {
   getManagementTeamByEmail,
   getNonSensitiveManagementTeamInfoById,
   setRefreshToken,
+  createManagementTeam,
   deleteManagementTeam,
+  updateManagementTeamNamePhoneNo,
 } from "../db/managementTeam.query.js";
 import jwt from "jsonwebtoken";
+import fs from "fs";
 
 const getManagementTeamAccount = asyncHandler(async (req, res) => {
   if (!req.managementTeam || !req.managementTeam.id) {
@@ -132,6 +135,113 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
           refreshToken,
         },
         "ManagementTeam logged in successfully."
+      )
+    );
+});
+
+const registerManagementTeam = asyncHandler(async (req, res) => {
+  const { name, phoneNumber, email, password, confirmPassword } = req.body;
+
+  const requiredFields = [
+    { field: name, message: "name is required.", reason: `name is ${name}` },
+    {
+      field: email,
+      message: "email is required.",
+      reason: `email is ${email}`,
+    },
+    {
+      field: phoneNumber,
+      message: "phoneNumber is required.",
+      reason: `phoneNumber is ${phoneNumber}`,
+    },
+    {
+      field: password,
+      message: "Password is required.",
+      reason: `password is ${password}`,
+    },
+    {
+      field: confirmPassword,
+      message: "Confirm password is required.",
+      reason: `confirmPassword is ${confirmPassword}`,
+    },
+  ];
+
+  for (const { field, message, reason } of requiredFields) {
+    if (!field) {
+      return res.status(400).json(new ApiResponse(400, { reason }, message));
+    }
+  }
+
+  if (password !== confirmPassword) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          { reason: "Passwords do not match" },
+          "Password confirmation does not match."
+        )
+      );
+  }
+
+  const existedManagementTeam = await getManagementTeamByEmail(email);
+
+  if (existedManagementTeam.length > 0) {
+    return res
+      .status(409)
+      .json(
+        new ApiResponse(
+          409,
+          { reason: "ManagementTeam already registered" },
+          "ManagementTeam already exists."
+        )
+      );
+  }
+
+  let managementTeam;
+
+  try {
+    managementTeam = await createManagementTeam(
+      name,
+      phoneNumber,
+      email,
+      password
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { reason: error.message || "Management team creation query error" },
+          "Something went wrong while registering the managementTeam."
+        )
+      );
+  }
+
+  if (!managementTeam) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { reason: "ManagementTeam is not defined" },
+          "Failed to register managementTeam"
+        )
+      );
+  }
+
+  delete managementTeam.refresh_token;
+  delete managementTeam.profile_image_url;
+  delete managementTeam.password;
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        managementTeam,
+        "ManagementTeam registered successfully."
       )
     );
 });
@@ -367,10 +477,121 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
     );
 });
 
+const updateManagementTeamAccount = asyncHandler(async (req, res) => {
+  let { name, phoneNumber } = req.body;
+
+  if (!name && !phoneNumber) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          400,
+          { reason: "No update details provided" },
+          "Please provide details to update"
+        )
+      );
+  }
+
+  const existingDetails = (
+    await getNonSensitiveManagementTeamInfoById(req.managementTeam.id)
+  )[0];
+
+  name = name ?? existingDetails.name;
+  phoneNumber = phoneNumber ?? existingDetails.phone_number;
+
+  let managementTeam;
+  try {
+    managementTeam = await updateManagementTeamNamePhoneNo(
+      req.managementTeam.id,
+      {
+        name,
+        phoneNumber,
+      }
+    );
+  } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          ...error,
+          reason: error.message || "ManagementTeam could not be updated",
+        },
+        "Failed to update managementTeam details."
+      )
+    );
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { managementTeam: managementTeam[0] },
+        "ManagementTeam details updated."
+      )
+    );
+});
+
+const updateManagementTeamImage = asyncHandler(async (req, res) => {
+  try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            400,
+            { reason: `The file passed is ${req.file}` },
+            "No image file uploaded."
+          )
+        );
+    }
+
+    const localFilePath = req.file.path;
+
+    const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
+
+    if (cloudinaryResponse.url) {
+      const managementTeam = await updateManagementTeamImageUrl(
+        req.managementTeam.id,
+        cloudinaryResponse.url
+      );
+
+      res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            { managementTeam, imageUrl: cloudinaryResponse.url },
+            "Image uploaded successfully."
+          )
+        );
+    } else {
+      throw new Error("Failed to upload image to Cloudinary.");
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          { error, reason: error.message || "Image could not be uploaded" },
+          error.message || "Internal server error."
+        )
+      );
+  } finally {
+    if (req.file && req.file.path) {
+      fs.unlinkSync(req.file.path);
+    }
+  }
+});
+
 export {
   getManagementTeamAccount,
   loginManagementTeam,
+  registerManagementTeam,
   logoutManagementTeam,
   refreshAccessToken,
   deleteManagementTeamAccount,
+  updateManagementTeamAccount,
+  updateManagementTeamImage,
 };

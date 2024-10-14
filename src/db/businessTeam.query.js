@@ -1,4 +1,5 @@
 import { sql } from "./database.js";
+import bcrypt from "bcrypt";
 
 const getBusinessTeamByPhoneNo = async (phoneNumber) => {
   const businessTeam =
@@ -37,10 +38,42 @@ const setRefreshToken = async (refreshToken, businessTeamId) => {
   return businessTeam;
 };
 
+const createBusinessTeam = async (name, phoneNumber, email, password) => {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+    const businessTeam = await sql`
+      INSERT INTO Business_Team (name, phone_number, email_address, password)
+      VALUES (${name}, ${phoneNumber}, ${email}, ${hashedPassword})
+      RETURNING id, name, phone_number, email_address;
+    `;
+    return businessTeam[0];
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 const deleteBusinessTeam = async (businessTeamId) => {
   try {
     const businessTeam =
       await sql`DELETE FROM Business_Team WHERE id=${businessTeamId} RETURNING id, name, phone_number, email_address`;
+    return businessTeam;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const updateBusinessTeamNamePhoneNo = async (
+  businessTeamId,
+  { name, phoneNumber }
+) => {
+  if (!name && !phoneNumber) throw new Error("No update fields provided");
+
+  const query = sql`
+  UPDATE Business_Team SET name = ${name}, phone_number = ${phoneNumber} WHERE id = ${businessTeamId} RETURNING id, name, phone_number, email_address;
+  `;
+
+  try {
+    const businessTeam = await query;
     return businessTeam;
   } catch (error) {
     throw new Error(error);
@@ -53,5 +86,7 @@ export {
   getBusinessTeamByEmail,
   getNonSensitiveBusinessTeamInfoById,
   setRefreshToken,
+  createBusinessTeam,
   deleteBusinessTeam,
+  updateBusinessTeamNamePhoneNo,
 };
