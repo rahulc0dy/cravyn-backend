@@ -6,41 +6,40 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import {
-  getCustomerByEmail,
   setRefreshToken,
-  createCustomer,
-  getCustomerById,
-  deleteCustomer,
-  updateCustomerNamePhoneNo,
-  getNonSensitiveCustomerInfoById,
-  updateCustomerImageUrl,
-} from "../db/customer.query.js";
+  createRestaurantOwner,
+  getRestaurantOwnerById,
+  getRestaurantOwnerByEmail,
+  deleteRestaurantOwner,
+  updateRestaurantOwnerNamePhoneNo,
+  getNonSensitiveRestaurantOwnerInfoById,
+} from "../db/restaurantOwner.query.js";
 import jwt from "jsonwebtoken";
-import fs from "fs";
-import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 
-const getCustomerAccount = asyncHandler(async (req, res) => {
-  if (!req.customer || !req.customer.id) {
+const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
+  if (!req.restaurantOwner || !req.restaurantOwner.id) {
     res
       .status(401)
       .json(
         new ApiResponse(
           401,
-          { reason: `req.customer is ${req.customer}` },
+          { reason: `req.restaurantOwner is ${req.restaurantOwner}` },
           "Unauthorised Access."
         )
       );
   }
 
-  const customer = (await getNonSensitiveCustomerInfoById(req.customer.id))[0];
+  const restaurantOwner = (
+    await getNonSensitiveRestaurantOwnerInfoById(req.restaurantOwner.id)
+  )[0];
 
-  if (!customer) {
+  if (!restaurantOwner) {
     res
       .status(404)
       .json(
         new ApiResponse(
           404,
-          { reason: `Customer not found by id` },
+          { reason: `RestaurantOwner not found by id` },
           "User not found."
         )
       );
@@ -48,10 +47,16 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, { customer }, "Customer obtained successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { restaurantOwner },
+        "RestaurantOwner obtained successfully"
+      )
+    );
 });
 
-const loginCustomer = asyncHandler(async (req, res) => {
+const loginRestaurantOwner = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const requiredFields = [
@@ -73,20 +78,20 @@ const loginCustomer = asyncHandler(async (req, res) => {
     }
   }
 
-  let customer = await getCustomerByEmail(email);
+  let restaurantOwner = await getRestaurantOwnerByEmail(email);
 
-  if (customer.length <= 0) {
+  if (restaurantOwner.length <= 0) {
     return res
       .status(503)
       .json(
         new ApiResponse(
           401,
-          { reason: "No customer found with given credentials" },
+          { reason: "No restaurantOwner found with given credentials" },
           "Phone number is not registered."
         )
       );
   }
-  const correctPassword = customer[0].password;
+  const correctPassword = restaurantOwner[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
@@ -101,20 +106,20 @@ const loginCustomer = asyncHandler(async (req, res) => {
         )
       );
   }
-  const accessToken = generateAccessToken(customer[0]);
-  const refreshToken = generateRefreshToken(customer[0]);
+  const accessToken = generateAccessToken(restaurantOwner[0]);
+  const refreshToken = generateRefreshToken(restaurantOwner[0]);
 
-  const customerId = customer[0].id;
+  const restaurantOwnerId = restaurantOwner[0].id;
 
-  customer = await setRefreshToken(refreshToken, customerId);
+  restaurantOwner = await setRefreshToken(refreshToken, restaurantOwnerId);
 
   const options = {
     httpOnly: true,
     secure: true,
   };
 
-  delete customer[0].refresh_token;
-  delete customer[0].password;
+  delete restaurantOwner[0].refresh_token;
+  delete restaurantOwner[0].password;
 
   return res
     .status(200)
@@ -124,30 +129,25 @@ const loginCustomer = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          customer: customer[0],
+          restaurantOwner: restaurantOwner[0],
           accessToken,
           refreshToken,
         },
-        "Customer logged in successfully."
+        "RestaurantOwner logged in successfully."
       )
     );
 });
 
-const registerCustomer = asyncHandler(async (req, res) => {
-  const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
+const registerRestaurantOwner = asyncHandler(async (req, res) => {
+  const { name, phoneNumber, email, panNumber, password, confirmPassword } =
     req.body;
 
   const requiredFields = [
     { field: name, message: "name is required.", reason: `name is ${name}` },
     {
-      field: email,
-      message: "email is required.",
-      reason: `email is ${email}`,
-    },
-    {
-      field: dateOfBirth,
-      message: "Date of birth is required.",
-      reason: `dateOfBirth is ${dateOfBirth}`,
+      field: panNumber,
+      message: "Pan number is required.",
+      reason: `panNumber is ${panNumber}`,
     },
     {
       field: password,
@@ -179,66 +179,73 @@ const registerCustomer = asyncHandler(async (req, res) => {
       );
   }
 
-  const existedCustomer = await getCustomerByEmail(email);
+  const existedRestaurantOwner = await getRestaurantOwnerByEmail(email);
 
-  if (existedCustomer.length > 0) {
+  if (existedRestaurantOwner.length > 0) {
     return res
       .status(409)
       .json(
         new ApiResponse(
           409,
-          { reason: "Customer already registered" },
-          "Customer already exists."
+          { reason: "RestaurantOwner already registered" },
+          "RestaurantOwner already exists."
         )
       );
   }
 
-  let customer;
+  let restaurantOwner;
 
   try {
-    customer = await createCustomer(
+    restaurantOwner = await createRestaurantOwner(
       name,
       phoneNumber,
       email,
-      dateOfBirth,
+      panNumber,
       password
     );
   } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          error,
+          reason: error.message || "Error at restaurant owner creation query",
+        },
+        "Something went wrong while registering the restaurantOwner."
+      )
+    );
+  }
+
+  if (!restaurantOwner) {
     return res
       .status(500)
       .json(
         new ApiResponse(
           500,
-          { ...error },
-          "Something went wrong while registering the customer."
+          { reason: "RestaurantOwner is not defined" },
+          "Failed to register restaurantOwner"
         )
       );
   }
 
-  if (!customer) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { reason: "Customer is not defined" },
-          "Failed to register customer"
-        )
-      );
-  }
-
-  delete customer.refresh_token;
-  delete customer.profile_image_url;
-  delete customer.password;
+  delete restaurantOwner.refresh_token;
+  delete restaurantOwner.profile_image_url;
+  delete restaurantOwner.password;
 
   return res
     .status(201)
-    .json(new ApiResponse(201, customer, "Customer registered successfully."));
+    .json(
+      new ApiResponse(
+        201,
+        restaurantOwner,
+        "RestaurantOwner registered successfully."
+      )
+    );
 });
 
-const logoutCustomer = asyncHandler(async (req, res) => {
+const logoutRestaurantOwner = asyncHandler(async (req, res) => {
   try {
-    await setRefreshToken("NULL", req.customer.id);
+    await setRefreshToken("NULL", req.restaurantOwner.id);
   } catch (error) {
     return res
       .status(500)
@@ -246,7 +253,7 @@ const logoutCustomer = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           { ...error },
-          "Unable to fetch the logged in customer."
+          "Unable to fetch the logged in restaurantOwner."
         )
       );
   }
@@ -264,7 +271,7 @@ const logoutCustomer = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Logout successful" },
-        "Customer logged out successfully."
+        "RestaurantOwner logged out successfully."
       )
     );
 });
@@ -291,11 +298,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    let customer = await getCustomerById(decodedToken.id);
+    let restaurantOwner = await getRestaurantOwnerById(decodedToken.id);
 
-    customer = customer[0];
+    restaurantOwner = restaurantOwner[0];
 
-    if (!customer) {
+    if (!restaurantOwner) {
       return res
         .status(500)
         .json(
@@ -307,7 +314,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         );
     }
 
-    if (incomingRefreshToken !== customer?.refresh_token)
+    if (incomingRefreshToken !== restaurantOwner?.refresh_token)
       res
         .status(401)
         .json(
@@ -323,8 +330,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       secure: true,
     };
 
-    const accessToken = generateAccessToken(customer);
-    const newRefreshToken = generateRefreshToken(customer);
+    const accessToken = generateAccessToken(restaurantOwner);
+    const newRefreshToken = generateRefreshToken(restaurantOwner);
 
     return res
       .status(200)
@@ -353,7 +360,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-const deleteCustomerAccount = asyncHandler(async (req, res) => {
+const deleteRestaurantOwnerAccount = asyncHandler(async (req, res) => {
   const { refreshToken, password } = req.body;
 
   const requiredFields = [
@@ -374,25 +381,25 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       return res.status(400).json(new ApiResponse(400, { reason }, message));
     }
   }
-  let customer;
+  let restaurantOwner;
 
   try {
     const decodedToken = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
-    const customerId = decodedToken?.id;
+    const restaurantOwnerId = decodedToken?.id;
 
-    customer = await getCustomerById(customerId);
+    restaurantOwner = await getRestaurantOwnerById(restaurantOwnerId);
 
-    if (customer.length === 0) {
+    if (restaurantOwner.length === 0) {
       return res
         .status(401)
         .json(
           new ApiResponse(
             401,
             { reason: "Invalid Refresh Token." },
-            "Customer not found"
+            "RestaurantOwner not found"
           )
         );
     }
@@ -408,18 +415,18 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       );
   }
 
-  if (customer.length <= 0) {
+  if (restaurantOwner.length <= 0) {
     return res
       .status(503)
       .json(
         new ApiResponse(
           401,
-          { reason: "Unable to get customer" },
+          { reason: "Unable to get restaurantOwner" },
           "Phone number is not registered"
         )
       );
   }
-  const correctPassword = customer[0].password;
+  const correctPassword = restaurantOwner[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
@@ -436,17 +443,18 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
   }
 
   try {
-    await deleteCustomer(customer[0].id);
+    await deleteRestaurantOwner(restaurantOwner[0].id);
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { ...error, reason: "Unable to fetch the logged in customer." },
-          "Failed to delete Customer"
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          ...error,
+          reason: "Unable to fetch the logged in restaurantOwner.",
+        },
+        "Failed to delete RestaurantOwner"
+      )
+    );
   }
 
   const options = {
@@ -462,36 +470,39 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Deletion successful" },
-        "Customer deleted out successfully."
+        "RestaurantOwner deleted out successfully."
       )
     );
 });
 
-const updateCustomerAccount = asyncHandler(async (req, res) => {
+const updateRestaurantOwnerAccount = asyncHandler(async (req, res) => {
   let { name, phoneNumber } = req.body;
 
   const existingDetails = (
-    await getNonSensitiveCustomerInfoById(req.customer.id)
+    await getNonSensitiveRestaurantOwnerInfoById(req.restaurantOwner.id)
   )[0];
 
   name = name ?? existingDetails.name;
   phoneNumber = phoneNumber ?? existingDetails.phone_number;
 
-  let customer;
+  let restaurantOwner;
   try {
-    customer = await updateCustomerNamePhoneNo(req.customer.id, {
-      name,
-      phoneNumber,
-    });
+    restaurantOwner = await updateRestaurantOwnerNamePhoneNo(
+      req.restaurantOwner.id,
+      {
+        name,
+        phoneNumber,
+      }
+    );
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
         500,
         {
           ...error,
-          reason: error.message || "Customer could not be updated",
+          reason: error.message || "RestaurantOwner could not be updated",
         },
-        "Failed to update customer details."
+        "Failed to update restaurantOwner details."
       )
     );
   }
@@ -501,13 +512,13 @@ const updateCustomerAccount = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { customer: customer[0] },
-        "Customer details updated."
+        { restaurantOwner: restaurantOwner[0] },
+        "RestaurantOwner details updated."
       )
     );
 });
 
-const updateCustomerImage = asyncHandler(async (req, res) => {
+const updateRestaurantOwnerImage = asyncHandler(async (req, res) => {
   try {
     if (!req.file) {
       return res
@@ -526,8 +537,8 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
     const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
 
     if (cloudinaryResponse.url) {
-      const customer = await updateCustomerImageUrl(
-        req.customer.id,
+      const restaurantOwner = await updateRestaurantOwnerImageUrl(
+        req.restaurantOwner.id,
         cloudinaryResponse.url
       );
 
@@ -536,7 +547,7 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(
             200,
-            { customer, imageUrl: cloudinaryResponse.url },
+            { restaurantOwner, imageUrl: cloudinaryResponse.url },
             "Image uploaded successfully."
           )
         );
@@ -561,12 +572,11 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
 });
 
 export {
-  getCustomerAccount,
-  loginCustomer,
-  registerCustomer,
-  logoutCustomer,
+  getRestaurantOwnerAccount,
+  loginRestaurantOwner,
+  registerRestaurantOwner,
+  logoutRestaurantOwner,
   refreshAccessToken,
-  deleteCustomerAccount,
-  updateCustomerAccount,
-  updateCustomerImage,
+  deleteRestaurantOwnerAccount,
+  updateRestaurantOwnerAccount,
 };
