@@ -537,7 +537,7 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(
             200,
-            { customer, imageUrl: cloudinaryResponse.url },
+            { customer: customer[0], imageUrl: cloudinaryResponse.url },
             "Image uploaded successfully."
           )
         );

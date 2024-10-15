@@ -577,7 +577,10 @@ const updateDeliveryPartnerImage = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(
             200,
-            { deliveryPartner, imageUrl: cloudinaryResponse.url },
+            {
+              deliveryPartner: deliveryPartner[0],
+              imageUrl: cloudinaryResponse.url,
+            },
             "Image uploaded successfully."
           )
         );
