@@ -6,41 +6,43 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import {
-  getCustomerByEmail,
+  getDeliveryPartnerByEmail,
   setRefreshToken,
-  createCustomer,
-  getCustomerById,
-  deleteCustomer,
-  updateCustomerNamePhoneNo,
-  getNonSensitiveCustomerInfoById,
-  updateCustomerImageUrl,
-} from "../db/customer.query.js";
+  createDeliveryPartner,
+  getDeliveryPartnerById,
+  deleteDeliveryPartner,
+  getNonSensitiveDeliveryPartnerInfoById,
+  updateDeliveryPartnerImageUrl,
+  updateDeliveryPartnerNamePhoneNoVehicleAvailability,
+} from "../db/deliveryPartner.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 
-const getCustomerAccount = asyncHandler(async (req, res) => {
-  if (!req.customer || !req.customer.id) {
+const getDeliveryPartnerAccount = asyncHandler(async (req, res) => {
+  if (!req.deliveryPartner || !req.deliveryPartner.id) {
     res
       .status(401)
       .json(
         new ApiResponse(
           401,
-          { reason: `req.customer is ${req.customer}` },
+          { reason: `req.deliveryPartner is ${req.deliveryPartner}` },
           "Unauthorised Access."
         )
       );
   }
 
-  const customer = (await getNonSensitiveCustomerInfoById(req.customer.id))[0];
+  const deliveryPartner = (
+    await getNonSensitiveDeliveryPartnerInfoById(req.deliveryPartner.id)
+  )[0];
 
-  if (!customer) {
+  if (!deliveryPartner) {
     res
       .status(404)
       .json(
         new ApiResponse(
           404,
-          { reason: `Customer not found by id` },
+          { reason: `DeliveryPartner not found by id` },
           "User not found."
         )
       );
@@ -48,10 +50,16 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, { customer }, "Customer obtained successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { deliveryPartner },
+        "DeliveryPartner obtained successfully"
+      )
+    );
 });
 
-const loginCustomer = asyncHandler(async (req, res) => {
+const loginDeliveryPartner = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const requiredFields = [
@@ -73,20 +81,20 @@ const loginCustomer = asyncHandler(async (req, res) => {
     }
   }
 
-  let customer = await getCustomerByEmail(email);
+  let deliveryPartner = await getDeliveryPartnerByEmail(email);
 
-  if (customer.length <= 0) {
+  if (deliveryPartner.length <= 0) {
     return res
       .status(503)
       .json(
         new ApiResponse(
           401,
-          { reason: "No customer found with given credentials" },
+          { reason: "No deliveryPartner found with given credentials" },
           "Phone number is not registered."
         )
       );
   }
-  const correctPassword = customer[0].password;
+  const correctPassword = deliveryPartner[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
@@ -101,20 +109,20 @@ const loginCustomer = asyncHandler(async (req, res) => {
         )
       );
   }
-  const accessToken = generateAccessToken(customer[0]);
-  const refreshToken = generateRefreshToken(customer[0]);
+  const accessToken = generateAccessToken(deliveryPartner[0]);
+  const refreshToken = generateRefreshToken(deliveryPartner[0]);
 
-  const customerId = customer[0].id;
+  const deliveryPartnerId = deliveryPartner[0].id;
 
-  customer = await setRefreshToken(refreshToken, customerId);
+  deliveryPartner = await setRefreshToken(refreshToken, deliveryPartnerId);
 
   const options = {
     httpOnly: true,
     secure: true,
   };
 
-  delete customer[0].refresh_token;
-  delete customer[0].password;
+  delete deliveryPartner[0].refresh_token;
+  delete deliveryPartner[0].password;
 
   return res
     .status(200)
@@ -124,18 +132,25 @@ const loginCustomer = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          customer: customer[0],
+          deliveryPartner: deliveryPartner[0],
           accessToken,
           refreshToken,
         },
-        "Customer logged in successfully."
+        "DeliveryPartner logged in successfully."
       )
     );
 });
 
-const registerCustomer = asyncHandler(async (req, res) => {
-  const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
-    req.body;
+const registerDeliveryPartner = asyncHandler(async (req, res) => {
+  const {
+    name,
+    phoneNumber,
+    email,
+    vehicleType,
+    availability,
+    password,
+    confirmPassword,
+  } = req.body;
 
   const requiredFields = [
     { field: name, message: "name is required.", reason: `name is ${name}` },
@@ -145,9 +160,19 @@ const registerCustomer = asyncHandler(async (req, res) => {
       reason: `email is ${email}`,
     },
     {
-      field: dateOfBirth,
-      message: "Date of birth is required.",
-      reason: `dateOfBirth is ${dateOfBirth}`,
+      field: phoneNumber,
+      message: "Phone number is required.",
+      reason: `phoneNumber is ${phoneNumber}`,
+    },
+    {
+      field: vehicleType,
+      message: "Vehicle type is required.",
+      reason: `vehicleType is ${vehicleType}`,
+    },
+    {
+      field: availability,
+      message: "availability is required.",
+      reason: `availability is ${availability}`,
     },
     {
       field: password,
@@ -179,67 +204,74 @@ const registerCustomer = asyncHandler(async (req, res) => {
       );
   }
 
-  const existedCustomer = await getCustomerByEmail(email);
+  const existedDeliveryPartner = await getDeliveryPartnerByEmail(email);
 
-  if (existedCustomer.length > 0) {
+  if (existedDeliveryPartner.length > 0) {
     return res
       .status(409)
       .json(
         new ApiResponse(
           409,
-          { reason: "Customer already registered" },
-          "Customer already exists."
+          { reason: "DeliveryPartner already registered" },
+          "DeliveryPartner already exists."
         )
       );
   }
 
-  let customer;
+  let deliveryPartner;
 
   try {
-    customer = await createCustomer(
+    deliveryPartner = await createDeliveryPartner({
       name,
       phoneNumber,
       email,
-      dateOfBirth,
-      password
-    );
+      vehicleType,
+      availability,
+      password,
+    });
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
         500,
         {
           error,
-          reason: error.message || "Error at customer controller",
+          reason: error.message || "Error at delivery partner controller",
         },
-        "Something went wrong while registering the customer."
+        "Something went wrong while registering the deliveryPartner."
       )
     );
   }
 
-  if (!customer) {
+  if (!deliveryPartner) {
     return res
       .status(500)
       .json(
         new ApiResponse(
           500,
-          { reason: "Customer is not defined" },
-          "Failed to register customer"
+          { reason: "DeliveryPartner is not defined" },
+          "Failed to register deliveryPartner"
         )
       );
   }
 
-  delete customer.refresh_token;
-  delete customer.profile_image_url;
-  delete customer.password;
+  delete deliveryPartner.refresh_token;
+  delete deliveryPartner.profile_image_url;
+  delete deliveryPartner.password;
 
   return res
     .status(201)
-    .json(new ApiResponse(201, customer, "Customer registered successfully."));
+    .json(
+      new ApiResponse(
+        201,
+        deliveryPartner,
+        "DeliveryPartner registered successfully."
+      )
+    );
 });
 
-const logoutCustomer = asyncHandler(async (req, res) => {
+const logoutDeliveryPartner = asyncHandler(async (req, res) => {
   try {
-    await setRefreshToken("NULL", req.customer.id);
+    await setRefreshToken("NULL", req.deliveryPartner.id);
   } catch (error) {
     return res
       .status(500)
@@ -247,7 +279,7 @@ const logoutCustomer = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           { ...error },
-          "Unable to fetch the logged in customer."
+          "Unable to fetch the logged in deliveryPartner."
         )
       );
   }
@@ -265,7 +297,7 @@ const logoutCustomer = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Logout successful" },
-        "Customer logged out successfully."
+        "DeliveryPartner logged out successfully."
       )
     );
 });
@@ -292,11 +324,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    let customer = await getCustomerById(decodedToken.id);
+    let deliveryPartner = await getDeliveryPartnerById(decodedToken.id);
 
-    customer = customer[0];
+    deliveryPartner = deliveryPartner[0];
 
-    if (!customer) {
+    if (!deliveryPartner) {
       return res
         .status(500)
         .json(
@@ -308,7 +340,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         );
     }
 
-    if (incomingRefreshToken !== customer?.refresh_token)
+    if (incomingRefreshToken !== deliveryPartner?.refresh_token)
       res
         .status(401)
         .json(
@@ -324,8 +356,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       secure: true,
     };
 
-    const accessToken = generateAccessToken(customer);
-    const newRefreshToken = generateRefreshToken(customer);
+    const accessToken = generateAccessToken(deliveryPartner);
+    const newRefreshToken = generateRefreshToken(deliveryPartner);
 
     return res
       .status(200)
@@ -354,7 +386,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-const deleteCustomerAccount = asyncHandler(async (req, res) => {
+const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
   const { refreshToken, password } = req.body;
 
   const requiredFields = [
@@ -375,25 +407,25 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       return res.status(400).json(new ApiResponse(400, { reason }, message));
     }
   }
-  let customer;
+  let deliveryPartner;
 
   try {
     const decodedToken = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
-    const customerId = decodedToken?.id;
+    const deliveryPartnerId = decodedToken?.id;
 
-    customer = await getCustomerById(customerId);
+    deliveryPartner = await getDeliveryPartnerById(deliveryPartnerId);
 
-    if (customer.length === 0) {
+    if (deliveryPartner.length === 0) {
       return res
         .status(401)
         .json(
           new ApiResponse(
             401,
             { reason: "Invalid Refresh Token." },
-            "Customer not found"
+            "DeliveryPartner not found"
           )
         );
     }
@@ -409,18 +441,18 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       );
   }
 
-  if (customer.length <= 0) {
+  if (deliveryPartner.length <= 0) {
     return res
       .status(503)
       .json(
         new ApiResponse(
           401,
-          { reason: "Unable to get customer" },
+          { reason: "Unable to get deliveryPartner" },
           "Phone number is not registered"
         )
       );
   }
-  const correctPassword = customer[0].password;
+  const correctPassword = deliveryPartner[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
@@ -437,17 +469,18 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
   }
 
   try {
-    await deleteCustomer(customer[0].id);
+    await deleteDeliveryPartner(deliveryPartner[0].id);
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { ...error, reason: "Unable to fetch the logged in customer." },
-          "Failed to delete Customer"
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          ...error,
+          reason: "Unable to fetch the logged in deliveryPartner.",
+        },
+        "Failed to delete DeliveryPartner"
+      )
+    );
   }
 
   const options = {
@@ -463,36 +496,43 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Deletion successful" },
-        "Customer deleted out successfully."
+        "DeliveryPartner deleted out successfully."
       )
     );
 });
 
-const updateCustomerAccount = asyncHandler(async (req, res) => {
-  let { name, phoneNumber } = req.body;
+const updateDeliveryPartnerAccount = asyncHandler(async (req, res) => {
+  let { name, phoneNumber, vehicleType, availability } = req.body;
 
   const existingDetails = (
-    await getNonSensitiveCustomerInfoById(req.customer.id)
+    await getNonSensitiveDeliveryPartnerInfoById(req.deliveryPartner.id)
   )[0];
 
   name = name ?? existingDetails.name;
   phoneNumber = phoneNumber ?? existingDetails.phone_number;
+  vehicleType = vehicleType ?? existingDetails.vehicle_type;
+  availability = availability ?? existingDetails.availability;
 
-  let customer;
+  let deliveryPartner;
   try {
-    customer = await updateCustomerNamePhoneNo(req.customer.id, {
-      name,
-      phoneNumber,
-    });
+    deliveryPartner = await updateDeliveryPartnerNamePhoneNoVehicleAvailability(
+      req.deliveryPartner.id,
+      {
+        name,
+        phoneNumber,
+        vehicleType,
+        availability,
+      }
+    );
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
         500,
         {
           ...error,
-          reason: error.message || "Customer could not be updated",
+          reason: error.message || "DeliveryPartner could not be updated",
         },
-        "Failed to update customer details."
+        "Failed to update deliveryPartner details."
       )
     );
   }
@@ -502,13 +542,13 @@ const updateCustomerAccount = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { customer: customer[0] },
-        "Customer details updated."
+        { deliveryPartner: deliveryPartner[0] },
+        "DeliveryPartner details updated."
       )
     );
 });
 
-const updateCustomerImage = asyncHandler(async (req, res) => {
+const updateDeliveryPartnerImage = asyncHandler(async (req, res) => {
   try {
     if (!req.file) {
       return res
@@ -527,8 +567,8 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
     const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
 
     if (cloudinaryResponse.url) {
-      const customer = await updateCustomerImageUrl(
-        req.customer.id,
+      const deliveryPartner = await updateDeliveryPartnerImageUrl(
+        req.deliveryPartner.id,
         cloudinaryResponse.url
       );
 
@@ -537,7 +577,10 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(
             200,
-            { customer: customer[0], imageUrl: cloudinaryResponse.url },
+            {
+              deliveryPartner: deliveryPartner[0],
+              imageUrl: cloudinaryResponse.url,
+            },
             "Image uploaded successfully."
           )
         );
@@ -562,12 +605,12 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
 });
 
 export {
-  getCustomerAccount,
-  loginCustomer,
-  registerCustomer,
-  logoutCustomer,
+  getDeliveryPartnerAccount,
+  loginDeliveryPartner,
+  registerDeliveryPartner,
+  logoutDeliveryPartner,
   refreshAccessToken,
-  deleteCustomerAccount,
-  updateCustomerAccount,
-  updateCustomerImage,
+  deleteDeliveryPartnerAccount,
+  updateDeliveryPartnerAccount,
+  updateDeliveryPartnerImage,
 };
