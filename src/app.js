@@ -6,6 +6,7 @@ import customerRouter from "./routes/customer.routes.js";
 import managementTeamRouter from "./routes/managementTeam.routes.js";
 import businessTeamRouter from "./routes/businessTeam.routes.js";
 import restaurantOwnerRouter from "./routes/restaurantOwner.routes.js";
+import restaurantRouter from "./routes/restaurant.routes.js";
 import deliveryPartnerRouter from "./routes/deliveryPartner.routes.js";
 
 const app = express();
@@ -28,5 +29,6 @@ app.use("/api/v1/delivery-partner", deliveryPartnerRouter);
 app.use("/api/v1/management-team", managementTeamRouter);
 app.use("/api/v1/business-team", businessTeamRouter);
 app.use("/api/v1/restaurant-owner", restaurantOwnerRouter);
+app.use("/api/v1/restaurant", restaurantRouter);
 
 export { app };
