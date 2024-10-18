@@ -1,8 +1,21 @@
 import { Router } from "express";
-import { addRestaurant } from "../controllers/restaurant.controller.js";
+import {
+  addRestaurant,
+  getRestaurant,
+  updateRestaurant,
+  deleteRestaurant,
+  verifyRestaurant,
+} from "../controllers/restaurant.controller.js";
 
 const router = Router();
 
-router.route("/add").post(addRestaurant);
+router
+  .route("/")
+  .get(getRestaurant)
+  .post(addRestaurant)
+  .patch(updateRestaurant)
+  .delete(deleteRestaurant);
+
+router.route("/verify").post(verifyRestaurant);
 
 export default router;
