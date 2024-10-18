@@ -82,12 +82,12 @@ const loginRestaurantOwner = asyncHandler(async (req, res) => {
 
   if (restaurantOwner.length <= 0) {
     return res
-      .status(503)
+      .status(404)
       .json(
         new ApiResponse(
-          401,
+          404,
           { reason: "No restaurantOwner found with given credentials" },
-          "Phone number is not registered."
+          "Email is not registered."
         )
       );
   }
@@ -148,6 +148,16 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
       field: panNumber,
       message: "Pan number is required.",
       reason: `panNumber is ${panNumber}`,
+    },
+    {
+      field: email,
+      message: "Email is required.",
+      reason: `email is ${email}`,
+    },
+    {
+      field: phoneNumber,
+      message: "Phone number is required.",
+      reason: `phoneNumber is ${phoneNumber}`,
     },
     {
       field: password,
@@ -252,8 +262,8 @@ const logoutRestaurantOwner = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           500,
-          { ...error },
-          "Unable to fetch the logged in restaurantOwner."
+          { reason: error.message || "Unable to set refresh token" },
+          "Unable to fetch restaurant owner."
         )
       );
   }
@@ -271,7 +281,7 @@ const logoutRestaurantOwner = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Logout successful" },
-        "RestaurantOwner logged out successfully."
+        "Restaurant owner logged out successfully."
       )
     );
 });
@@ -287,7 +297,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         ApiResponse(
           401,
           { reason: "Request unauthorised" },
-          "Unauthorized request"
+          "Unauthorized request."
         )
       );
   }
@@ -304,12 +314,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     if (!restaurantOwner) {
       return res
-        .status(500)
+        .status(401)
         .json(
           new ApiResponse(
             401,
             { reason: "Token verification failed" },
-            "Invalid refresh token"
+            "Invalid refresh token."
           )
         );
     }
@@ -399,30 +409,30 @@ const deleteRestaurantOwnerAccount = asyncHandler(async (req, res) => {
           new ApiResponse(
             401,
             { reason: "Invalid Refresh Token." },
-            "RestaurantOwner not found"
+            "Restaurant owner not found."
           )
         );
     }
   } catch (error) {
+    return res.status(401).json(
+      new ApiResponse(
+        401,
+        {
+          reason: error?.message || "Refresh token could not be verified",
+        },
+        "Invalid request."
+      )
+    );
+  }
+
+  if (restaurantOwner.length <= 0) {
     return res
       .status(401)
       .json(
         new ApiResponse(
           401,
-          { ...error, reason: "Refresh token could not be verified" },
-          error?.message || "Invalid request"
-        )
-      );
-  }
-
-  if (restaurantOwner.length <= 0) {
-    return res
-      .status(503)
-      .json(
-        new ApiResponse(
-          401,
           { reason: "Unable to get restaurantOwner" },
-          "Phone number is not registered"
+          "Email is not registered."
         )
       );
   }
@@ -452,7 +462,7 @@ const deleteRestaurantOwnerAccount = asyncHandler(async (req, res) => {
           ...error,
           reason: "Unable to fetch the logged in restaurantOwner.",
         },
-        "Failed to delete RestaurantOwner"
+        "Failed to delete restaurant owner."
       )
     );
   }
@@ -560,8 +570,8 @@ const updateRestaurantOwnerImage = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           500,
-          { error, reason: error.message || "Image could not be uploaded" },
-          error.message || "Internal server error."
+          { reason: error.message || "Image could not be uploaded" },
+          "Internal server error."
         )
       );
   } finally {
