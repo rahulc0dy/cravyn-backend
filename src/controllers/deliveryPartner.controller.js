@@ -54,7 +54,7 @@ const getDeliveryPartnerAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { deliveryPartner },
-        "DeliveryPartner obtained successfully"
+        "Delivery partner obtained successfully."
       )
     );
 });
@@ -85,12 +85,12 @@ const loginDeliveryPartner = asyncHandler(async (req, res) => {
 
   if (deliveryPartner.length <= 0) {
     return res
-      .status(503)
+      .status(404)
       .json(
         new ApiResponse(
-          401,
+          404,
           { reason: "No deliveryPartner found with given credentials" },
-          "Phone number is not registered."
+          "Email is not registered."
         )
       );
   }
@@ -136,7 +136,7 @@ const loginDeliveryPartner = asyncHandler(async (req, res) => {
           accessToken,
           refreshToken,
         },
-        "DeliveryPartner logged in successfully."
+        "Delivery partner logged in successfully."
       )
     );
 });
@@ -213,7 +213,7 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
         new ApiResponse(
           409,
           { reason: "DeliveryPartner already registered" },
-          "DeliveryPartner already exists."
+          "Delivery partner account already exists."
         )
       );
   }
@@ -237,7 +237,7 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
           error,
           reason: error.message || "Error at delivery partner controller",
         },
-        "Something went wrong while registering the deliveryPartner."
+        "Something went wrong while registering the delivery partner."
       )
     );
   }
@@ -249,7 +249,7 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           { reason: "DeliveryPartner is not defined" },
-          "Failed to register deliveryPartner"
+          "Failed to register delivery partner."
         )
       );
   }
@@ -264,7 +264,7 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
       new ApiResponse(
         201,
         deliveryPartner,
-        "DeliveryPartner registered successfully."
+        "Delivery partner registered successfully."
       )
     );
 });
@@ -279,7 +279,7 @@ const logoutDeliveryPartner = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           { ...error },
-          "Unable to fetch the logged in deliveryPartner."
+          "Unable to fetch the logged in delivery partner."
         )
       );
   }
@@ -297,7 +297,7 @@ const logoutDeliveryPartner = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Logout successful" },
-        "DeliveryPartner logged out successfully."
+        "Delivery partner logged out successfully."
       )
     );
 });
@@ -313,7 +313,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         ApiResponse(
           401,
           { reason: "Request unauthorised" },
-          "Unauthorized request"
+          "Unauthorized request."
         )
       );
   }
@@ -330,12 +330,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     if (!deliveryPartner) {
       return res
-        .status(500)
+        .status(401)
         .json(
           new ApiResponse(
             401,
             { reason: "Token verification failed" },
-            "Invalid refresh token"
+            "Invalid refresh token."
           )
         );
     }
@@ -347,7 +347,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
           new ApiResponse(
             401,
             { reason: "Tokens do not match" },
-            "Unable to reinstate session"
+            "Unable to reinstate session."
           )
         );
 
@@ -370,19 +370,20 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             accessToken: accessToken,
             refreshToken: newRefreshToken,
           },
-          "Session is reinitialised"
+          "Session is reinitialised."
         )
       );
   } catch (error) {
-    res
-      .status(401)
-      .json(
-        new ApiResponse(
-          401,
-          { ...error, reason: "Error occured while trying to refresh token" },
-          error?.message || "Invalid refresh token"
-        )
-      );
+    res.status(401).json(
+      new ApiResponse(
+        401,
+        {
+          reason:
+            error?.message || "Error occured while trying to refresh token",
+        },
+        "Invalid refresh token."
+      )
+    );
   }
 });
 
@@ -425,30 +426,30 @@ const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
           new ApiResponse(
             401,
             { reason: "Invalid Refresh Token." },
-            "DeliveryPartner not found"
+            "Delivery partner account not found."
           )
         );
     }
   } catch (error) {
+    return res.status(401).json(
+      new ApiResponse(
+        401,
+        {
+          reason: error?.message || "Refresh token could not be verified",
+        },
+        "Invalid request."
+      )
+    );
+  }
+
+  if (deliveryPartner.length <= 0) {
     return res
       .status(401)
       .json(
         new ApiResponse(
           401,
-          { ...error, reason: "Refresh token could not be verified" },
-          error?.message || "Invalid request"
-        )
-      );
-  }
-
-  if (deliveryPartner.length <= 0) {
-    return res
-      .status(503)
-      .json(
-        new ApiResponse(
-          401,
           { reason: "Unable to get deliveryPartner" },
-          "Phone number is not registered"
+          "Email is not registered."
         )
       );
   }
@@ -475,10 +476,10 @@ const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         500,
         {
-          ...error,
-          reason: "Unable to fetch the logged in deliveryPartner.",
+          reason:
+            error.message || "Unable to fetch the logged in deliveryPartner.",
         },
-        "Failed to delete DeliveryPartner"
+        "Failed to delete Delivery partner."
       )
     );
   }
@@ -496,7 +497,7 @@ const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Deletion successful" },
-        "DeliveryPartner deleted out successfully."
+        "Delivery partner deleted out successfully."
       )
     );
 });
@@ -529,7 +530,6 @@ const updateDeliveryPartnerAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         500,
         {
-          ...error,
           reason: error.message || "DeliveryPartner could not be updated",
         },
         "Failed to update deliveryPartner details."
@@ -543,7 +543,7 @@ const updateDeliveryPartnerAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { deliveryPartner: deliveryPartner[0] },
-        "DeliveryPartner details updated."
+        "Delivery partner details updated."
       )
     );
 });
@@ -572,18 +572,16 @@ const updateDeliveryPartnerImage = asyncHandler(async (req, res) => {
         cloudinaryResponse.url
       );
 
-      res
-        .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            {
-              deliveryPartner: deliveryPartner[0],
-              imageUrl: cloudinaryResponse.url,
-            },
-            "Image uploaded successfully."
-          )
-        );
+      res.status(200).json(
+        new ApiResponse(
+          200,
+          {
+            deliveryPartner: deliveryPartner[0],
+            imageUrl: cloudinaryResponse.url,
+          },
+          "Image uploaded successfully."
+        )
+      );
     } else {
       throw new Error("Failed to upload image to Cloudinary.");
     }
@@ -593,7 +591,7 @@ const updateDeliveryPartnerImage = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           500,
-          { error, reason: error.message || "Image could not be uploaded" },
+          { reason: error.message || "Image could not be uploaded" },
           error.message || "Internal server error."
         )
       );

@@ -48,7 +48,9 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, { customer }, "Customer obtained successfully"));
+    .json(
+      new ApiResponse(200, { customer }, "Customer obtained successfully.")
+    );
 });
 
 const loginCustomer = asyncHandler(async (req, res) => {
@@ -77,12 +79,12 @@ const loginCustomer = asyncHandler(async (req, res) => {
 
   if (customer.length <= 0) {
     return res
-      .status(503)
+      .status(404)
       .json(
         new ApiResponse(
-          401,
+          404,
           { reason: "No customer found with given credentials" },
-          "Phone number is not registered."
+          "Email is not registered."
         )
       );
   }
@@ -128,7 +130,7 @@ const loginCustomer = asyncHandler(async (req, res) => {
           accessToken,
           refreshToken,
         },
-        "Customer logged in successfully."
+        "User logged in successfully."
       )
     );
 });
@@ -188,7 +190,7 @@ const registerCustomer = asyncHandler(async (req, res) => {
         new ApiResponse(
           409,
           { reason: "Customer already registered" },
-          "Customer already exists."
+          "User already exists."
         )
       );
   }
@@ -211,7 +213,7 @@ const registerCustomer = asyncHandler(async (req, res) => {
           error,
           reason: error.message || "Error at customer controller",
         },
-        "Something went wrong while registering the customer."
+        "Something went wrong while registering the user."
       )
     );
   }
@@ -223,7 +225,7 @@ const registerCustomer = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           { reason: "Customer is not defined" },
-          "Failed to register customer"
+          "Failed to register user."
         )
       );
   }
@@ -246,8 +248,8 @@ const logoutCustomer = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           500,
-          { ...error },
-          "Unable to fetch the logged in customer."
+          { reason: error.message || "Unable to set refresh token" },
+          "Unable to fetch the logged in user."
         )
       );
   }
@@ -265,7 +267,7 @@ const logoutCustomer = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { reason: "Logout successful" },
-        "Customer logged out successfully."
+        "User logged out successfully."
       )
     );
 });
@@ -281,7 +283,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         ApiResponse(
           401,
           { reason: "Request unauthorised" },
-          "Unauthorized request"
+          "Unauthorized request."
         )
       );
   }
@@ -303,7 +305,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
           new ApiResponse(
             401,
             { reason: "Token verification failed" },
-            "Invalid refresh token"
+            "Invalid refresh token."
           )
         );
     }
@@ -315,7 +317,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
           new ApiResponse(
             401,
             { reason: "Tokens do not match" },
-            "Unable to reinstate session"
+            "Unable to reinstate session."
           )
         );
 
@@ -338,19 +340,20 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             accessToken: accessToken,
             refreshToken: newRefreshToken,
           },
-          "Session is reinitialised"
+          "Session is reinitialised."
         )
       );
   } catch (error) {
-    res
-      .status(401)
-      .json(
-        new ApiResponse(
-          401,
-          { ...error, reason: "Error occured while trying to refresh token" },
-          error?.message || "Invalid refresh token"
-        )
-      );
+    res.status(401).json(
+      new ApiResponse(
+        401,
+        {
+          reason:
+            error.message || "Error occured while trying to refresh token",
+        },
+        "Unable to refresh tokens."
+      )
+    );
   }
 });
 
@@ -393,7 +396,7 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
           new ApiResponse(
             401,
             { reason: "Invalid Refresh Token." },
-            "Customer not found"
+            "User not found."
           )
         );
     }
@@ -403,8 +406,8 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           401,
-          { ...error, reason: "Refresh token could not be verified" },
-          error?.message || "Invalid request"
+          { reason: error.message || "Refresh token could not be verified" },
+          "Invalid request."
         )
       );
   }
@@ -416,7 +419,7 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
         new ApiResponse(
           401,
           { reason: "Unable to get customer" },
-          "Phone number is not registered"
+          "Email is not registered"
         )
       );
   }
@@ -444,7 +447,9 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           500,
-          { ...error, reason: "Unable to fetch the logged in customer." },
+          {
+            reason: error.message || "Unable to fetch the logged in customer.",
+          },
           "Failed to delete Customer"
         )
       );
@@ -489,7 +494,6 @@ const updateCustomerAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         500,
         {
-          ...error,
           reason: error.message || "Customer could not be updated",
         },
         "Failed to update customer details."
@@ -550,7 +554,7 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           500,
-          { error, reason: error.message || "Image could not be uploaded" },
+          { reason: error.message || "Image could not be uploaded" },
           error.message || "Internal server error."
         )
       );
