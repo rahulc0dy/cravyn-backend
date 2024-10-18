@@ -41,7 +41,7 @@ const updateRestaurantNameOwnerAvailabilityById = async (
 
 const setRestaurantVerificationStatusById = async (restaurantId, status) => {
   const restaurant = await sql`
-    UPDATE Restaurant SET verification_status=${status}
+    UPDATE Restaurant SET verify_status=${status}
     WHERE restaurant_id=${restaurantId}
     RETURNING *
     `;

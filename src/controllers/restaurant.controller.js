@@ -7,10 +7,9 @@ import {
   deleteRestaurantById,
   setRestaurantVerificationStatusById,
 } from "../db/restaurant.query.js";
-import fs from "fs";
 
 const getRestaurant = asyncHandler(async (req, res) => {
-  const restaurantId = req.body;
+  const { restaurantId } = req.body;
 
   if (!restaurantId) {
     return res.status(400).json(
@@ -147,12 +146,17 @@ const addRestaurant = asyncHandler(async (req, res) => {
 const updateRestaurant = asyncHandler(async (req, res) => {
   const { restaurantId, name, licenseUrl, availabilityStatus } = req.body;
 
-  if (!restaurantId || !(name && availabilityStatus) || licenseUrl) {
+  if (
+    !restaurantId ||
+    !name ||
+    !licenseUrl ||
+    availabilityStatus == undefined
+  ) {
     return res.status(400).json(
       new ApiResponse(
         400,
         {
-          reason: { restaurantId, name, licenseUrl, availabilityStatus },
+          reason: `restaurantId:${restaurantId}, name:${name}, licenseUrl:${licenseUrl}, availabilityStatus:${availabilityStatus}`,
         },
         "Bad request."
       )
@@ -202,7 +206,8 @@ const updateRestaurant = asyncHandler(async (req, res) => {
 });
 
 const verifyRestaurant = asyncHandler(async (req, res) => {
-  const { restaurantId, acceptVerification } = req.body;
+  const { restaurantId } = req.body;
+  let { acceptVerification } = req.body;
 
   if (!restaurantId) {
     return res.status(400).json(
