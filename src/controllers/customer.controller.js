@@ -147,6 +147,11 @@ const registerCustomer = asyncHandler(async (req, res) => {
       reason: `email is ${email}`,
     },
     {
+      field: phoneNumber,
+      message: "Phone number is required.",
+      reason: `phoneNumber is ${phoneNumber}`,
+    },
+    {
       field: dateOfBirth,
       message: "Date of birth is required.",
       reason: `dateOfBirth is ${dateOfBirth}`,
@@ -442,17 +447,15 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
   try {
     await deleteCustomer(customer[0].id);
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          {
-            reason: error.message || "Unable to fetch the logged in customer.",
-          },
-          "Failed to delete Customer"
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          reason: error.message || "Unable to fetch the logged in customer.",
+        },
+        "Failed to delete Customer"
+      )
+    );
   }
 
   const options = {

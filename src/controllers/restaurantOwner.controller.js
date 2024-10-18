@@ -150,6 +150,16 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
       reason: `panNumber is ${panNumber}`,
     },
     {
+      field: email,
+      message: "Email is required.",
+      reason: `email is ${email}`,
+    },
+    {
+      field: phoneNumber,
+      message: "Phone number is required.",
+      reason: `phoneNumber is ${phoneNumber}`,
+    },
+    {
       field: password,
       message: "Password is required.",
       reason: `password is ${password}`,

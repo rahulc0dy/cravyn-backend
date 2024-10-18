@@ -165,6 +165,11 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
       reason: `phoneNumber is ${phoneNumber}`,
     },
     {
+      field: phoneNumber,
+      message: "Phone number is required.",
+      reason: `phoneNumber is ${phoneNumber}`,
+    },
+    {
       field: vehicleType,
       message: "Vehicle type is required.",
       reason: `vehicleType is ${vehicleType}`,
