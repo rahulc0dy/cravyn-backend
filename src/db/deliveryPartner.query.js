@@ -101,6 +101,19 @@ const updateDeliveryPartnerImageUrl = async (deliveryPartnerId, imageUrl) => {
   }
 };
 
+const updateDeliveryPartnerPassword = async (email, passwordHash) => {
+  const query = sql`
+  UPDATE Delivery_Partner SET password = ${passwordHash} WHERE email_address = ${email} RETURNING id, name, phone_number, email_address;
+  `;
+
+  try {
+    const deliveryPartner = await query;
+    return deliveryPartner[0];
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 export {
   getDeliveryPartnerByPhoneNo,
   getDeliveryPartnerById,
@@ -111,4 +124,5 @@ export {
   deleteDeliveryPartner,
   updateDeliveryPartnerNamePhoneNoVehicleAvailability,
   updateDeliveryPartnerImageUrl,
+  updateDeliveryPartnerPassword,
 };

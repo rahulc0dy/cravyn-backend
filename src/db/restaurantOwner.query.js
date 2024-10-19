@@ -86,6 +86,19 @@ const updateRestaurantOwnerNamePhoneNo = async (
   }
 };
 
+const updateRestaurantOwnerPassword = async (email, passwordHash) => {
+  const query = sql`
+  UPDATE Restaurant_Owner SET password = ${passwordHash} WHERE email_address = ${email} RETURNING id, name, phone_number, email_address;
+  `;
+
+  try {
+    const restaurantOwner = await query;
+    return restaurantOwner[0];
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 export {
   getRestaurantOwnerByPhoneNo,
   getRestaurantOwnerById,
@@ -95,4 +108,5 @@ export {
   createRestaurantOwner,
   deleteRestaurantOwner,
   updateRestaurantOwnerNamePhoneNo,
+  updateRestaurantOwnerPassword,
 };

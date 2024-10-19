@@ -18,15 +18,16 @@ import jwt from "jsonwebtoken";
 
 const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   if (!req.businessTeam || !req.businessTeam.id) {
-    res
-      .status(401)
-      .json(
-        new ApiResponse(
-          401,
-          { reason: `req.businessTeam is ${req.businessTeam}` },
-          "Unauthorised Access."
-        )
-      );
+    res.status(400).json(
+      new ApiResponse(
+        400,
+        {
+          reason: `req.businessTeam is ${req.businessTeam}`,
+          at: "businessTeam.controller.js -> getBusinessTeamAccouont",
+        },
+        "Unauthorised Access."
+      )
+    );
   }
 
   const businessTeam = (
@@ -34,15 +35,16 @@ const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   )[0];
 
   if (!businessTeam) {
-    res
-      .status(404)
-      .json(
-        new ApiResponse(
-          404,
-          { reason: `BusinessTeam member not found by id` },
-          "User not found."
-        )
-      );
+    res.status(404).json(
+      new ApiResponse(
+        404,
+        {
+          reason: `BusinessTeam member not found by id`,
+          at: "businessTeam.controller.js -> getBusinessTeamAccount",
+        },
+        "User not found."
+      )
+    );
   }
 
   res
@@ -51,7 +53,7 @@ const getBusinessTeamAccount = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { businessTeam },
-        "BusinessTeam obtained successfully"
+        "BusinessTeam obtained successfully."
       )
     );
 });
@@ -74,37 +76,48 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(
+        new ApiResponse(
+          400,
+          {
+            reason,
+            at: "businessTeam.controller.js -> loginBusinessTeam",
+          },
+          message
+        )
+      );
     }
   }
 
   let businessTeam = await getBusinessTeamByEmail(email);
 
   if (businessTeam.length <= 0) {
-    return res
-      .status(503)
-      .json(
-        new ApiResponse(
-          401,
-          { reason: "No businessTeam found with given credentials" },
-          "Phone number is not registered."
-        )
-      );
+    return res.status(404).json(
+      new ApiResponse(
+        404,
+        {
+          reason: "No businessTeam found with given credentials",
+          at: "businessTeam.controller.js -> loginBusinessTeam",
+        },
+        "Phone number is not registered."
+      )
+    );
   }
   const correctPassword = businessTeam[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
   if (!isPasswordCorrect) {
-    return res
-      .status(401)
-      .json(
-        new ApiResponse(
-          401,
-          { reason: "Incorrect Password." },
-          "Invalid credentials, please try again."
-        )
-      );
+    return res.status(401).json(
+      new ApiResponse(
+        401,
+        {
+          reason: "Incorrect Password.",
+          at: "businessTeam.controller.js -> loginBusinessTeam",
+        },
+        "Invalid credentials, please try again."
+      )
+    );
   }
   const accessToken = generateAccessToken(businessTeam[0]);
   const refreshToken = generateRefreshToken(businessTeam[0]);
@@ -172,29 +185,31 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
   }
 
   if (password !== confirmPassword) {
-    return res
-      .status(400)
-      .json(
-        new ApiResponse(
-          400,
-          { reason: "Passwords do not match" },
-          "Password confirmation does not match."
-        )
-      );
+    return res.status(400).json(
+      new ApiResponse(
+        400,
+        {
+          reason: "Passwords do not match",
+          at: "businessTeam.controller.js -> registerBusinessTeam",
+        },
+        "Password confirmation does not match."
+      )
+    );
   }
 
   const existedBusinessTeam = await getBusinessTeamByEmail(email);
 
   if (existedBusinessTeam.length > 0) {
-    return res
-      .status(409)
-      .json(
-        new ApiResponse(
-          409,
-          { reason: "BusinessTeam already registered" },
-          "BusinessTeam already exists."
-        )
-      );
+    return res.status(409).json(
+      new ApiResponse(
+        409,
+        {
+          reason: "BusinessTeam already registered",
+          at: "businessTeam.controller.js -> registerBusinessTeam",
+        },
+        "BusinessTeam already exists."
+      )
+    );
   }
 
   let businessTeam;
@@ -202,27 +217,29 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
   try {
     businessTeam = await createBusinessTeam(name, phoneNumber, email, password);
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { reason: error.message || "Business team creation query error" },
-          "Something went wrong while registering the businessTeam."
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          reason: error.message || "Business team creation query error",
+          at: "businessTeam.controller.js -> registerBusinessTeam",
+        },
+        "Something went wrong while registering the businessTeam."
+      )
+    );
   }
 
   if (!businessTeam) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { reason: "BusinessTeam is not defined" },
-          "Failed to register businessTeam"
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          reason: "BusinessTeam is not defined",
+          at: "businessTeam.controller.js -> registerBusinessTeam",
+        },
+        "Failed to register businessTeam."
+      )
+    );
   }
 
   delete businessTeam.refresh_token;
@@ -244,15 +261,16 @@ const logoutBusinessTeam = asyncHandler(async (req, res) => {
   try {
     await setRefreshToken("NULL", req.businessTeam.id);
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          { ...error },
-          "Unable to fetch the logged in businessTeam."
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        500,
+        {
+          reason: error.message,
+          at: "businessTeam.controller.js -> logoutBusinessTeam",
+        },
+        "Unable to fetch the logged in businessTeam."
+      )
+    );
   }
 
   const options = {
@@ -267,7 +285,10 @@ const logoutBusinessTeam = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { reason: "Logout successful" },
+        {
+          reason: "Logout successful",
+          at: "businessTeam.controller.js -> logoutBusinessTeam",
+        },
         "BusinessTeam logged out successfully."
       )
     );
@@ -278,15 +299,16 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     req.cookies?.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
-    return res
-      .status(401)
-      .json(
-        new ApiResponse(
-          401,
-          { reason: "Request unauthorised" },
-          "Unauthorized request"
-        )
-      );
+    return res.status(401).json(
+      new ApiResponse(
+        401,
+        {
+          reason: "Request unauthorised",
+          at: "businessTeam.controller.js -> refreshAccessToken",
+        },
+        "Unauthorized request."
+      )
+    );
   }
 
   try {
@@ -301,26 +323,27 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     if (!businessTeam) {
       return res
-        .status(500)
+        .status(401)
         .json(
           new ApiResponse(
             401,
             { reason: "Token verification failed" },
-            "Invalid refresh token"
+            "Invalid refresh token."
           )
         );
     }
 
-    if (incomingRefreshToken !== businessTeam?.refresh_token)
+    if (incomingRefreshToken !== businessTeam?.refresh_token) {
       return res
         .status(401)
         .json(
           new ApiResponse(
             401,
             { reason: "Tokens do not match" },
-            "Unable to reinstate session"
+            "Unable to reinstate session."
           )
         );
+    }
 
     const options = {
       httpOnly: true,
@@ -341,7 +364,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             accessToken: accessToken,
             refreshToken: newRefreshToken,
           },
-          "Session is reinitialised"
+          "Session is reinitialised."
         )
       );
   } catch (error) {
@@ -414,10 +437,10 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
 
   if (businessTeam.length <= 0) {
     return res
-      .status(503)
+      .status(404)
       .json(
         new ApiResponse(
-          401,
+          404,
           { reason: "Unable to get businessTeam" },
           "Phone number is not registered"
         )
@@ -448,7 +471,7 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
         new ApiResponse(
           500,
           { ...error, reason: "Unable to fetch the logged in businessTeam." },
-          "Failed to delete BusinessTeam"
+          "Failed to delete BusinessTeam."
         )
       );
   }
@@ -481,7 +504,7 @@ const updateBusinessTeamAccount = asyncHandler(async (req, res) => {
         new ApiResponse(
           400,
           { reason: "No update details provided" },
-          "Please provide details to update"
+          "Please provide details to update."
         )
       );
   }

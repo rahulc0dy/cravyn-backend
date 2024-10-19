@@ -95,6 +95,19 @@ const updateCustomerImageUrl = async (customerId, imageUrl) => {
   }
 };
 
+const updateCustomerPassword = async (email, passwordHash) => {
+  const query = sql`
+  UPDATE Customer SET password = ${passwordHash} WHERE email_address = ${email} RETURNING id, name, phone_number, email_address;
+  `;
+
+  try {
+    const customer = await query;
+    return customer[0];
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 export {
   getCustomerByPhoneNo,
   getCustomerById,
@@ -105,4 +118,5 @@ export {
   deleteCustomer,
   updateCustomerNamePhoneNo,
   updateCustomerImageUrl,
+  updateCustomerPassword,
 };
