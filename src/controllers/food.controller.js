@@ -3,14 +3,13 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   getFoodItemById,
   createFoodItem,
-  updateFoodItemById,
-  deleteFoodItemById,
   getFoodItemByName,
 } from "../db/foodItem.query.js";
 import {
   createPrepares,
   getPreparesById,
   updatePreparesDiscountById,
+  deletePreparesById,
 } from "../db/prepares.query.js";
 import { getRestaurantById } from "../db/restaurant.query.js";
 
@@ -225,6 +224,7 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
       discountPercent,
       discountCap,
     });
+
     const data = {
       foodItem: foodItem[0],
       preparesItem: preparesItem[0],
@@ -246,17 +246,11 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
       }
     }
 
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          foodItem: foodItem[0],
-          preparesItem: preparesItem[0],
-          restaurant: restaurant[0],
-        },
-        "Food item discount updated successfully."
-      )
-    );
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, data, "Food item discount updated successfully.")
+      );
   } catch (error) {
     return res
       .status(500)
@@ -271,49 +265,68 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
 });
 
 const deleteFood = asyncHandler(async (req, res) => {
-  const { foodItemId } = req.body;
+  const { foodItemId, restaurantId } = req.body;
 
-  if (!foodItemId) {
+  if (!foodItemId || !restaurantId) {
     return res.status(400).json(
       new ApiResponse(
         400,
         {
-          reason: `foodItemId is ${foodItemId}`,
+          reason: foodItemId
+            ? "restaurantId is undefined"
+            : `foodItemId is ${foodItemId}`,
         },
         "Bad request."
       )
     );
   }
 
-  let foodItem = await getFoodItemById(foodItemId);
+  let preparesItem = await getPreparesById(foodItemId, restaurantId);
 
-  if (!foodItem) {
+  if (preparesItem.length <= 0) {
     return res
       .status(404)
       .json(
         new ApiResponse(
           404,
-          { reason: `foodItem is ${foodItem}` },
+          { reason: `preparesItem is ${preparesItem}` },
           "Food item not found."
         )
       );
   }
 
   try {
-    foodItem = await deleteFoodItemById(foodItemId);
+    let [foodItem, restaurant] = await Promise.all([
+      getFoodItemById(foodItemId),
+      getRestaurantById(restaurantId),
+    ]);
 
-    if (foodItem.length <= 0)
-      throw new Error("No return value from delete item.");
+    preparesItem = await deletePreparesById(foodItemId, restaurantId);
+
+    const data = {
+      foodItem: foodItem[0],
+      preparesItem: preparesItem[0],
+      restaurant: restaurant[0],
+    };
+
+    for (const key in data) {
+      if (!data[key]) {
+        return res.status(404).json(
+          new ApiResponse(
+            404,
+            {
+              reason: `${key} had error while keycheck.`,
+              at: "foodItem.controller.js -> updateFoodDiscount",
+            },
+            "Item not found."
+          )
+        );
+      }
+    }
 
     return res
       .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          { foodItem: foodItem[0] },
-          "Food item deleted successfully."
-        )
-      );
+      .json(new ApiResponse(200, data, "Food item deleted successfully."));
   } catch (error) {
     return res
       .status(500)

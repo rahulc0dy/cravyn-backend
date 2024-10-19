@@ -57,8 +57,9 @@ const updatePreparesDiscountById = async ({
 
 const deletePreparesById = async (foodItemId, restaurantId) => {
   const prepares = await sql`
-    DELETE FROM Prepares WHERE item_id=${preparesId} AND restaurant_id=${restaurantId} RETURNING * ;
+    DELETE FROM Prepares WHERE item_id=${foodItemId} AND restaurant_id=${restaurantId} RETURNING * ;
     `;
+  return prepares;
 };
 
 export {
