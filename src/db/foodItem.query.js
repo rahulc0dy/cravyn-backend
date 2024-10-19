@@ -7,7 +7,14 @@ const getFoodItemById = async (foodItemId) => {
   return foodItem;
 };
 
-const createFoodItem = async (name, type) => {
+const getFoodItemByName = async (name) => {
+  const foodItem = await sql`
+    SELECT * FROM Food_Item WHERE name = ${name};
+    `;
+  return foodItem;
+};
+
+const createFoodItem = async ({ name, type }) => {
   const foodItem = await sql`
     INSERT INTO Food_Item ( name, type ) VALUES ( ${name}, ${type} ) RETURNING * ;
     `;
@@ -31,6 +38,7 @@ const deleteFoodItemById = async (foodItemId) => {
 
 export {
   getFoodItemById,
+  getFoodItemByName,
   createFoodItem,
   updateFoodItemById,
   deleteFoodItemById,

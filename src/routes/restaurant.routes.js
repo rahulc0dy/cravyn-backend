@@ -16,6 +16,8 @@ router
   .patch(updateRestaurant)
   .delete(deleteRestaurant);
 
+// router.route("/recommended").get(getNearestRestaurants);
+
 router.route("/verify").post(verifyRestaurant);
 
 export default router;
