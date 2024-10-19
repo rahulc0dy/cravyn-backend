@@ -1,38 +1,45 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
+title: "Bug Report"
+labels: "bug"
+assignees: "rahulc0dy"
 ---
 
-### Describe the bug
-A clear and concise description of what the bug is.
+### Description
 
-### To Reproduce
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+<!-- A clear and concise description of what the bug is. -->
 
-### Expected behavior
-A clear and concise description of what you expected to happen.
+### Steps to Reproduce
 
-### Screenshots
-If applicable, add screenshots to help explain your problem.
+<!-- Steps to reproduce the behavior: -->
 
-### Desktop (please complete the following information):
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+1.
+2.
+3.
 
-### Smartphone (please complete the following information):
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+### Expected Behavior
 
-### Additional context
-Add any other context about the problem here.
+<!-- A clear and concise description of what you expected to happen. -->
+
+### Actual Behavior
+
+<!-- What actually happened. Include screenshots if applicable. -->
+
+### Requests and Responses
+
+<!-- Info about the request made and the response -->
+
+### Relevant Code/Logs
+
+<!-- Code or Logs related to the bug -->
+<!-- Use Code block syntax for code -->
+
+### Environment Details
+
+- Node.js version:
+- NPM/Yarn version:
+- Operating System:
+- API Version:
+- Relevant Route:
+- Any other relevant details:
