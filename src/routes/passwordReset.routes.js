@@ -1,11 +1,14 @@
 import { Router } from "express";
 import {
   forgotPassword,
+  verifyOtp,
   resetPassword,
 } from "../controllers/passwordReset.controller.js";
 
 const router = Router();
 
-router.route("/").post(forgotPassword).patch(resetPassword);
+router.route("/").post(forgotPassword);
+router.route("/verify-otp").post(verifyOtp);
+router.route("/reset-password").patch(resetPassword);
 
 export default router;
