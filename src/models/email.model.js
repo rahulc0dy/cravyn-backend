@@ -61,9 +61,11 @@ const otpMailTemplate = (from, to, otp) => {
         <div class="container">
             <h2>Cravyn Password Reset</h2>
             <p>Hi ${to},</p>
+            <br>
             <p>We received a request to reset the password for your Cravyn account. Please use the following OTP to reset your password:</p>
             <div class="otp">${otp}</div>
             <p>If you did not request this, please ignore this email or contact our support team for assistance.</p>
+            <br>
             <p>Thanks,</p>
             <p>The Cravyn Team</p>
             <div class="footer">
