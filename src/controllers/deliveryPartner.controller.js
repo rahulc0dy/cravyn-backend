@@ -14,7 +14,7 @@ import {
   getNonSensitiveDeliveryPartnerInfoById,
   updateDeliveryPartnerImageUrl,
   updateDeliveryPartnerNamePhoneNoVehicleAvailability,
-} from "../db/deliveryPartner.query.js";
+} from "../database/queries/deliveryPartner.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";

@@ -13,7 +13,7 @@ import {
   deleteRestaurantOwner,
   updateRestaurantOwnerNamePhoneNo,
   getNonSensitiveRestaurantOwnerInfoById,
-} from "../db/restaurantOwner.query.js";
+} from "../database/queries/restaurantOwner.query.js";
 import jwt from "jsonwebtoken";
 
 const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {

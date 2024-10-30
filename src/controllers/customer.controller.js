@@ -14,7 +14,7 @@ import {
   updateCustomerNamePhoneNo,
   getNonSensitiveCustomerInfoById,
   updateCustomerImageUrl,
-} from "../db/customer.query.js";
+} from "../database/queries/customer.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";

@@ -4,17 +4,17 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import {
   getCustomerByEmail,
   updateCustomerPassword,
-} from "../db/customer.query.js";
+} from "../database/queries/customer.query.js";
 import {
   getDeliveryPartnerByEmail,
   updateDeliveryPartnerPassword,
-} from "../db/deliveryPartner.query.js";
+} from "../database/queries/deliveryPartner.query.js";
 import {
   getRestaurantOwnerByEmail,
   updateRestaurantOwnerPassword,
-} from "../db/restaurantOwner.query.js";
+} from "../database/queries/restaurantOwner.query.js";
 import { totp } from "otplib";
-import { getOtp, storeOtp } from "../db/otp.query.js";
+import { getOtp, storeOtp } from "../database/queries/otp.query.js";
 import bcrypt from "bcrypt";
 
 const forgotPassword = asyncHandler(async (req, res) => {

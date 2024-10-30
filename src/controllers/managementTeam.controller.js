@@ -13,7 +13,7 @@ import {
   createManagementTeam,
   deleteManagementTeam,
   updateManagementTeamNamePhoneNo,
-} from "../db/managementTeam.query.js";
+} from "../database/queries/managementTeam.query.js";
 import jwt from "jsonwebtoken";
 
 const getManagementTeamAccount = asyncHandler(async (req, res) => {

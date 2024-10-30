@@ -6,7 +6,7 @@ import {
   updateRestaurantNameOwnerAvailabilityById,
   deleteRestaurantById,
   setRestaurantVerificationStatusById,
-} from "../db/restaurant.query.js";
+} from "../database/queries/restaurant.query.js";
 
 const getRestaurant = asyncHandler(async (req, res) => {
   const { restaurantId } = req.body;

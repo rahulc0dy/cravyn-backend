@@ -1,11 +1,11 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
-import { getNonSensitiveCustomerInfoById } from "../db/customer.query.js";
-import { getNonSensitiveManagementTeamInfoById } from "../db/managementTeam.query.js";
-import { getNonSensitiveRestaurantOwnerInfoById } from "../db/restaurantOwner.query.js";
-import { getNonSensitiveBusinessTeamInfoById } from "../db/businessTeam.query.js";
-import { getNonSensitiveDeliveryPartnerInfoById } from "../db/deliveryPartner.query.js";
+import { getNonSensitiveCustomerInfoById } from "../database/queries/customer.query.js";
+import { getNonSensitiveManagementTeamInfoById } from "../database/queries/managementTeam.query.js";
+import { getNonSensitiveRestaurantOwnerInfoById } from "../database/queries/restaurantOwner.query.js";
+import { getNonSensitiveBusinessTeamInfoById } from "../database/queries/businessTeam.query.js";
+import { getNonSensitiveDeliveryPartnerInfoById } from "../database/queries/deliveryPartner.query.js";
 
 export const verifyJwt = asyncHandler(async (req, res, next) => {
   const token =

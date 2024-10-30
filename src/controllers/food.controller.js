@@ -4,14 +4,8 @@ import {
   getFoodItemById,
   createFoodItem,
   getFoodItemByName,
-} from "../db/foodItem.query.js";
-import {
-  createPrepares,
-  getPreparesById,
-  updatePreparesDiscountById,
-  deletePreparesById,
-} from "../db/prepares.query.js";
-import { getRestaurantById } from "../db/restaurant.query.js";
+} from "../database/queries/foodItem.query.js";
+import { getRestaurantById } from "../database/queries/restaurant.query.js";
 
 const getFood = asyncHandler(async (req, res) => {
   const { foodItemId, restaurantId } = req.body;

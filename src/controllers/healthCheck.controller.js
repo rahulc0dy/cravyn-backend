@@ -1,6 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
-import { sql } from "../db/database.js";
+import { sql } from "../database/queries/database.js";
 
 const healthCheck = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, {}, "Status OK."));

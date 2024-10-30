@@ -13,7 +13,7 @@ import {
   createBusinessTeam,
   deleteBusinessTeam,
   updateBusinessTeamNamePhoneNo,
-} from "../db/businessTeam.query.js";
+} from "../database/queries/businessTeam.query.js";
 import jwt from "jsonwebtoken";
 
 const getBusinessTeamAccount = asyncHandler(async (req, res) => {
