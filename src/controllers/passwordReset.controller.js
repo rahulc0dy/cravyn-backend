@@ -24,7 +24,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
   if (!email || !userType) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: email ? `userType is ${userType}` : `email is ${email}`,
           at: "passwordReset.controller.js",
@@ -54,7 +53,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: "User does not exist", at: "passwordReset.controller.js" },
           "User with this email does not exist."
         )
@@ -77,7 +75,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
       .status(250)
       .json(
         new ApiResponse(
-          250,
           { mailResponse, user: user[0] },
           "OTP sent to your email."
         )
@@ -85,7 +82,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(503).json(
       new ApiResponse(
-        503,
         {
           reason: error.message || "error sending email",
           at: "passwordReset.controller.js > nodemailer.js",
@@ -103,7 +99,6 @@ const resetPassword = asyncHandler(async (req, res) => {
   if (password !== confirmPassword) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: "Passwords do not match",
           at: "passwordReset.controller.js -> resetPassword",
@@ -114,7 +109,6 @@ const resetPassword = asyncHandler(async (req, res) => {
   } else if (!otp || !userType) {
     return res.status(400).json(
       new ApiResponse(
-        400,
         {
           reason: userType ? `otp is ${otp}` : `userType is ${userType}`,
           at: "passwordReset.controller.js -> resetPassword",
@@ -134,7 +128,6 @@ const resetPassword = asyncHandler(async (req, res) => {
         .status(400)
         .json(
           new ApiResponse(
-            400,
             { reason: "Incorrect otp", at: "passwordreset" },
             "OTP is incorrect."
           )
@@ -159,11 +152,10 @@ const resetPassword = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, { user }, "Password updated successfully."));
+      .json(new ApiResponse({ user }, "Password updated successfully."));
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: error.message || "Failed",
           at: "passwordReset.controller.js->resetPassword",

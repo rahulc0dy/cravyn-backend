@@ -6,14 +6,15 @@ import {
   getFoodItemByName,
 } from "../database/queries/foodItem.query.js";
 import { getRestaurantById } from "../database/queries/restaurant.query.js";
+import { getRestaurantOwnerById } from "../database/queries/restaurantOwner.query.js";
 
 const getFood = asyncHandler(async (req, res) => {
-  const { foodItemId, restaurantId } = req.body;
+  const { restaurantId } = req.restaurant?.id;
+  const { foodItemId } = req.body;
 
   if (!foodItemId || !restaurantId) {
     return res.status(400).json(
       new ApiResponse(
-        400,
         {
           reason: foodItemId
             ? "restaurantId not found"
@@ -26,15 +27,13 @@ const getFood = asyncHandler(async (req, res) => {
   }
 
   try {
-    const [foodItem, preparesItem, restaurant] = await Promise.all([
+    const [foodItem, restaurant] = await Promise.all([
       getFoodItemById(foodItemId),
-      getPreparesById(foodItemId, restaurantId),
       getRestaurantById(restaurantId),
     ]);
 
     const data = {
       foodItem: foodItem[0],
-      preparesItem: preparesItem[0],
       restaurant: restaurant[0],
     };
 
@@ -42,7 +41,6 @@ const getFood = asyncHandler(async (req, res) => {
       if (!data[key]) {
         return res.status(404).json(
           new ApiResponse(
-            404,
             {
               reason: `${key} could not be found using the provided ID.`,
               at: "foodItem.controller.js -> getFood",
@@ -55,11 +53,10 @@ const getFood = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, data, "Food item retrieved successfully."));
+      .json(new ApiResponse(data, "Food item retrieved successfully."));
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: error.message || "Food item cannot be retrieved",
           at: "foodItem.controller.js -> getFoodItem",
@@ -101,7 +98,6 @@ const addFood = asyncHandler(async (req, res) => {
     if (!field) {
       return res.status(400).json(
         new ApiResponse(
-          400,
           {
             reason,
           },
@@ -120,14 +116,6 @@ const addFood = asyncHandler(async (req, res) => {
 
     const foodItemId = foodItem[0]?.item_id;
 
-    const preparesItem = await createPrepares({
-      foodItemId,
-      restaurantId,
-      price,
-      foodImageUrl,
-      description,
-    });
-
     const data = {
       foodItem: foodItem[0],
       preparesItem: preparesItem[0],
@@ -138,7 +126,6 @@ const addFood = asyncHandler(async (req, res) => {
       if (!data[key]) {
         return res.status(404).json(
           new ApiResponse(
-            404,
             {
               reason: `${key} could not be found using the provided ID.`,
               at: "foodItem.controller.js -> addFood",
@@ -151,11 +138,10 @@ const addFood = asyncHandler(async (req, res) => {
 
     return res
       .status(201)
-      .json(new ApiResponse(201, data, "Food item added successfully."));
+      .json(new ApiResponse(data, "Food item added successfully."));
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: error.message || "Error occurred during food item creation",
           at: "foodItem.controller.js -> addFoodItem",
@@ -196,7 +182,6 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
     if (!field) {
       return res.status(400).json(
         new ApiResponse(
-          400,
           {
             reason,
           },
@@ -229,7 +214,6 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
       if (!data[key]) {
         return res.status(404).json(
           new ApiResponse(
-            404,
             {
               reason: `${key} had error while keycheck.`,
               at: "foodItem.controller.js -> updateFoodDiscount",
@@ -242,15 +226,12 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(
-        new ApiResponse(200, data, "Food item discount updated successfully.")
-      );
+      .json(new ApiResponse(data, "Food item discount updated successfully."));
   } catch (error) {
     return res
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message },
           "Unable to update food item."
         )
@@ -264,7 +245,6 @@ const deleteFood = asyncHandler(async (req, res) => {
   if (!foodItemId || !restaurantId) {
     return res.status(400).json(
       new ApiResponse(
-        400,
         {
           reason: foodItemId
             ? "restaurantId is undefined"
@@ -282,7 +262,6 @@ const deleteFood = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: `preparesItem is ${preparesItem}` },
           "Food item not found."
         )
@@ -307,7 +286,6 @@ const deleteFood = asyncHandler(async (req, res) => {
       if (!data[key]) {
         return res.status(404).json(
           new ApiResponse(
-            404,
             {
               reason: `${key} had error while keycheck.`,
               at: "foodItem.controller.js -> updateFoodDiscount",
@@ -320,13 +298,12 @@ const deleteFood = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, data, "Food item deleted successfully."));
+      .json(new ApiResponse(data, "Food item deleted successfully."));
   } catch (error) {
     return res
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message },
           "Unable to delete food item."
         )

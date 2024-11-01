@@ -25,7 +25,6 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: `req.customer is ${req.customer}` },
           "Unauthorised Access."
         )
@@ -39,7 +38,6 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: `Customer not found by id` },
           "User not found."
         )
@@ -48,9 +46,7 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(
-      new ApiResponse(200, { customer }, "Customer obtained successfully.")
-    );
+    .json(new ApiResponse({ customer }, "Customer obtained successfully."));
 });
 
 const loginCustomer = asyncHandler(async (req, res) => {
@@ -71,7 +67,7 @@ const loginCustomer = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
 
@@ -82,7 +78,6 @@ const loginCustomer = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: "No customer found with given credentials" },
           "Email is not registered."
         )
@@ -97,7 +92,6 @@ const loginCustomer = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Incorrect Password." },
           "Invalid credentials, please try again."
         )
@@ -124,7 +118,6 @@ const loginCustomer = asyncHandler(async (req, res) => {
     .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
-        200,
         {
           customer: customer[0],
           accessToken,
@@ -170,7 +163,7 @@ const registerCustomer = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
 
@@ -179,7 +172,6 @@ const registerCustomer = asyncHandler(async (req, res) => {
       .status(400)
       .json(
         new ApiResponse(
-          400,
           { reason: "Passwords do not match" },
           "Password confirmation does not match."
         )
@@ -193,7 +185,6 @@ const registerCustomer = asyncHandler(async (req, res) => {
       .status(409)
       .json(
         new ApiResponse(
-          409,
           { reason: "Customer already registered" },
           "User already exists."
         )
@@ -213,7 +204,6 @@ const registerCustomer = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           error,
           reason: error.message || "Error at customer controller",
@@ -228,7 +218,6 @@ const registerCustomer = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: "Customer is not defined" },
           "Failed to register user."
         )
@@ -241,7 +230,7 @@ const registerCustomer = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new ApiResponse(201, customer, "Customer registered successfully."));
+    .json(new ApiResponse(customer, "Customer registered successfully."));
 });
 
 const logoutCustomer = asyncHandler(async (req, res) => {
@@ -252,7 +241,6 @@ const logoutCustomer = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message || "Unable to set refresh token" },
           "Unable to fetch the logged in user."
         )
@@ -270,7 +258,6 @@ const logoutCustomer = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(
       new ApiResponse(
-        200,
         { reason: "Logout successful" },
         "User logged out successfully."
       )
@@ -285,8 +272,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     res
       .status(401)
       .json(
-        ApiResponse(
-          401,
+        new ApiResponse(
           { reason: "Request unauthorised" },
           "Unauthorized request."
         )
@@ -308,7 +294,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         .status(500)
         .json(
           new ApiResponse(
-            401,
             { reason: "Token verification failed" },
             "Invalid refresh token."
           )
@@ -320,7 +305,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Tokens do not match" },
             "Unable to reinstate session."
           )
@@ -340,7 +324,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .cookie("refreshToken", newRefreshToken, options)
       .json(
         new ApiResponse(
-          200,
           {
             accessToken: accessToken,
             refreshToken: newRefreshToken,
@@ -351,7 +334,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   } catch (error) {
     res.status(401).json(
       new ApiResponse(
-        401,
         {
           reason:
             error.message || "Error occured while trying to refresh token",
@@ -380,7 +362,7 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
   let customer;
@@ -399,7 +381,6 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Invalid Refresh Token." },
             "User not found."
           )
@@ -410,7 +391,6 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: error.message || "Refresh token could not be verified" },
           "Invalid request."
         )
@@ -422,7 +402,6 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       .status(503)
       .json(
         new ApiResponse(
-          401,
           { reason: "Unable to get customer" },
           "Email is not registered"
         )
@@ -437,7 +416,6 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Incorrect Password" },
           "Invalid credentials, please try again."
         )
@@ -449,7 +427,6 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: error.message || "Unable to fetch the logged in customer.",
         },
@@ -469,7 +446,6 @@ const deleteCustomerAccount = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(
       new ApiResponse(
-        200,
         { reason: "Deletion successful" },
         "Customer deleted out successfully."
       )
@@ -495,7 +471,6 @@ const updateCustomerAccount = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: error.message || "Customer could not be updated",
         },
@@ -507,11 +482,7 @@ const updateCustomerAccount = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(
-      new ApiResponse(
-        200,
-        { customer: customer[0] },
-        "Customer details updated."
-      )
+      new ApiResponse({ customer: customer[0] }, "Customer details updated.")
     );
 });
 
@@ -522,7 +493,6 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
         .status(400)
         .json(
           new ApiResponse(
-            400,
             { reason: `The file passed is ${req.file}` },
             "No image file uploaded."
           )
@@ -543,7 +513,6 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
         .status(200)
         .json(
           new ApiResponse(
-            200,
             { customer: customer[0], imageUrl: cloudinaryResponse.url },
             "Image uploaded successfully."
           )
@@ -556,7 +525,6 @@ const updateCustomerImage = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message || "Image could not be uploaded" },
           error.message || "Internal server error."
         )

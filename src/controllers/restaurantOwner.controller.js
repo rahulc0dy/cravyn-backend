@@ -22,7 +22,6 @@ const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: `req.restaurantOwner is ${req.restaurantOwner}` },
           "Unauthorised Access."
         )
@@ -38,7 +37,6 @@ const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: `RestaurantOwner not found by id` },
           "User not found."
         )
@@ -49,7 +47,6 @@ const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
     .status(200)
     .json(
       new ApiResponse(
-        200,
         { restaurantOwner },
         "RestaurantOwner obtained successfully"
       )
@@ -74,7 +71,7 @@ const loginRestaurantOwner = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
 
@@ -85,7 +82,6 @@ const loginRestaurantOwner = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: "No restaurantOwner found with given credentials" },
           "Email is not registered."
         )
@@ -100,7 +96,6 @@ const loginRestaurantOwner = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Incorrect Password." },
           "Invalid credentials, please try again."
         )
@@ -127,7 +122,6 @@ const loginRestaurantOwner = asyncHandler(async (req, res) => {
     .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
-        200,
         {
           restaurantOwner: restaurantOwner[0],
           accessToken,
@@ -173,7 +167,7 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
 
@@ -182,7 +176,6 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
       .status(400)
       .json(
         new ApiResponse(
-          400,
           { reason: "Passwords do not match" },
           "Password confirmation does not match."
         )
@@ -196,7 +189,6 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
       .status(409)
       .json(
         new ApiResponse(
-          409,
           { reason: "RestaurantOwner already registered" },
           "RestaurantOwner already exists."
         )
@@ -216,7 +208,6 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           error,
           reason: error.message || "Error at restaurant owner creation query",
@@ -231,7 +222,6 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: "RestaurantOwner is not defined" },
           "Failed to register restaurantOwner"
         )
@@ -246,7 +236,6 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
     .status(201)
     .json(
       new ApiResponse(
-        201,
         restaurantOwner,
         "RestaurantOwner registered successfully."
       )
@@ -261,7 +250,6 @@ const logoutRestaurantOwner = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message || "Unable to set refresh token" },
           "Unable to fetch restaurant owner."
         )
@@ -279,7 +267,6 @@ const logoutRestaurantOwner = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(
       new ApiResponse(
-        200,
         { reason: "Logout successful" },
         "Restaurant owner logged out successfully."
       )
@@ -294,11 +281,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     res
       .status(401)
       .json(
-        ApiResponse(
-          401,
-          { reason: "Request unauthorised" },
-          "Unauthorized request."
-        )
+        ApiResponse({ reason: "Request unauthorised" }, "Unauthorized request.")
       );
   }
 
@@ -317,7 +300,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Token verification failed" },
             "Invalid refresh token."
           )
@@ -329,7 +311,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Tokens do not match" },
             "Unable to reinstate session"
           )
@@ -349,7 +330,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .cookie("refreshToken", newRefreshToken, options)
       .json(
         new ApiResponse(
-          200,
           {
             accessToken: accessToken,
             refreshToken: newRefreshToken,
@@ -362,7 +342,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { ...error, reason: "Error occured while trying to refresh token" },
           error?.message || "Invalid refresh token"
         )
@@ -388,7 +367,7 @@ const deleteRestaurantOwnerAccount = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
   let restaurantOwner;
@@ -407,7 +386,6 @@ const deleteRestaurantOwnerAccount = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Invalid Refresh Token." },
             "Restaurant owner not found."
           )
@@ -416,7 +394,6 @@ const deleteRestaurantOwnerAccount = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(401).json(
       new ApiResponse(
-        401,
         {
           reason: error?.message || "Refresh token could not be verified",
         },
@@ -430,7 +407,6 @@ const deleteRestaurantOwnerAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Unable to get restaurantOwner" },
           "Email is not registered."
         )
@@ -445,7 +421,6 @@ const deleteRestaurantOwnerAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Incorrect Password" },
           "Invalid credentials, please try again."
         )
@@ -457,7 +432,6 @@ const deleteRestaurantOwnerAccount = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           ...error,
           reason: "Unable to fetch the logged in restaurantOwner.",
@@ -478,7 +452,6 @@ const deleteRestaurantOwnerAccount = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(
       new ApiResponse(
-        200,
         { reason: "Deletion successful" },
         "RestaurantOwner deleted out successfully."
       )
@@ -507,7 +480,6 @@ const updateRestaurantOwnerAccount = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           ...error,
           reason: error.message || "RestaurantOwner could not be updated",
@@ -521,7 +493,6 @@ const updateRestaurantOwnerAccount = asyncHandler(async (req, res) => {
     .status(200)
     .json(
       new ApiResponse(
-        200,
         { restaurantOwner: restaurantOwner[0] },
         "RestaurantOwner details updated."
       )
@@ -535,7 +506,6 @@ const updateRestaurantOwnerImage = asyncHandler(async (req, res) => {
         .status(400)
         .json(
           new ApiResponse(
-            400,
             { reason: `The file passed is ${req.file}` },
             "No image file uploaded."
           )
@@ -556,7 +526,6 @@ const updateRestaurantOwnerImage = asyncHandler(async (req, res) => {
         .status(200)
         .json(
           new ApiResponse(
-            200,
             { restaurantOwner, imageUrl: cloudinaryResponse.url },
             "Image uploaded successfully."
           )
@@ -569,7 +538,6 @@ const updateRestaurantOwnerImage = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message || "Image could not be uploaded" },
           "Internal server error."
         )

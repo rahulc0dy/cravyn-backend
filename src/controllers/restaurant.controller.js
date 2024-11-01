@@ -6,6 +6,7 @@ import {
   updateRestaurantNameOwnerAvailabilityById,
   deleteRestaurantById,
   setRestaurantVerificationStatusById,
+  getNonSensitiveRestaurantInfoById,
 } from "../database/queries/restaurant.query.js";
 
 const getRestaurant = asyncHandler(async (req, res) => {
@@ -14,7 +15,6 @@ const getRestaurant = asyncHandler(async (req, res) => {
   if (!restaurantId) {
     return res.status(400).json(
       new ApiResponse(
-        400,
         {
           reason: "restaurantId could not be retrieved from req.body",
           at: "restaurant.controller.js -> getRestaurant",
@@ -25,12 +25,11 @@ const getRestaurant = asyncHandler(async (req, res) => {
   }
 
   try {
-    const restaurant = await getRestaurantById(restaurantId);
+    const restaurant = await getNonSensitiveRestaurantInfoById(restaurantId);
     return res
       .status(200)
       .json(
         new ApiResponse(
-          200,
           { restaurant: restaurant[0] },
           "Restaurant added successfully."
         )
@@ -38,12 +37,11 @@ const getRestaurant = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: error.message || "restaurant cannot be added",
           at: "restaurant.controller.js -> getRestaurant",
         },
-        "Restaurant could not be added."
+        "Restaurant could not be fetched."
       )
     );
   }
@@ -62,6 +60,12 @@ const addRestaurant = asyncHandler(async (req, res) => {
     pinCode,
     availabilityStatus,
     licenseUrl,
+    gstinNo,
+    AccountNo,
+    ifscCode,
+    bankName,
+    bankBranchCity,
+    password,
   } = req.body;
 
   const requiredFields = [
@@ -97,11 +101,41 @@ const addRestaurant = asyncHandler(async (req, res) => {
       message: "License URL is required.",
       reason: `licenseUrl is ${licenseUrl}`,
     },
+    {
+      field: gstinNo,
+      message: "GSTIN No. is required.",
+      reason: `gstinNo is ${gstinNo}`,
+    },
+    {
+      field: AccountNo,
+      message: "AccountNo is required.",
+      reason: `accountNo is ${AccountNo}`,
+    },
+    {
+      field: ifscCode,
+      message: "ifscCode is required.",
+      reason: `ifscCode is ${ifscCode}`,
+    },
+    {
+      field: bankName,
+      message: "Bank name is required.",
+      reason: `bankName is ${bankName}`,
+    },
+    {
+      field: bankBranchCity,
+      message: "BankBranchCity is required.",
+      reason: `bankBranchCity is ${bankBranchCity}`,
+    },
+    {
+      field: password,
+      message: "Password is required.",
+      reason: `password is ${password}`,
+    },
   ];
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
 
@@ -118,13 +152,18 @@ const addRestaurant = asyncHandler(async (req, res) => {
       pinCode,
       availabilityStatus,
       licenseUrl,
+      gstinNo,
+      AccountNo,
+      ifscCode,
+      bankName,
+      bankBranchCity,
+      password,
     });
 
     return res
       .status(201)
       .json(
         new ApiResponse(
-          201,
           { restaurant: restaurant[0] },
           "Restaurant added successfully."
         )
@@ -132,9 +171,8 @@ const addRestaurant = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
-          reason: error.message || "error occured during restaurant creation",
+          reason: error.message || "error occurred during restaurant creation",
           at: "restaurant.controller.js",
         },
         "Unable to add Restaurant."
@@ -150,11 +188,10 @@ const updateRestaurant = asyncHandler(async (req, res) => {
     !restaurantId ||
     !name ||
     !licenseUrl ||
-    availabilityStatus == undefined
+    availabilityStatus === undefined
   ) {
     return res.status(400).json(
       new ApiResponse(
-        400,
         {
           reason: `restaurantId:${restaurantId}, name:${name}, licenseUrl:${licenseUrl}, availabilityStatus:${availabilityStatus}`,
         },
@@ -170,7 +207,6 @@ const updateRestaurant = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: `restaurant is ${restaurant}` },
           "Restaurant not Found."
         )
@@ -187,7 +223,6 @@ const updateRestaurant = asyncHandler(async (req, res) => {
       .status(200)
       .json(
         new ApiResponse(
-          200,
           { restaurant: restaurant[0] },
           "Restaurant details updated."
         )
@@ -197,7 +232,6 @@ const updateRestaurant = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message },
           "Could not update restaurant details."
         )
@@ -212,7 +246,6 @@ const verifyRestaurant = asyncHandler(async (req, res) => {
   if (!restaurantId) {
     return res.status(400).json(
       new ApiResponse(
-        400,
         {
           reason: { restaurantId },
         },
@@ -230,7 +263,6 @@ const verifyRestaurant = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: `restaurant is ${restaurant}` },
           "Restaurant not Found."
         )
@@ -246,7 +278,6 @@ const verifyRestaurant = asyncHandler(async (req, res) => {
       .status(200)
       .json(
         new ApiResponse(
-          200,
           { restaurant: restaurant[0] },
           acceptVerification
             ? "Restaurant verified."
@@ -258,7 +289,6 @@ const verifyRestaurant = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message },
           "Could update restaurant verification."
         )
@@ -272,7 +302,6 @@ const deleteRestaurant = asyncHandler(async (req, res) => {
   if (!restaurantId) {
     return res.status(400).json(
       new ApiResponse(
-        400,
         {
           reason: { restaurantId },
         },
@@ -288,7 +317,6 @@ const deleteRestaurant = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: `restaurant is ${restaurant}` },
           "Restaurant not Found."
         )
@@ -300,18 +328,13 @@ const deleteRestaurant = asyncHandler(async (req, res) => {
     return res
       .status(200)
       .json(
-        new ApiResponse(
-          200,
-          { restaurant: restaurant[0] },
-          "Restaurant deleted."
-        )
+        new ApiResponse({ restaurant: restaurant[0] }, "Restaurant deleted.")
       );
   } catch (error) {
     return res
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message },
           "Could not delete restaurant."
         )

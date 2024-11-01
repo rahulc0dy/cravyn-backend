@@ -8,18 +8,18 @@ import {
   deleteRestaurantOwnerAccount,
   updateRestaurantOwnerAccount,
 } from "../controllers/restaurantOwner.controller.js";
-import { verifyJwt } from "../middlewares/auth.middleware.js";
+import { verifyUserJwt } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
 router.route("/login").post(loginRestaurantOwner);
 router.route("/register").post(registerRestaurantOwner);
-router.route("/logout").post(verifyJwt, logoutRestaurantOwner);
+router.route("/logout").post(verifyUserJwt, logoutRestaurantOwner);
 router.route("/refresh-token").post(refreshAccessToken);
 router
   .route("/")
-  .delete(verifyJwt, deleteRestaurantOwnerAccount)
-  .patch(verifyJwt, updateRestaurantOwnerAccount)
-  .get(verifyJwt, getRestaurantOwnerAccount);
+  .delete(verifyUserJwt, deleteRestaurantOwnerAccount)
+  .patch(verifyUserJwt, updateRestaurantOwnerAccount)
+  .get(verifyUserJwt, getRestaurantOwnerAccount);
 
 export default router;

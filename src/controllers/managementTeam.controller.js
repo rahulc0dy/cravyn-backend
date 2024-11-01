@@ -22,7 +22,6 @@ const getManagementTeamAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: `req.managementTeam is ${req.managementTeam}` },
           "Unauthorised Access."
         )
@@ -38,7 +37,6 @@ const getManagementTeamAccount = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: `ManagementTeam not found by id` },
           "User not found."
         )
@@ -49,7 +47,6 @@ const getManagementTeamAccount = asyncHandler(async (req, res) => {
     .status(200)
     .json(
       new ApiResponse(
-        200,
         { managementTeam },
         "ManagementTeam obtained successfully"
       )
@@ -74,7 +71,7 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
 
@@ -85,7 +82,6 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
       .status(503)
       .json(
         new ApiResponse(
-          401,
           { reason: "No managementTeam found with given credentials" },
           "Phone number is not registered."
         )
@@ -100,7 +96,6 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Incorrect Password." },
           "Invalid credentials, please try again."
         )
@@ -127,7 +122,6 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
     .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
-        200,
         {
           managementTeam: managementTeam[0],
           accessToken,
@@ -167,7 +161,7 @@ const registerManagementTeam = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
 
@@ -176,7 +170,6 @@ const registerManagementTeam = asyncHandler(async (req, res) => {
       .status(400)
       .json(
         new ApiResponse(
-          400,
           { reason: "Passwords do not match" },
           "Password confirmation does not match."
         )
@@ -190,7 +183,6 @@ const registerManagementTeam = asyncHandler(async (req, res) => {
       .status(409)
       .json(
         new ApiResponse(
-          409,
           { reason: "ManagementTeam already registered" },
           "ManagementTeam already exists."
         )
@@ -211,7 +203,6 @@ const registerManagementTeam = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message || "Management team creation query error" },
           "Something went wrong while registering the managementTeam."
         )
@@ -223,7 +214,6 @@ const registerManagementTeam = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: "ManagementTeam is not defined" },
           "Failed to register managementTeam"
         )
@@ -237,11 +227,7 @@ const registerManagementTeam = asyncHandler(async (req, res) => {
   return res
     .status(201)
     .json(
-      new ApiResponse(
-        201,
-        managementTeam,
-        "ManagementTeam registered successfully."
-      )
+      new ApiResponse(managementTeam, "ManagementTeam registered successfully.")
     );
 });
 
@@ -253,7 +239,6 @@ const logoutManagementTeam = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { ...error },
           "Unable to fetch the logged in managementTeam."
         )
@@ -271,7 +256,6 @@ const logoutManagementTeam = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(
       new ApiResponse(
-        200,
         { reason: "Logout successful" },
         "ManagementTeam logged out successfully."
       )
@@ -287,7 +271,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Request unauthorised" },
           "Unauthorized request"
         )
@@ -309,7 +292,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         .status(500)
         .json(
           new ApiResponse(
-            401,
             { reason: "Token verification failed" },
             "Invalid refresh token"
           )
@@ -321,7 +303,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Tokens do not match" },
             "Unable to reinstate session"
           )
@@ -341,7 +322,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .cookie("refreshToken", newRefreshToken, options)
       .json(
         new ApiResponse(
-          200,
           {
             accessToken: accessToken,
             refreshToken: newRefreshToken,
@@ -354,7 +334,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { ...error, reason: "Error occured while trying to refresh token" },
           error?.message || "Invalid refresh token"
         )
@@ -380,7 +359,7 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
   let managementTeam;
@@ -399,7 +378,6 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Invalid Refresh Token." },
             "ManagementTeam not found"
           )
@@ -410,7 +388,6 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { ...error, reason: "Refresh token could not be verified" },
           error?.message || "Invalid request"
         )
@@ -422,7 +399,6 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
       .status(503)
       .json(
         new ApiResponse(
-          401,
           { reason: "Unable to get managementTeam" },
           "Phone number is not registered"
         )
@@ -437,7 +413,6 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Incorrect Password" },
           "Invalid credentials, please try again."
         )
@@ -451,7 +426,6 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { ...error, reason: "Unable to fetch the logged in managementTeam." },
           "Failed to delete ManagementTeam"
         )
@@ -469,7 +443,6 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(
       new ApiResponse(
-        200,
         { reason: "Deletion successful" },
         "ManagementTeam deleted out successfully."
       )
@@ -484,7 +457,6 @@ const updateManagementTeamAccount = asyncHandler(async (req, res) => {
       .status(400)
       .json(
         new ApiResponse(
-          400,
           { reason: "No update details provided" },
           "Please provide details to update"
         )
@@ -510,7 +482,6 @@ const updateManagementTeamAccount = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           ...error,
           reason: error.message || "ManagementTeam could not be updated",
@@ -524,7 +495,6 @@ const updateManagementTeamAccount = asyncHandler(async (req, res) => {
     .status(200)
     .json(
       new ApiResponse(
-        200,
         { managementTeam: managementTeam[0] },
         "ManagementTeam details updated."
       )
