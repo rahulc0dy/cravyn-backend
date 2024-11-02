@@ -5,7 +5,10 @@ import {
   updateRestaurant,
   deleteRestaurant,
   verifyRestaurant,
+  loginRestaurant,
+  refreshAccessToken,
 } from "../controllers/restaurant.controller.js";
+import { verifyUserJwt } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -15,6 +18,9 @@ router
   .post(addRestaurant)
   .patch(updateRestaurant)
   .delete(deleteRestaurant);
+
+router.route("/login").post(loginRestaurant);
+router.route("/refresh-token").post(refreshAccessToken);
 
 router.route("/verify").post(verifyRestaurant);
 

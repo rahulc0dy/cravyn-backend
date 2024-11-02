@@ -336,7 +336,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       new ApiResponse(
         {
           reason:
-            error.message || "Error occured while trying to refresh token",
+            error.message || "Error occurred while trying to refresh token",
         },
         "Unable to refresh tokens."
       )
