@@ -31,7 +31,6 @@ const getRestaurant = asyncHandler(async (req, res) => {
       )
     );
   }
-  console.log(sensitive);
   try {
     const restaurant =
       sensitive !== true
@@ -299,7 +298,6 @@ const loginRestaurant = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure: true,
   };
-  console.log(restaurant[0]);
   delete restaurant[0].refresh_token;
   delete restaurant[0].password;
 

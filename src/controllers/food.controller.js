@@ -68,13 +68,12 @@ const getFood = asyncHandler(async (req, res) => {
 });
 
 const addFood = asyncHandler(async (req, res) => {
-  const { restaurantId, name, type, price, foodImageUrl, description } =
-    req.body;
+  const { restaurant, name, type, price, foodImageUrl, description } = req.body;
 
   const requiredFields = [
     {
-      field: restaurantId,
-      reason: "restaurantId Missing",
+      field: restaurant,
+      reason: "restaurant not defined",
       message: "Restaurant authorisation failure.",
     },
     {
@@ -92,6 +91,11 @@ const addFood = asyncHandler(async (req, res) => {
       reason: "price Missing",
       message: "Price is Required.",
     },
+    {
+      field: description,
+      reason: "description Missing",
+      message: "Description is Required.",
+    },
   ];
 
   for (const { field, reason, message } of requiredFields) {
@@ -108,17 +112,21 @@ const addFood = asyncHandler(async (req, res) => {
   }
 
   try {
-    let foodItem = await getFoodItemByName(name);
+    const restaurant = await getRestaurantById(restaurant.restaurant_id);
 
-    const restaurant = await getRestaurantById(restaurantId);
+    const restaurantId = restaurant?.restaurant_id;
 
-    if (foodItem.length === 0) foodItem = await createFoodItem({ name, type });
-
-    const foodItemId = foodItem[0]?.item_id;
+    const foodItem = await createFoodItem({
+      name,
+      type,
+      price,
+      description,
+      foodImageUrl,
+      restaurantId,
+    });
 
     const data = {
       foodItem: foodItem[0],
-      preparesItem: preparesItem[0],
       restaurant: restaurant[0],
     };
 
