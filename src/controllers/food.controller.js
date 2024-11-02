@@ -68,7 +68,8 @@ const getFood = asyncHandler(async (req, res) => {
 });
 
 const addFood = asyncHandler(async (req, res) => {
-  const { restaurant, name, type, price, foodImageUrl, description } = req.body;
+  const { name, type, price, foodImageUrl, description } = req.body;
+  let { restaurant } = req;
 
   const requiredFields = [
     {
@@ -112,7 +113,7 @@ const addFood = asyncHandler(async (req, res) => {
   }
 
   try {
-    const restaurant = await getRestaurantById(restaurant.restaurant_id);
+    restaurant = await getRestaurantById(restaurant.restaurant_id);
 
     const restaurantId = restaurant?.restaurant_id;
 
@@ -148,6 +149,7 @@ const addFood = asyncHandler(async (req, res) => {
       .status(201)
       .json(new ApiResponse(data, "Food item added successfully."));
   } catch (error) {
+    console.log(error);
     return res.status(500).json(
       new ApiResponse(
         {
