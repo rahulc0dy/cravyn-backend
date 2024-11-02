@@ -3,10 +3,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   getFoodItemById,
   createFoodItem,
-  getFoodItemByName,
+  updateFoodItemDiscountById,
+  deleteFoodItemById,
 } from "../database/queries/foodItem.query.js";
 import { getRestaurantById } from "../database/queries/restaurant.query.js";
-import { getRestaurantOwnerById } from "../database/queries/restaurantOwner.query.js";
 
 const getFood = asyncHandler(async (req, res) => {
   const { restaurantId } = req.restaurant?.id;
@@ -68,7 +68,15 @@ const getFood = asyncHandler(async (req, res) => {
 });
 
 const addFood = asyncHandler(async (req, res) => {
-  const { name, type, price, foodImageUrl, description } = req.body;
+  const {
+    name,
+    type,
+    price,
+    discountPercent,
+    discountCap,
+    foodImageUrl,
+    description,
+  } = req.body;
   let { restaurant } = req;
 
   const requiredFields = [
@@ -85,17 +93,17 @@ const addFood = asyncHandler(async (req, res) => {
     {
       field: type,
       reason: "type Missing",
-      message: "type is reqiured.",
+      message: "Type is required.",
     },
     {
       field: price,
       reason: "price Missing",
-      message: "Price is Required.",
+      message: "Price is required.",
     },
     {
       field: description,
       reason: "description Missing",
-      message: "Description is Required.",
+      message: "Description is required.",
     },
   ];
 
@@ -115,15 +123,17 @@ const addFood = asyncHandler(async (req, res) => {
   try {
     restaurant = await getRestaurantById(restaurant.restaurant_id);
 
-    const restaurantId = restaurant?.restaurant_id;
+    const restaurantId = restaurant[0].restaurant_id;
 
     const foodItem = await createFoodItem({
       name,
       type,
-      price,
-      description,
-      foodImageUrl,
       restaurantId,
+      price,
+      discountPercent,
+      discountCap,
+      foodImageUrl,
+      description,
     });
 
     const data = {
@@ -163,12 +173,13 @@ const addFood = asyncHandler(async (req, res) => {
 });
 
 const updateFoodDiscount = asyncHandler(async (req, res) => {
-  const { foodItemId, restaurantId, discountPercent, discountCap } = req.body;
+  const { foodItemId, discountPercent, discountCap } = req.body;
+  let { restaurant } = req;
 
   const requiredFields = [
     {
-      field: restaurantId,
-      reason: "restaurantId Missing",
+      field: restaurant,
+      reason: "restaurant not defined",
       message: "Restaurant authorisation failure.",
     },
     {
@@ -202,41 +213,37 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
   }
 
   try {
-    let [foodItem, restaurant] = await Promise.all([
-      getFoodItemById(foodItemId),
-      getRestaurantById(restaurantId),
-    ]);
+    restaurant = await getRestaurantById(restaurant.restaurant_id);
 
-    const preparesItem = await updatePreparesDiscountById({
+    const restaurantId = restaurant[0].restaurant_id;
+
+    const updatedFoodItem = await updateFoodItemDiscountById({
       foodItemId,
       restaurantId,
       discountPercent,
       discountCap,
     });
 
-    const data = {
-      foodItem: foodItem[0],
-      preparesItem: preparesItem[0],
-      restaurant: restaurant[0],
-    };
-
-    for (const key in data) {
-      if (!data[key]) {
-        return res.status(404).json(
-          new ApiResponse(
-            {
-              reason: `${key} had error while keycheck.`,
-              at: "foodItem.controller.js -> updateFoodDiscount",
-            },
-            "Item not found."
-          )
-        );
-      }
+    if (updatedFoodItem.length == 0) {
+      return res.status(404).json(
+        new ApiResponse(
+          {
+            reason: `Maybe food item does not belong to that restaurant.`,
+            at: "foodItem.controller.js -> updateFoodDiscount",
+          },
+          "Item not found."
+        )
+      );
     }
 
     return res
       .status(200)
-      .json(new ApiResponse(data, "Food item discount updated successfully."));
+      .json(
+        new ApiResponse(
+          updatedFoodItem,
+          "Food item discount updated successfully."
+        )
+      );
   } catch (error) {
     return res
       .status(500)
@@ -250,65 +257,60 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
 });
 
 const deleteFood = asyncHandler(async (req, res) => {
-  const { foodItemId, restaurantId } = req.body;
+  const { foodItemId } = req.body;
+  let { restaurant } = req;
 
-  if (!foodItemId || !restaurantId) {
-    return res.status(400).json(
-      new ApiResponse(
-        {
-          reason: foodItemId
-            ? "restaurantId is undefined"
-            : `foodItemId is ${foodItemId}`,
-        },
-        "Bad request."
-      )
-    );
-  }
+  const requiredFields = [
+    {
+      field: restaurant,
+      reason: "restaurant not defined",
+      message: "Restaurant authorisation failure.",
+    },
+    {
+      field: foodItemId,
+      reason: "foodItemId Missing",
+      message: "Food identification failure.",
+    },
+  ];
 
-  let preparesItem = await getPreparesById(foodItemId, restaurantId);
-
-  if (preparesItem.length <= 0) {
-    return res
-      .status(404)
-      .json(
+  for (const { field, reason, message } of requiredFields) {
+    if (!field) {
+      return res.status(400).json(
         new ApiResponse(
-          { reason: `preparesItem is ${preparesItem}` },
-          "Food item not found."
+          {
+            reason,
+          },
+          message
         )
       );
+    }
   }
 
   try {
-    let [foodItem, restaurant] = await Promise.all([
-      getFoodItemById(foodItemId),
-      getRestaurantById(restaurantId),
-    ]);
+    restaurant = await getRestaurantById(restaurant.restaurant_id);
 
-    preparesItem = await deletePreparesById(foodItemId, restaurantId);
+    const restaurantId = restaurant[0].restaurant_id;
 
-    const data = {
-      foodItem: foodItem[0],
-      preparesItem: preparesItem[0],
-      restaurant: restaurant[0],
-    };
+    const deletedFoodItem = await deleteFoodItemById({
+      foodItemId,
+      restaurantId,
+    });
 
-    for (const key in data) {
-      if (!data[key]) {
-        return res.status(404).json(
-          new ApiResponse(
-            {
-              reason: `${key} had error while keycheck.`,
-              at: "foodItem.controller.js -> updateFoodDiscount",
-            },
-            "Item not found."
-          )
-        );
-      }
+    if (deletedFoodItem.length == 0) {
+      return res.status(404).json(
+        new ApiResponse(
+          {
+            reason: `Maybe food item does not belong to that restaurant.`,
+            at: "foodItem.controller.js -> deleteFood",
+          },
+          "Item not found."
+        )
+      );
     }
 
     return res
       .status(200)
-      .json(new ApiResponse(data, "Food item deleted successfully."));
+      .json(new ApiResponse({}, "Food item deleted successfully."));
   } catch (error) {
     return res
       .status(500)

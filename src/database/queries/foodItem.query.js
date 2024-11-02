@@ -17,36 +17,51 @@ const getFoodItemByName = async (name) => {
 const createFoodItem = async ({
   name,
   type,
-  description,
-  price,
-  foodImageUrl,
   restaurantId,
+  price,
+  discountPercent,
+  discountCap,
+  foodImageUrl,
+  description,
 }) => {
   const foodItem = await sql`
-    INSERT INTO Food_Item ( food_name, type, description, price, food_image_url ) VALUES ( ${name}, ${type}, ${description}, ${price}, ${foodImageUrl}, ${restaurantId} ) RETURNING * ;
+    INSERT INTO Food_Item ( food_name, type, restaurant_id, price, discount_percent, discount_cap, food_image_url, description )
+    VALUES ( ${name}, ${type}, ${restaurantId}, ${price}, ${discountPercent}, ${discountCap}, ${foodImageUrl}, ${description} ) RETURNING * ;
     `;
 
   return foodItem;
 };
 
-const updateFoodItemById = async (foodItemId, { name, type, description }) => {
+const updateFoodItemDiscountById = async ({
+  foodItemId,
+  restaurantId,
+  discountPercent,
+  discountCap,
+}) => {
   const foodItem = await sql`
-    UPDATE Food_Item SET name=${name}, type=${type}, description=${description} WHERE item_id=${foodItemId} RETURNING * ;
+    UPDATE Food_Item
+    SET discount_percent=${discountPercent}, discount_cap=${discountCap}
+    WHERE item_id=${foodItemId} AND restaurant_id=${restaurantId}
+    RETURNING * ;
     `;
 
   return foodItem;
 };
 
-const deleteFoodItemById = async (foodItemId) => {
+const deleteFoodItemById = async ({ foodItemId, restaurantId }) => {
   const foodItem = await sql`
-    DELETE FROM Food_Item WHERE item_id=${foodItemId} RETURNING * ;
+    DELETE FROM Food_Item
+    WHERE item_id=${foodItemId} AND restaurant_id=${restaurantId}
+    RETURNING * ;
     `;
+
+  return foodItem;
 };
 
 export {
   getFoodItemById,
   getFoodItemByName,
   createFoodItem,
-  updateFoodItemById,
+  updateFoodItemDiscountById,
   deleteFoodItemById,
 };

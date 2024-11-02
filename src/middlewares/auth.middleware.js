@@ -121,7 +121,10 @@ export const verifyRestaurantJwt = asyncHandler(async (req, res, next) => {
       return res
         .status(401)
         .json(
-          new ApiResponse({ reason: "Invalid Access Token" }, "User not found.")
+          new ApiResponse(
+            { reason: "Invalid Access Token" },
+            "Restaurant not found."
+          )
         );
     }
 

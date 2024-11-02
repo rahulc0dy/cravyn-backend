@@ -308,7 +308,7 @@ const loginRestaurant = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         {
-          customer: restaurant[0],
+          restaurant: restaurant[0],
           accessToken,
           refreshToken,
         },
