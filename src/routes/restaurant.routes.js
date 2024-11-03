@@ -8,20 +8,19 @@ import {
   loginRestaurant,
   refreshAccessToken,
 } from "../controllers/restaurant.controller.js";
-import { verifyUserJwt } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
 router
   .route("/")
   .get(getRestaurant)
-  .post(addRestaurant)
+  .post(upload.single("licenseCopy"), addRestaurant)
   .patch(updateRestaurant)
   .delete(deleteRestaurant);
 
 router.route("/login").post(loginRestaurant);
 router.route("/refresh-token").post(refreshAccessToken);
-
 router.route("/verify").post(verifyRestaurant);
 
 export default router;

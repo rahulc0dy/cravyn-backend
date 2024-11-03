@@ -16,6 +16,12 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import jwt from "jsonwebtoken";
+import {
+  deleteImageFromCloudinary,
+  uploadImageOnCloudinary,
+} from "../utils/cloudinary.js";
+import { updateCustomerImageUrl } from "../database/queries/customer.query.js";
+import fs from "fs";
 
 const getRestaurant = asyncHandler(async (req, res) => {
   const { restaurantId, sensitive } = req.body;
@@ -81,7 +87,6 @@ const addRestaurant = asyncHandler(async (req, res) => {
     landmark,
     pinCode,
     availabilityStatus,
-    licenseUrl,
     gstinNo,
     accountNo,
     ifscCode,
@@ -118,11 +123,6 @@ const addRestaurant = asyncHandler(async (req, res) => {
       field: availabilityStatus,
       message: "Availability status is required.",
       reason: `availabilityStatus is ${availabilityStatus}`,
-    },
-    {
-      field: licenseUrl,
-      message: "License URL is required.",
-      reason: `licenseUrl is ${licenseUrl}`,
     },
     {
       field: gstinNo,
@@ -181,6 +181,27 @@ const addRestaurant = asyncHandler(async (req, res) => {
   const passwordHash = await bcrypt.hash(password, 10);
 
   try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            { reason: `The licenseCopy passed is ${req.file}` },
+            "No licenseCopy uploaded."
+          )
+        );
+    }
+
+    const localFilePath = req.file.path;
+
+    const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
+
+    if (!cloudinaryResponse.url) {
+      throw new Error("Failed to upload document.");
+    }
+
+    const licenseUrl = cloudinaryResponse.url;
+
     const restaurant = await createRestaurant({
       name,
       registrationNo,
@@ -202,6 +223,7 @@ const addRestaurant = asyncHandler(async (req, res) => {
     });
 
     if (!restaurant) {
+      await deleteImageFromCloudinary(cloudinaryResponse.public_id);
       return res
         .status(400)
         .json(
@@ -233,6 +255,10 @@ const addRestaurant = asyncHandler(async (req, res) => {
         "Unable to add Restaurant."
       )
     );
+  } finally {
+    if (req.file && req.file.path) {
+      fs.unlinkSync(req.file.path);
+    }
   }
 });
 
