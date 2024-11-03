@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: cravyn-backend
+    ports:
+      - "8800:8800"  # Maps port 8800 on the host to port 8800 in the container
+    env_file:
+      - .env
+      - .env.local
+      - .env.test
+      - .env.production
+    volumes:
+      - .:/app  # Mounts the project directory to /app in the container
+      - /app/node_modules  # Ensures node_modules inside container isn't overwritten
