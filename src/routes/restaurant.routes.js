@@ -20,7 +20,7 @@ router
   .delete(deleteRestaurant);
 
 router.route("/login").post(loginRestaurant);
-router.route("/refresh-token").post(refreshAccessToken);
+router.route("/refresh-token").get(refreshAccessToken);
 router.route("/verify").post(verifyRestaurant);
 
 export default router;

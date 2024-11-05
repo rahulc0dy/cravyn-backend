@@ -20,7 +20,6 @@ import {
   deleteImageFromCloudinary,
   uploadImageOnCloudinary,
 } from "../utils/cloudinary.js";
-import { updateCustomerImageUrl } from "../database/queries/customer.query.js";
 import fs from "fs";
 
 const getRestaurant = asyncHandler(async (req, res) => {
@@ -287,6 +286,17 @@ const loginRestaurant = asyncHandler(async (req, res) => {
   let restaurant =
     await getNonSensitiveRestaurantInfoByRegNo(registrationNumber);
 
+  if (restaurant.length <= 0) {
+    return res
+      .status(404)
+      .json(
+        new ApiResponse(
+          { reason: "No restaurant found with given credentials" },
+          "Restaurant is not registered."
+        )
+      );
+  }
+
   restaurant = await getRestaurantById(restaurant[0].restaurant_id);
 
   if (restaurant.length <= 0) {
@@ -322,7 +332,7 @@ const loginRestaurant = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: true,
+    secure: false,
   };
   delete restaurant[0].refresh_token;
   delete restaurant[0].password;
@@ -467,7 +477,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     req.cookies?.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
-    res
+    return res
       .status(401)
       .json(
         new ApiResponse(
@@ -483,7 +493,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    let restaurant = await getCustomerById(decodedToken.id);
+    let restaurant = await getNonSensitiveRestaurantInfoById(decodedToken.id);
 
     restaurant = restaurant[0];
 
@@ -499,7 +509,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
     if (incomingRefreshToken !== restaurant?.refresh_token)
-      res
+      return res
         .status(401)
         .json(
           new ApiResponse(
@@ -530,7 +540,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    res.status(401).json(
+    return res.status(401).json(
       new ApiResponse(
         {
           reason:
