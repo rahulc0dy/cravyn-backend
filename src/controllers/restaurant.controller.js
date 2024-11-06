@@ -21,6 +21,8 @@ import {
   uploadImageOnCloudinary,
 } from "../utils/cloudinary.js";
 import fs from "fs";
+import { getFoodsByRestaurantId } from "../database/queries/foodItem.query.js";
+import error from "multer/lib/multer-error.js";
 
 const getRestaurant = asyncHandler(async (req, res) => {
   const { restaurantId, sensitive } = req.body;
@@ -196,7 +198,14 @@ const addRestaurant = asyncHandler(async (req, res) => {
     const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
 
     if (!cloudinaryResponse.url) {
-      throw new Error("Failed to upload document.");
+      return res
+        .status(500)
+        .json(
+          new ApiResponse(
+            { reason: "Could not upload image." },
+            "Document Upload Failed."
+          )
+        );
     }
 
     const licenseUrl = cloudinaryResponse.url;
@@ -411,12 +420,8 @@ const updateRestaurant = asyncHandler(async (req, res) => {
   }
 });
 
-const updateRestaurantPassword = asyncHandler(async (req, res) => {
-  const { restaurantId, password } = req.body;
-});
-
 const verifyRestaurant = asyncHandler(async (req, res) => {
-  const { restaurantId } = req.body;
+  const { restaurantId, managementTeamMemberId } = req.body;
   let { acceptVerification } = req.body;
 
   if (!restaurantId) {
@@ -540,7 +545,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    return res.status(401).json(
+    return res.status(500).json(
       new ApiResponse(
         {
           reason:
@@ -598,6 +603,67 @@ const deleteRestaurant = asyncHandler(async (req, res) => {
   }
 });
 
+const getRestaurantCatalog = asyncHandler(async (req, res) => {
+  const { limit } = req.body;
+
+  if (!req.restaurant || !req.restaurant.restaurant_id) {
+    return res
+      .status(404)
+      .json(
+        new ApiResponse(
+          { reason: "No restaurant found." },
+          "Restaurant not found."
+        )
+      );
+  }
+
+  try {
+    const restaurant = await getRestaurantById(req.restaurant?.restaurant_id);
+
+    if (restaurant.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "No restaurant found." },
+            "Restaurant not found."
+          )
+        );
+    }
+
+    const catalog = await getFoodsByRestaurantId(restaurant[0].restaurant_id);
+
+    if (catalog.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "Catalog Could not be fetched." },
+            "Catalog not found."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          { catalog, restaurant: restaurant[0] },
+          "Catalog fetched successfully."
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message, error: JSON.stringify(error) },
+          "Failed to get food catalog"
+        )
+      );
+  }
+});
+
 export {
   getRestaurant,
   addRestaurant,
@@ -606,4 +672,5 @@ export {
   updateRestaurant,
   deleteRestaurant,
   verifyRestaurant,
+  getRestaurantCatalog,
 };

@@ -14,6 +14,13 @@ const getFoodItemByName = async (name) => {
   return foodItem;
 };
 
+const getFoodsByRestaurantId = async (restaurantId, limit = null) => {
+  const foodItem = await sql`
+    SELECT * FROM Food_Item WHERE restaurant_id = ${restaurantId} LIMIT ${limit};
+    `;
+  return foodItem;
+};
+
 const createFoodItem = async ({
   name,
   type,
@@ -61,6 +68,7 @@ const deleteFoodItemById = async ({ foodItemId, restaurantId }) => {
 export {
   getFoodItemById,
   getFoodItemByName,
+  getFoodsByRestaurantId,
   createFoodItem,
   updateFoodItemDiscountById,
   deleteFoodItemById,

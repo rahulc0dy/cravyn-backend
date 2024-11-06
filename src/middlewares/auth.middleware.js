@@ -136,8 +136,14 @@ export const verifyRestaurantJwt = asyncHandler(async (req, res, next) => {
       .status(401)
       .json(
         new ApiResponse(
-          { reason: error.message || "Error at auth middleware" },
-          error?.message || "Invalid Access Token."
+          {
+            reason: error.message.includes("jwt expired")
+              ? "Token expired"
+              : error.message,
+          },
+          error.message.includes("jwt expired")
+            ? "Session expired. Please log in again."
+            : "Invalid Access Token."
         )
       );
   }
