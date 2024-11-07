@@ -2,7 +2,8 @@ const getGeocodeUrl = (address) => {
   if (!address) {
     throw new Error("Geocode address is required");
   }
-  return `https://geocode.maps.co/search?q=${address}&api_key=${process.env.GEOCODE_API_KEY}`;
+  const encodedAddress = encodeURIComponent(address);
+  return `https://geocode.maps.co/search?q=${encodedAddress}&api_key=${process.env.GEOCODE_API_KEY}`;
 };
 
 const getReverseGeocodeUrl = (latitude, longitude) => {

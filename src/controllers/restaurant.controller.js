@@ -24,6 +24,8 @@ import {
 } from "../utils/cloudinary.js";
 import fs from "fs";
 import { getFoodsByRestaurantId } from "../database/queries/foodItem.query.js";
+import { getCoordinates } from "./geocode.controller.js";
+import { getGeocodeUrl } from "../utils/geocodeUrl.js";
 
 const getRestaurantsList = asyncHandler(async (req, res) => {
   const { limit, offset } = req.query;
@@ -194,6 +196,30 @@ const addRestaurant = asyncHandler(async (req, res) => {
       reason: `password is ${password}`,
     },
   ];
+
+  if (!lat || !long)
+    try {
+      const address = `${city}, ${pinCode}`;
+      const url = getGeocodeUrl(address);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch geocode data");
+      }
+
+      const data = await response.json();
+
+      const [lat, long] = [data[0].lat, data[0].long];
+    } catch (error) {
+      return res
+        .status(500)
+        .json(
+          new ApiResponse(
+            { error: error.message },
+            "Failed to retrieve coordinates"
+          )
+        );
+    }
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {

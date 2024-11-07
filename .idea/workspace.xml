@@ -4,13 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="245e1fe5-925b-4c53-bbea-bf187eafb75e" name="Changes" comment="restaurant catalog get method">
+    <list default="true" id="245e1fe5-925b-4c53-bbea-bf187eafb75e" name="Changes" comment="Restaurant menu and search restaurants by name">
       <change beforePath="$PROJECT_DIR$/.env.sample" beforeDir="false" afterPath="$PROJECT_DIR$/.env.sample" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/controllers/geocode.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/controllers/geocode.controller.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/controllers/restaurant.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/controllers/restaurant.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/database/queries/restaurant.query.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/queries/restaurant.query.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/restaurant.routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/restaurant.routes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/geocodeUrl.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/geocodeUrl.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -151,7 +151,7 @@
       <workItem from="1730822586337" duration="422000" />
       <workItem from="1730823236936" duration="286000" />
       <workItem from="1730886958481" duration="4857000" />
-      <workItem from="1730974860501" duration="7872000" />
+      <workItem from="1730974860501" duration="13133000" />
     </task>
     <task id="LOCAL-00001" summary="Restaurant modification">
       <option name="closed" value="true" />
@@ -193,7 +193,15 @@
       <option name="project" value="LOCAL" />
       <updated>1730895261028</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Restaurant menu and search restaurants by name">
+      <option name="closed" value="true" />
+      <created>1730985734060</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1730985734060</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -219,6 +227,7 @@
     <MESSAGE value="restaurant document upload" />
     <MESSAGE value="restaurant auth modification" />
     <MESSAGE value="restaurant catalog get method" />
-    <option name="LAST_COMMIT_MESSAGE" value="restaurant catalog get method" />
+    <MESSAGE value="Restaurant menu and search restaurants by name" />
+    <option name="LAST_COMMIT_MESSAGE" value="Restaurant menu and search restaurants by name" />
   </component>
 </project>

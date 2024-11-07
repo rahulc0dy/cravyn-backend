@@ -10,6 +10,7 @@ import restaurantRouter from "./routes/restaurant.routes.js";
 import deliveryPartnerRouter from "./routes/deliveryPartner.routes.js";
 import foodRouter from "./routes/food.routes.js";
 import passwordResetRouter from "./routes/passwordReset.routes.js";
+import geocodeRouter from "./routes/geocode.routes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 app.use("/api/v1/health-check", healthCheckRouter);
+app.use("/api/v1/geocode", geocodeRouter);
 
 app.use("/api/v1/customer", customerRouter);
 app.use("/api/v1/delivery-partner", deliveryPartnerRouter);
