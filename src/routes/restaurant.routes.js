@@ -8,6 +8,9 @@ import {
   loginRestaurant,
   refreshAccessToken,
   getRestaurantCatalog,
+  logoutRestaurant,
+  getRestaurantsList,
+  searchRestaurantByName,
 } from "../controllers/restaurant.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
@@ -17,14 +20,19 @@ import {
 
 const router = Router();
 
+router.route("/list").get(getRestaurantsList);
+router.route("/menu").get(getRestaurantCatalog);
+router.route("/search").get(searchRestaurantByName);
+
 router
   .route("/")
   .get(verifyRestaurantJwt, getRestaurant)
   .post(upload.single("licenseCopy"), addRestaurant)
   .patch(verifyRestaurantJwt, updateRestaurant)
-  .delete(deleteRestaurant);
+  .delete(verifyUserJwt, deleteRestaurant);
 
 router.route("/login").post(loginRestaurant);
+router.route("/logout").post(verifyRestaurantJwt, logoutRestaurant);
 router.route("/refresh-token").get(refreshAccessToken);
 router.route("/verify").post(verifyUserJwt, verifyRestaurant);
 

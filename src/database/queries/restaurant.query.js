@@ -26,6 +26,13 @@ const getNonSensitiveRestaurantInfoByRegNo = async (
   return restaurant;
 };
 
+const getRestaurants = async (limit = null, offset = null) => {
+  const restaurants = await sql`
+    SELECT * FROM Restaurant LIMIT ${limit};
+    `;
+  return restaurants;
+};
+
 const createRestaurant = async ({
   name,
   registrationNo,
@@ -112,10 +119,22 @@ const deleteRestaurantById = async (restaurantId) => {
   return restaurant;
 };
 
+const fuzzySearchRestaurant = async (name) => {
+  const threshold = 0.3; // Adjust this value for sensitivity
+  const restaurants = await sql`
+    SELECT *
+    FROM restaurant
+    WHERE similarity(name, ${name}) > ${threshold}
+    ORDER BY similarity(name, ${name}) DESC
+  `;
+  return restaurants;
+};
+
 export {
   getRestaurantById,
   getNonSensitiveRestaurantInfoById,
   getNonSensitiveRestaurantInfoByRegNo,
+  getRestaurants,
   createRestaurant,
   updateRestaurantNameOwnerAvailabilityById,
   updateRestaurantPaymentDetailsById,
@@ -123,4 +142,5 @@ export {
   setRestaurantVerificationStatusById,
   setRefreshToken,
   deleteRestaurantById,
+  fuzzySearchRestaurant,
 };

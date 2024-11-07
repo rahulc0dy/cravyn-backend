@@ -9,6 +9,8 @@ import {
   getNonSensitiveRestaurantInfoById,
   getNonSensitiveRestaurantInfoByRegNo,
   setRefreshToken,
+  getRestaurants,
+  fuzzySearchRestaurant,
 } from "../database/queries/restaurant.query.js";
 import bcrypt from "bcrypt";
 import {
@@ -22,7 +24,38 @@ import {
 } from "../utils/cloudinary.js";
 import fs from "fs";
 import { getFoodsByRestaurantId } from "../database/queries/foodItem.query.js";
-import error from "multer/lib/multer-error.js";
+
+const getRestaurantsList = asyncHandler(async (req, res) => {
+  const { limit, offset } = req.query;
+
+  try {
+    const restaurantsList = await getRestaurants(limit, offset);
+
+    if (restaurantsList.length === 0) {
+      return res
+        .status(401)
+        .json(
+          new ApiResponse(
+            { reason: "Restaurant List is empty" },
+            "No restaurants found."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse({ restaurantsList }, "Fetched successfully."));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Failed" },
+          "Failed to fetch restaurants."
+        )
+      );
+  }
+});
 
 const getRestaurant = asyncHandler(async (req, res) => {
   const { restaurantId, sensitive } = req.body;
@@ -362,6 +395,37 @@ const loginRestaurant = asyncHandler(async (req, res) => {
     );
 });
 
+const logoutRestaurant = asyncHandler(async (req, res) => {
+  try {
+    await setRefreshToken("NULL", req.restaurant.restaurant_id);
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Unable to set refresh token" },
+          "Unable to fetch the logged in restaurant."
+        )
+      );
+  }
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+      new ApiResponse(
+        { reason: "Logout successful" },
+        "Restaurant logged out successfully."
+      )
+    );
+});
+
 const updateRestaurant = asyncHandler(async (req, res) => {
   const { restaurantId, name, licenseUrl, availabilityStatus } = req.body;
 
@@ -604,21 +668,22 @@ const deleteRestaurant = asyncHandler(async (req, res) => {
 });
 
 const getRestaurantCatalog = asyncHandler(async (req, res) => {
-  const { limit } = req.body;
-
-  if (!req.restaurant || !req.restaurant.restaurant_id) {
+  const { limit, restaurantId } = req.query;
+  if ((!req.restaurant || !req.restaurant.restaurant_id) && !restaurantId) {
     return res
       .status(404)
       .json(
         new ApiResponse(
-          { reason: "No restaurant found." },
+          { reason: "restaurant id is missing" },
           "Restaurant not found."
         )
       );
   }
 
   try {
-    const restaurant = await getRestaurantById(req.restaurant?.restaurant_id);
+    const restaurant = await getNonSensitiveRestaurantInfoById(
+      req.restaurant?.restaurant_id || restaurantId
+    );
 
     if (restaurant.length === 0) {
       return res
@@ -631,7 +696,10 @@ const getRestaurantCatalog = asyncHandler(async (req, res) => {
         );
     }
 
-    const catalog = await getFoodsByRestaurantId(restaurant[0].restaurant_id);
+    const catalog = await getFoodsByRestaurantId(
+      restaurant[0].restaurant_id || restaurantId,
+      limit
+    );
 
     if (catalog.length === 0) {
       return res
@@ -648,7 +716,7 @@ const getRestaurantCatalog = asyncHandler(async (req, res) => {
       .status(200)
       .json(
         new ApiResponse(
-          { catalog, restaurant: restaurant[0] },
+          { catalog, restaurant: restaurantId ? null : restaurant[0] },
           "Catalog fetched successfully."
         )
       );
@@ -664,13 +732,53 @@ const getRestaurantCatalog = asyncHandler(async (req, res) => {
   }
 });
 
+const searchRestaurantByName = asyncHandler(async (req, res) => {
+  const { name } = req.query;
+
+  try {
+    const restaurantList = await fuzzySearchRestaurant(name);
+
+    if (restaurantList.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "No restaurant found with that name." },
+            "No restaurants found with this name."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          { restaurantList: restaurantList },
+          "Restaurants found with this name."
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message },
+          "Failed to get restaurant list"
+        )
+      );
+  }
+});
+
 export {
   getRestaurant,
+  getRestaurantsList,
   addRestaurant,
   loginRestaurant,
+  logoutRestaurant,
   refreshAccessToken,
   updateRestaurant,
   deleteRestaurant,
   verifyRestaurant,
   getRestaurantCatalog,
+  searchRestaurantByName,
 };

@@ -1,6 +1,6 @@
 {
   "name": "cravyn-backend",
-  "version": "1.0.0",
+  "version": "1.6.2",
   "description": "Backend APIs for cravyn Food Ordering System.",
   "type": "module",
   "main": "index.js",
