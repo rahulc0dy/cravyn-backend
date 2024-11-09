@@ -175,11 +175,6 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
       reason: `vehicleType is ${vehicleType}`,
     },
     {
-      field: availability,
-      message: "availability is required.",
-      reason: `availability is ${availability}`,
-    },
-    {
       field: password,
       message: "Password is required.",
       reason: `password is ${password}`,
@@ -231,7 +226,7 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
       phoneNumber,
       email,
       vehicleType,
-      availability,
+      availability: availability || false,
       password,
     });
   } catch (error) {

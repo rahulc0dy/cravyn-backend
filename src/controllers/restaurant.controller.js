@@ -88,11 +88,6 @@ const addRestaurant = asyncHandler(async (req, res) => {
       reason: `pinCode is ${pinCode}`,
     },
     {
-      field: availabilityStatus,
-      message: "Availability status is required.",
-      reason: `availabilityStatus is ${availabilityStatus}`,
-    },
-    {
       field: licenseUrl,
       message: "License URL is required.",
       reason: `licenseUrl is ${licenseUrl}`,
@@ -116,7 +111,7 @@ const addRestaurant = asyncHandler(async (req, res) => {
       street,
       landmark,
       pinCode,
-      availabilityStatus,
+      availabilityStatus: availabilityStatus || false,
       licenseUrl,
     });
 
