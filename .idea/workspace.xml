@@ -4,13 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="245e1fe5-925b-4c53-bbea-bf187eafb75e" name="Changes" comment="Geocoding and reverse geocoding">
+    <list default="true" id="245e1fe5-925b-4c53-bbea-bf187eafb75e" name="Changes" comment="Fuzzy search food item">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/controllers/food.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/controllers/food.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/controllers/restaurant.controller.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/controllers/restaurant.controller.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/database/queries/foodItem.query.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/queries/foodItem.query.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/food.routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/food.routes.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/restaurant.routes.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/restaurant.routes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -153,7 +149,8 @@
       <workItem from="1730886958481" duration="4857000" />
       <workItem from="1730974860501" duration="13442000" />
       <workItem from="1731041044691" duration="2125000" />
-      <workItem from="1731117125202" duration="1565000" />
+      <workItem from="1731117125202" duration="1823000" />
+      <workItem from="1731132953139" duration="1314000" />
     </task>
     <task id="LOCAL-00001" summary="Restaurant modification">
       <option name="closed" value="true" />
@@ -211,7 +208,15 @@
       <option name="project" value="LOCAL" />
       <updated>1730991540491</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Fuzzy search food item">
+      <option name="closed" value="true" />
+      <created>1731120752450</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1731120752450</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -239,6 +244,7 @@
     <MESSAGE value="restaurant catalog get method" />
     <MESSAGE value="Restaurant menu and search restaurants by name" />
     <MESSAGE value="Geocoding and reverse geocoding" />
-    <option name="LAST_COMMIT_MESSAGE" value="Geocoding and reverse geocoding" />
+    <MESSAGE value="Fuzzy search food item" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fuzzy search food item" />
   </component>
 </project>

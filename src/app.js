@@ -11,6 +11,7 @@ import deliveryPartnerRouter from "./routes/deliveryPartner.routes.js";
 import foodRouter from "./routes/food.routes.js";
 import passwordResetRouter from "./routes/passwordReset.routes.js";
 import geocodeRouter from "./routes/geocode.routes.js";
+import searchRouter from "./routes/search.routes.js";
 
 const app = express();
 
@@ -36,6 +37,8 @@ app.use("/api/v1/business-team", businessTeamRouter);
 app.use("/api/v1/restaurant-owner", restaurantOwnerRouter);
 app.use("/api/v1/foods", foodRouter);
 app.use("/api/v1/restaurants", restaurantRouter);
+
+app.use("/api/v1/search", searchRouter);
 
 app.use("/api/v1/forgot-password", passwordResetRouter);
 
