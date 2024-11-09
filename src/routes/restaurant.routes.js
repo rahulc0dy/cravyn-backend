@@ -11,6 +11,7 @@ import {
   logoutRestaurant,
   getRestaurantsList,
   searchRestaurantByName,
+  getRestaurantPendingOrders,
 } from "../controllers/restaurant.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
@@ -37,5 +38,8 @@ router.route("/refresh-token").get(refreshAccessToken);
 router.route("/verify").post(verifyUserJwt, verifyRestaurant);
 
 router.route("/catalog").get(verifyRestaurantJwt, getRestaurantCatalog);
+router
+  .route("/orders/pending")
+  .get(verifyRestaurantJwt, getRestaurantPendingOrders);
 
 export default router;

@@ -21,6 +21,17 @@ const getFoodsByRestaurantId = async (restaurantId, limit = null) => {
   return foodItem;
 };
 
+const fuzzySearchFoodItem = async (foodItemName) => {
+  const threshold = 0.3;
+  const foodItems = sql`
+    SELECT *
+    FROM Food_Item
+    WHERE similarity(food_name, ${foodItemName}) > ${threshold}
+    ORDER BY similarity(food_name, ${foodItemName}) DESC
+    `;
+  return foodItems;
+};
+
 const createFoodItem = async ({
   name,
   type,
@@ -69,6 +80,7 @@ export {
   getFoodItemById,
   getFoodItemByName,
   getFoodsByRestaurantId,
+  fuzzySearchFoodItem,
   createFoodItem,
   updateFoodItemDiscountById,
   deleteFoodItemById,

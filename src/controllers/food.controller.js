@@ -5,6 +5,7 @@ import {
   createFoodItem,
   updateFoodItemDiscountById,
   deleteFoodItemById,
+  fuzzySearchFoodItem,
 } from "../database/queries/foodItem.query.js";
 import { getRestaurantById } from "../database/queries/restaurant.query.js";
 
@@ -64,6 +65,49 @@ const getFood = asyncHandler(async (req, res) => {
         "Unable to retrieve item."
       )
     );
+  }
+});
+
+const searchFoodByName = asyncHandler(async (req, res) => {
+  const { foodName } = req.query;
+
+  if (!foodName) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          { reason: "No food name provided" },
+          "No food name provided"
+        )
+      );
+  }
+
+  try {
+    const foodItems = await fuzzySearchFoodItem(foodName);
+
+    if (!foodItems.length) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "No food item found with that name" },
+            "No food item found with that name."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse({ foodItems: foodItems }, "Food items found."));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Food item not found." },
+          "Unable to retrieve item."
+        )
+      );
   }
 });
 
@@ -224,7 +268,7 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
       discountCap,
     });
 
-    if (updatedFoodItem.length == 0) {
+    if (updatedFoodItem.length === 0) {
       return res.status(404).json(
         new ApiResponse(
           {
@@ -296,7 +340,7 @@ const deleteFood = asyncHandler(async (req, res) => {
       restaurantId,
     });
 
-    if (deletedFoodItem.length == 0) {
+    if (deletedFoodItem.length === 0) {
       return res.status(404).json(
         new ApiResponse(
           {
@@ -323,4 +367,4 @@ const deleteFood = asyncHandler(async (req, res) => {
   }
 });
 
-export { getFood, addFood, updateFoodDiscount, deleteFood };
+export { getFood, addFood, updateFoodDiscount, deleteFood, searchFoodByName };

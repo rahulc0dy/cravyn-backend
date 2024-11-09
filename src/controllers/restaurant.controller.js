@@ -26,6 +26,7 @@ import fs from "fs";
 import { getFoodsByRestaurantId } from "../database/queries/foodItem.query.js";
 import { getCoordinates } from "./geocode.controller.js";
 import { getGeocodeUrl } from "../utils/geocodeUrl.js";
+import { getPendingOrdersByRestaurantId } from "../database/queries/order.qury.js";
 
 const getRestaurantsList = asyncHandler(async (req, res) => {
   const { limit, offset } = req.query;
@@ -795,6 +796,52 @@ const searchRestaurantByName = asyncHandler(async (req, res) => {
   }
 });
 
+const getRestaurantPendingOrders = asyncHandler(async (req, res) => {
+  const { limit } = req.query;
+  const { restaurant } = req;
+
+  if (!restaurant || !restaurant?.restaurant_id) {
+    return res
+      .status(404)
+      .json(
+        new ApiResponse(
+          { reason: "No restaurants found." },
+          "Error getting restaurant."
+        )
+      );
+  }
+
+  try {
+    const orders = await getPendingOrdersByRestaurantId(
+      restaurant.restaurant_id
+    );
+
+    if (orders.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "No orders Processing." },
+            "No pending orders."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse({ orders: orders }, "Orders found."));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message },
+          "Failed to get pending orders."
+        )
+      );
+  }
+});
+
 export {
   getRestaurant,
   getRestaurantsList,
@@ -807,4 +854,5 @@ export {
   verifyRestaurant,
   getRestaurantCatalog,
   searchRestaurantByName,
+  getRestaurantPendingOrders,
 };
