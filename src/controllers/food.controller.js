@@ -6,12 +6,15 @@ import {
   updateFoodItemDiscountById,
   deleteFoodItemById,
   fuzzySearchFoodItem,
+  updateFoodItemById,
 } from "../database/queries/foodItem.query.js";
 import { getRestaurantById } from "../database/queries/restaurant.query.js";
+import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
+import fs from "fs";
 
 const getFood = asyncHandler(async (req, res) => {
-  const { restaurantId } = req.restaurant?.id;
-  const { foodItemId } = req.body;
+  const restaurantId = req.restaurant?.restaurant_id;
+  const { foodItemId } = req.query;
 
   if (!foodItemId || !restaurantId) {
     return res.status(400).json(
@@ -112,15 +115,7 @@ const searchFoodByName = asyncHandler(async (req, res) => {
 });
 
 const addFood = asyncHandler(async (req, res) => {
-  const {
-    name,
-    type,
-    price,
-    discountPercent,
-    discountCap,
-    foodImageUrl,
-    description,
-  } = req.body;
+  const { name, type, price, description } = req.body;
   let { restaurant } = req;
 
   const requiredFields = [
@@ -165,6 +160,34 @@ const addFood = asyncHandler(async (req, res) => {
   }
 
   try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            { reason: `The image passed is ${req.file}` },
+            "No Image uploaded."
+          )
+        );
+    }
+
+    const localFilePath = req.file.path;
+
+    const cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
+
+    if (!cloudinaryResponse.url) {
+      return res
+        .status(500)
+        .json(
+          new ApiResponse(
+            { reason: "Could not upload image." },
+            "Image Upload Failed."
+          )
+        );
+    }
+
+    const foodImageUrl = cloudinaryResponse.url;
+
     restaurant = await getRestaurantById(restaurant.restaurant_id);
 
     const restaurantId = restaurant[0].restaurant_id;
@@ -174,8 +197,6 @@ const addFood = asyncHandler(async (req, res) => {
       type,
       restaurantId,
       price,
-      discountPercent,
-      discountCap,
       foodImageUrl,
       description,
     });
@@ -213,6 +234,98 @@ const addFood = asyncHandler(async (req, res) => {
         "Unable to add food item."
       )
     );
+  } finally {
+    if (req.file && req.file.path) {
+      fs.unlinkSync(req.file.path);
+    }
+  }
+});
+
+const updateFood = asyncHandler(async (req, res) => {
+  const { foodItemId, name, type, price, description } = req.body;
+  let { restaurant } = req;
+
+  if (!foodItemId) {
+    return res
+      .status(404)
+      .json(
+        new ApiResponse({ reason: "No food id given" }, "No food id given.")
+      );
+  }
+
+  try {
+    let localFilePath, cloudinaryResponse;
+
+    if (req.file) {
+      localFilePath = req.file.path;
+
+      cloudinaryResponse = await uploadImageOnCloudinary(localFilePath);
+
+      if (!cloudinaryResponse.url) {
+        return res
+          .status(500)
+          .json(
+            new ApiResponse(
+              { reason: "Could not upload image." },
+              "Image Upload Failed."
+            )
+          );
+      }
+    }
+
+    const foodImageUrl = cloudinaryResponse?.url;
+
+    restaurant = await getRestaurantById(restaurant.restaurant_id);
+
+    const restaurantId = restaurant[0]?.restaurant_id;
+
+    const foodItem = await updateFoodItemById({
+      foodItemId,
+      name,
+      type,
+      restaurantId,
+      price,
+      foodImageUrl,
+      description,
+    });
+
+    const data = {
+      foodItem: foodItem[0],
+      restaurant: restaurant[0],
+    };
+
+    for (const key in data) {
+      if (!data[key]) {
+        return res.status(404).json(
+          new ApiResponse(
+            {
+              reason: `${key} could not be found using the provided ID.`,
+              at: "foodItem.controller.js -> addFood",
+            },
+            "Item not found."
+          )
+        );
+      }
+    }
+
+    return res
+      .status(201)
+      .json(new ApiResponse(data, "Food item added successfully."));
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(
+      new ApiResponse(
+        {
+          reason: error.message || "Error occurred during food item creation",
+          at: "foodItem.controller.js -> addFoodItem",
+        },
+        "Unable to add food item."
+      )
+    );
+  } finally {
+    if (req.file && req.file.path) {
+      fs.unlinkSync(req.file.path);
+    }
   }
 });
 
@@ -367,4 +480,11 @@ const deleteFood = asyncHandler(async (req, res) => {
   }
 });
 
-export { getFood, addFood, updateFoodDiscount, deleteFood, searchFoodByName };
+export {
+  getFood,
+  addFood,
+  updateFood,
+  updateFoodDiscount,
+  deleteFood,
+  searchFoodByName,
+};

@@ -66,6 +66,25 @@ const updateFoodItemDiscountById = async ({
   return foodItem;
 };
 
+const updateFoodItemById = async ({
+  foodItemId,
+  restaurantId,
+  name,
+  type,
+  price,
+  foodImageUrl,
+  description,
+}) => {
+  const foodItem = await sql`
+    UPDATE Food_Item
+    SET price=${price}, food_name=${name}, food_image_url=${foodImageUrl}, description=${description}, type=${type}
+    WHERE item_id=${foodItemId} AND restaurant_id=${restaurantId}
+    RETURNING * ;
+    `;
+
+  return foodItem;
+};
+
 const deleteFoodItemById = async ({ foodItemId, restaurantId }) => {
   const foodItem = await sql`
     DELETE FROM Food_Item
@@ -83,5 +102,6 @@ export {
   fuzzySearchFoodItem,
   createFoodItem,
   updateFoodItemDiscountById,
+  updateFoodItemById,
   deleteFoodItemById,
 };
