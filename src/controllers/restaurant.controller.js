@@ -282,7 +282,7 @@ const addRestaurant = asyncHandler(async (req, res) => {
       street,
       landmark,
       pinCode,
-      availabilityStatus,
+      availabilityStatus: availabilityStatus || false,
       licenseUrl,
       gstinNo,
       accountNo,
