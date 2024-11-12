@@ -83,7 +83,7 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           { reason: "No managementTeam found with given credentials" },
-          "Phone number is not registered."
+          "Email is not registered."
         )
       );
   }
@@ -123,9 +123,7 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         {
-          managementTeam: managementTeam[0],
-          accessToken,
-          refreshToken,
+          user: managementTeam[0],
         },
         "ManagementTeam logged in successfully."
       )
