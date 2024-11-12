@@ -119,6 +119,6 @@ dist
 
 # Default ignored files
 /.idea/shelf/
-.idea/workspace.xml
+/.idea/workspace.xml
 # Editor-based HTTP Client requests
 /.idea/httpRequests/

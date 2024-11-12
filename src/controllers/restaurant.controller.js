@@ -133,8 +133,6 @@ const addRestaurant = asyncHandler(async (req, res) => {
     confirmPassword,
   } = req.body;
 
-  console.log(req.body, req.file);
-
   const requiredFields = [
     { field: name, message: "Name is required.", reason: `name is ${name}` },
     {
