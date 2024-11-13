@@ -8,7 +8,7 @@ const getRestaurantById = async (restaurantId) => {
 
 const getNonSensitiveRestaurantInfoById = async (restaurantId) => {
   const restaurant = await sql`
-        SELECT restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url, refresh_token 
+        SELECT restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url 
         FROM Restaurant 
         WHERE restaurant_id = ${restaurantId}
         ;`;
@@ -19,7 +19,7 @@ const getNonSensitiveRestaurantInfoByRegNo = async (
   restaurantRegistrationNo
 ) => {
   const restaurant = await sql`
-        SELECT restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url, refresh_token 
+        SELECT restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url 
         FROM Restaurant 
         WHERE registration_no = ${restaurantRegistrationNo}
         ;`;
