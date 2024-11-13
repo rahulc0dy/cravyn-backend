@@ -14,7 +14,7 @@ import {
   getNonSensitiveDeliveryPartnerInfoById,
   updateDeliveryPartnerImageUrl,
   updateDeliveryPartnerNamePhoneNoVehicleAvailability,
-} from "../db/deliveryPartner.query.js";
+} from "../database/queries/deliveryPartner.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
@@ -25,7 +25,6 @@ const getDeliveryPartnerAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: `req.deliveryPartner is ${req.deliveryPartner}` },
           "Unauthorised Access."
         )
@@ -41,7 +40,6 @@ const getDeliveryPartnerAccount = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: `DeliveryPartner not found by id` },
           "User not found."
         )
@@ -52,7 +50,6 @@ const getDeliveryPartnerAccount = asyncHandler(async (req, res) => {
     .status(200)
     .json(
       new ApiResponse(
-        200,
         { deliveryPartner },
         "Delivery partner obtained successfully."
       )
@@ -77,7 +74,7 @@ const loginDeliveryPartner = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
 
@@ -88,7 +85,6 @@ const loginDeliveryPartner = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: "No deliveryPartner found with given credentials" },
           "Email is not registered."
         )
@@ -103,7 +99,6 @@ const loginDeliveryPartner = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Incorrect Password." },
           "Invalid credentials, please try again."
         )
@@ -130,7 +125,6 @@ const loginDeliveryPartner = asyncHandler(async (req, res) => {
     .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
-        200,
         {
           deliveryPartner: deliveryPartner[0],
           accessToken,
@@ -188,7 +182,7 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
 
@@ -197,7 +191,6 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
       .status(400)
       .json(
         new ApiResponse(
-          400,
           { reason: "Passwords do not match" },
           "Password confirmation does not match."
         )
@@ -211,7 +204,6 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
       .status(409)
       .json(
         new ApiResponse(
-          409,
           { reason: "DeliveryPartner already registered" },
           "Delivery partner account already exists."
         )
@@ -232,7 +224,6 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           error,
           reason: error.message || "Error at delivery partner controller",
@@ -247,7 +238,6 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: "DeliveryPartner is not defined" },
           "Failed to register delivery partner."
         )
@@ -262,7 +252,6 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
     .status(201)
     .json(
       new ApiResponse(
-        201,
         deliveryPartner,
         "Delivery partner registered successfully."
       )
@@ -277,7 +266,6 @@ const logoutDeliveryPartner = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { ...error },
           "Unable to fetch the logged in delivery partner."
         )
@@ -295,7 +283,6 @@ const logoutDeliveryPartner = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(
       new ApiResponse(
-        200,
         { reason: "Logout successful" },
         "Delivery partner logged out successfully."
       )
@@ -310,11 +297,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     res
       .status(401)
       .json(
-        ApiResponse(
-          401,
-          { reason: "Request unauthorised" },
-          "Unauthorized request."
-        )
+        ApiResponse({ reason: "Request unauthorised" }, "Unauthorized request.")
       );
   }
 
@@ -333,7 +316,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Token verification failed" },
             "Invalid refresh token."
           )
@@ -345,7 +327,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Tokens do not match" },
             "Unable to reinstate session."
           )
@@ -365,7 +346,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .cookie("refreshToken", newRefreshToken, options)
       .json(
         new ApiResponse(
-          200,
           {
             accessToken: accessToken,
             refreshToken: newRefreshToken,
@@ -376,7 +356,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   } catch (error) {
     res.status(401).json(
       new ApiResponse(
-        401,
         {
           reason:
             error?.message || "Error occured while trying to refresh token",
@@ -405,7 +384,7 @@ const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
 
   for (const { field, message, reason } of requiredFields) {
     if (!field) {
-      return res.status(400).json(new ApiResponse(400, { reason }, message));
+      return res.status(400).json(new ApiResponse({ reason }, message));
     }
   }
   let deliveryPartner;
@@ -424,7 +403,6 @@ const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Invalid Refresh Token." },
             "Delivery partner account not found."
           )
@@ -433,7 +411,6 @@ const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(401).json(
       new ApiResponse(
-        401,
         {
           reason: error?.message || "Refresh token could not be verified",
         },
@@ -447,7 +424,6 @@ const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Unable to get deliveryPartner" },
           "Email is not registered."
         )
@@ -462,7 +438,6 @@ const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Incorrect Password" },
           "Invalid credentials, please try again."
         )
@@ -474,7 +449,6 @@ const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason:
             error.message || "Unable to fetch the logged in deliveryPartner.",
@@ -495,7 +469,6 @@ const deleteDeliveryPartnerAccount = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(
       new ApiResponse(
-        200,
         { reason: "Deletion successful" },
         "Delivery partner deleted out successfully."
       )
@@ -528,7 +501,6 @@ const updateDeliveryPartnerAccount = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: error.message || "DeliveryPartner could not be updated",
         },
@@ -541,7 +513,6 @@ const updateDeliveryPartnerAccount = asyncHandler(async (req, res) => {
     .status(200)
     .json(
       new ApiResponse(
-        200,
         { deliveryPartner: deliveryPartner[0] },
         "Delivery partner details updated."
       )
@@ -555,7 +526,6 @@ const updateDeliveryPartnerImage = asyncHandler(async (req, res) => {
         .status(400)
         .json(
           new ApiResponse(
-            400,
             { reason: `The file passed is ${req.file}` },
             "No image file uploaded."
           )
@@ -574,7 +544,6 @@ const updateDeliveryPartnerImage = asyncHandler(async (req, res) => {
 
       res.status(200).json(
         new ApiResponse(
-          200,
           {
             deliveryPartner: deliveryPartner[0],
             imageUrl: cloudinaryResponse.url,
@@ -590,7 +559,6 @@ const updateDeliveryPartnerImage = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { reason: error.message || "Image could not be uploaded" },
           error.message || "Internal server error."
         )

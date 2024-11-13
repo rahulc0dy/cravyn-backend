@@ -8,8 +8,10 @@ import businessTeamRouter from "./routes/businessTeam.routes.js";
 import restaurantOwnerRouter from "./routes/restaurantOwner.routes.js";
 import restaurantRouter from "./routes/restaurant.routes.js";
 import deliveryPartnerRouter from "./routes/deliveryPartner.routes.js";
-import foodItemRouter from "./routes/foodItem.routes.js";
+import foodRouter from "./routes/food.routes.js";
 import passwordResetRouter from "./routes/passwordReset.routes.js";
+import geocodeRouter from "./routes/geocode.routes.js";
+import searchRouter from "./routes/search.routes.js";
 
 const app = express();
 
@@ -26,14 +28,17 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 app.use("/api/v1/health-check", healthCheckRouter);
+app.use("/api/v1/geocode", geocodeRouter);
 
 app.use("/api/v1/customer", customerRouter);
 app.use("/api/v1/delivery-partner", deliveryPartnerRouter);
 app.use("/api/v1/management-team", managementTeamRouter);
 app.use("/api/v1/business-team", businessTeamRouter);
 app.use("/api/v1/restaurant-owner", restaurantOwnerRouter);
-app.use("/api/v1/food-item", foodItemRouter);
-app.use("/api/v1/restaurant", restaurantRouter);
+app.use("/api/v1/foods", foodRouter);
+app.use("/api/v1/restaurants", restaurantRouter);
+
+app.use("/api/v1/search", searchRouter);
 
 app.use("/api/v1/forgot-password", passwordResetRouter);
 

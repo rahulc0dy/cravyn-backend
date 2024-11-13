@@ -13,14 +13,13 @@ import {
   createBusinessTeam,
   deleteBusinessTeam,
   updateBusinessTeamNamePhoneNo,
-} from "../db/businessTeam.query.js";
+} from "../database/queries/businessTeam.query.js";
 import jwt from "jsonwebtoken";
 
 const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   if (!req.businessTeam || !req.businessTeam.id) {
     res.status(400).json(
       new ApiResponse(
-        400,
         {
           reason: `req.businessTeam is ${req.businessTeam}`,
           at: "businessTeam.controller.js -> getBusinessTeamAccouont",
@@ -37,7 +36,6 @@ const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   if (!businessTeam) {
     res.status(404).json(
       new ApiResponse(
-        404,
         {
           reason: `BusinessTeam member not found by id`,
           at: "businessTeam.controller.js -> getBusinessTeamAccount",
@@ -51,7 +49,6 @@ const getBusinessTeamAccount = asyncHandler(async (req, res) => {
     .status(200)
     .json(
       new ApiResponse(
-        200,
         { businessTeam },
         "BusinessTeam obtained successfully."
       )
@@ -78,7 +75,6 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
     if (!field) {
       return res.status(400).json(
         new ApiResponse(
-          400,
           {
             reason,
             at: "businessTeam.controller.js -> loginBusinessTeam",
@@ -94,7 +90,6 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
   if (businessTeam.length <= 0) {
     return res.status(404).json(
       new ApiResponse(
-        404,
         {
           reason: "No businessTeam found with given credentials",
           at: "businessTeam.controller.js -> loginBusinessTeam",
@@ -110,7 +105,6 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
   if (!isPasswordCorrect) {
     return res.status(401).json(
       new ApiResponse(
-        401,
         {
           reason: "Incorrect Password.",
           at: "businessTeam.controller.js -> loginBusinessTeam",
@@ -140,7 +134,6 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
     .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
-        200,
         {
           businessTeam: businessTeam[0],
           accessToken,
@@ -187,7 +180,6 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
   if (password !== confirmPassword) {
     return res.status(400).json(
       new ApiResponse(
-        400,
         {
           reason: "Passwords do not match",
           at: "businessTeam.controller.js -> registerBusinessTeam",
@@ -202,7 +194,6 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
   if (existedBusinessTeam.length > 0) {
     return res.status(409).json(
       new ApiResponse(
-        409,
         {
           reason: "BusinessTeam already registered",
           at: "businessTeam.controller.js -> registerBusinessTeam",
@@ -219,7 +210,6 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: error.message || "Business team creation query error",
           at: "businessTeam.controller.js -> registerBusinessTeam",
@@ -232,7 +222,6 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
   if (!businessTeam) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: "BusinessTeam is not defined",
           at: "businessTeam.controller.js -> registerBusinessTeam",
@@ -250,7 +239,6 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
     .status(201)
     .json(
       new ApiResponse(
-        201,
         businessTeam,
         "BusinessTeam registered successfully."
       )
@@ -263,7 +251,6 @@ const logoutBusinessTeam = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: error.message,
           at: "businessTeam.controller.js -> logoutBusinessTeam",
@@ -284,7 +271,6 @@ const logoutBusinessTeam = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(
       new ApiResponse(
-        200,
         {
           reason: "Logout successful",
           at: "businessTeam.controller.js -> logoutBusinessTeam",
@@ -301,7 +287,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   if (!incomingRefreshToken) {
     return res.status(401).json(
       new ApiResponse(
-        401,
         {
           reason: "Request unauthorised",
           at: "businessTeam.controller.js -> refreshAccessToken",
@@ -326,7 +311,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Token verification failed" },
             "Invalid refresh token."
           )
@@ -338,7 +322,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Tokens do not match" },
             "Unable to reinstate session."
           )
@@ -359,7 +342,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .cookie("refreshToken", newRefreshToken, options)
       .json(
         new ApiResponse(
-          200,
           {
             accessToken: accessToken,
             refreshToken: newRefreshToken,
@@ -372,7 +354,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { ...error, reason: "Error occured while trying to refresh token" },
           error?.message || "Invalid refresh token"
         )
@@ -417,7 +398,6 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
         .status(401)
         .json(
           new ApiResponse(
-            401,
             { reason: "Invalid Refresh Token." },
             "BusinessTeam not found"
           )
@@ -428,7 +408,6 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { ...error, reason: "Refresh token could not be verified" },
           error?.message || "Invalid request"
         )
@@ -440,7 +419,6 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
       .status(404)
       .json(
         new ApiResponse(
-          404,
           { reason: "Unable to get businessTeam" },
           "Phone number is not registered"
         )
@@ -455,7 +433,6 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: "Incorrect Password" },
           "Invalid credentials, please try again."
         )
@@ -469,7 +446,6 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
       .status(500)
       .json(
         new ApiResponse(
-          500,
           { ...error, reason: "Unable to fetch the logged in businessTeam." },
           "Failed to delete BusinessTeam."
         )
@@ -487,7 +463,6 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(
       new ApiResponse(
-        200,
         { reason: "Deletion successful" },
         "BusinessTeam deleted out successfully."
       )
@@ -502,7 +477,6 @@ const updateBusinessTeamAccount = asyncHandler(async (req, res) => {
       .status(400)
       .json(
         new ApiResponse(
-          400,
           { reason: "No update details provided" },
           "Please provide details to update."
         )
@@ -525,7 +499,6 @@ const updateBusinessTeamAccount = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           ...error,
           reason: error.message || "BusinessTeam could not be updated",
@@ -539,7 +512,6 @@ const updateBusinessTeamAccount = asyncHandler(async (req, res) => {
     .status(200)
     .json(
       new ApiResponse(
-        200,
         { businessTeam: businessTeam[0] },
         "BusinessTeam details updated."
       )

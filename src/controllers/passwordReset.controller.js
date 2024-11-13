@@ -4,17 +4,17 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import {
   getCustomerByEmail,
   updateCustomerPassword,
-} from "../db/customer.query.js";
+} from "../database/queries/customer.query.js";
 import {
   getDeliveryPartnerByEmail,
   updateDeliveryPartnerPassword,
-} from "../db/deliveryPartner.query.js";
+} from "../database/queries/deliveryPartner.query.js";
 import {
   getRestaurantOwnerByEmail,
   updateRestaurantOwnerPassword,
-} from "../db/restaurantOwner.query.js";
+} from "../database/queries/restaurantOwner.query.js";
 import { totp } from "otplib";
-import { getOtp, storeOtp } from "../db/otp.query.js";
+import { getOtp, storeOtp } from "../database/queries/otp.query.js";
 import bcrypt from "bcrypt";
 
 const forgotPassword = asyncHandler(async (req, res) => {
@@ -24,7 +24,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
   if (!email || !userType) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: email ? `userType is ${userType}` : `email is ${email}`,
           at: "passwordReset.controller.js",
@@ -50,16 +49,14 @@ const forgotPassword = asyncHandler(async (req, res) => {
   }
 
   if (!user) {
-    return res.status(404).json(
-      new ApiResponse(
-        404,
-        {
-          reason: "User does not exist",
-          at: "passwordReset.controller.js -> forgotPassword",
-        },
-        "No user found associated with this email."
-      )
-    );
+    return res
+      .status(404)
+      .json(
+        new ApiResponse(
+          { reason: "User does not exist", at: "passwordReset.controller.js" },
+          "User with this email does not exist."
+        )
+      );
   }
 
   totp.options = {
@@ -78,7 +75,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
       .status(250)
       .json(
         new ApiResponse(
-          250,
           { mailResponse, user: user[0] },
           "The OTP has been sent to your email."
         )
@@ -86,7 +82,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
   } catch (error) {
     return res.status(503).json(
       new ApiResponse(
-        503,
         {
           reason: error.message || "error sending email",
           at: "passwordReset.controller.js -> nodemailer.js",
@@ -161,7 +156,6 @@ const resetPassword = asyncHandler(async (req, res) => {
   if (password !== confirmPassword) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: "Passwords do not match",
           at: "passwordReset.controller.js -> resetPassword",
@@ -172,7 +166,6 @@ const resetPassword = asyncHandler(async (req, res) => {
   } else if (!otp || !userType) {
     return res.status(400).json(
       new ApiResponse(
-        400,
         {
           reason: userType ? `otp is ${otp}` : `userType is ${userType}`,
           at: "passwordReset.controller.js -> resetPassword",
@@ -187,17 +180,15 @@ const resetPassword = asyncHandler(async (req, res) => {
   const passwordHash = await bcrypt.hash(password, 10);
 
   try {
-    if (!isOtpCorrect) {
-      return res.status(400).json(
-        new ApiResponse(
-          400,
-          {
-            reason: "Incorrect otp",
-            at: "passwordReset.controller.js -> resetPassword",
-          },
-          "Incorrect OTP, please try again."
-        )
-      );
+    if (!otpCorrect) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            { reason: "Incorrect otp", at: "passwordreset" },
+            "OTP is incorrect."
+          )
+        );
     }
 
     let user;
@@ -218,11 +209,10 @@ const resetPassword = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, { user }, "Password updated successfully."));
+      .json(new ApiResponse({ user }, "Password updated successfully."));
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
-        500,
         {
           reason: error.message || "Failed",
           at: "passwordReset.controller.js -> resetPassword",

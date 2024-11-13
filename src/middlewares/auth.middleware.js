@@ -1,13 +1,14 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
-import { getNonSensitiveCustomerInfoById } from "../db/customer.query.js";
-import { getNonSensitiveManagementTeamInfoById } from "../db/managementTeam.query.js";
-import { getNonSensitiveRestaurantOwnerInfoById } from "../db/restaurantOwner.query.js";
-import { getNonSensitiveBusinessTeamInfoById } from "../db/businessTeam.query.js";
-import { getNonSensitiveDeliveryPartnerInfoById } from "../db/deliveryPartner.query.js";
+import { getNonSensitiveCustomerInfoById } from "../database/queries/customer.query.js";
+import { getNonSensitiveManagementTeamInfoById } from "../database/queries/managementTeam.query.js";
+import { getNonSensitiveRestaurantOwnerInfoById } from "../database/queries/restaurantOwner.query.js";
+import { getNonSensitiveBusinessTeamInfoById } from "../database/queries/businessTeam.query.js";
+import { getNonSensitiveDeliveryPartnerInfoById } from "../database/queries/deliveryPartner.query.js";
+import { getRestaurantById } from "../database/queries/restaurant.query.js";
 
-export const verifyJwt = asyncHandler(async (req, res, next) => {
+export const verifyUserJwt = asyncHandler(async (req, res, next) => {
   const token =
     req.cookies?.accessToken ||
     req.header("Authorization")?.replace("Bearer ", "");
@@ -19,7 +20,6 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: `Token is ${token}, userType is ${req.query}` },
           "Unauthorized request."
         )
@@ -57,11 +57,7 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
       return res
         .status(401)
         .json(
-          new ApiResponse(
-            401,
-            { reason: "Invalid Access Token" },
-            "User not found."
-          )
+          new ApiResponse({ reason: "Invalid Access Token" }, "User not found.")
         );
     }
 
@@ -92,9 +88,62 @@ export const verifyJwt = asyncHandler(async (req, res, next) => {
       .status(401)
       .json(
         new ApiResponse(
-          401,
           { reason: error.message || "Error at auth middleware" },
           error?.message || "Invalid Access Token."
+        )
+      );
+  }
+});
+
+export const verifyRestaurantJwt = asyncHandler(async (req, res, next) => {
+  const token =
+    req.cookies?.accessToken ||
+    req.header("Authorization")?.replace("Bearer ", "");
+
+  if (!token) {
+    return res
+      .status(401)
+      .json(
+        new ApiResponse(
+          { reason: `Token is ${token}` },
+          "Unauthorized request."
+        )
+      );
+  }
+
+  try {
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const restaurantId = decodedToken?.id;
+
+    const restaurant = await getRestaurantById(restaurantId);
+
+    if (restaurant.length === 0) {
+      return res
+        .status(401)
+        .json(
+          new ApiResponse(
+            { reason: "Invalid Access Token" },
+            "Restaurant not found."
+          )
+        );
+    }
+
+    req.restaurant = restaurant[0];
+
+    next();
+  } catch (error) {
+    return res
+      .status(401)
+      .json(
+        new ApiResponse(
+          {
+            reason: error.message.includes("jwt expired")
+              ? "Token expired"
+              : error.message,
+          },
+          error.message.includes("jwt expired")
+            ? "Session expired. Please log in again."
+            : "Invalid Access Token."
         )
       );
   }

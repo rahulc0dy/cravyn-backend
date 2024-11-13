@@ -22,6 +22,18 @@ const uploadImageOnCloudinary = async (localFilePath) => {
   }
 };
 
+// Delete image from cloudinary
+const deleteImageFromCloudinary = async (publicId) => {
+  try {
+    if (!publicId) throw new Error("Public ID is required to delete an image.");
+
+    const response = await cloudinary.uploader.destroy(publicId);
+    return response;
+  } catch (error) {
+    return error;
+  }
+};
+
 // Optimize delivery by resizing and applying auto-format and auto-quality
 const optimizeUrl = cloudinary.url("shoes", {
   fetch_format: "auto",
@@ -36,4 +48,9 @@ const autoCropUrl = cloudinary.url("shoes", {
   height: 500,
 });
 
-export { uploadImageOnCloudinary, optimizeUrl, autoCropUrl };
+export {
+  uploadImageOnCloudinary,
+  deleteImageFromCloudinary,
+  optimizeUrl,
+  autoCropUrl,
+};

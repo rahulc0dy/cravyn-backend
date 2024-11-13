@@ -1,0 +1,17 @@
+node_modules
+
+.git
+.github
+
+.env
+.env.local
+.env.production
+.env.test
+.env.dev
+
+.DS_Store
+*.log
+*.sqlite
+npm-debug.log
+
+public/uploads
