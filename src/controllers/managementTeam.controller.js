@@ -111,6 +111,7 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "None",
   };
 
   delete managementTeam[0].refresh_token;

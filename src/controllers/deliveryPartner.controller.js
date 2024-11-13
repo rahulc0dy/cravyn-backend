@@ -114,6 +114,7 @@ const loginDeliveryPartner = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "None",
   };
 
   delete deliveryPartner[0].refresh_token;

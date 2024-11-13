@@ -402,7 +402,9 @@ const loginRestaurant = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: false,
+    sameSite: "None",
   };
+
   delete restaurant[0].refresh_token;
   delete restaurant[0].password;
 

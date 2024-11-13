@@ -48,10 +48,7 @@ const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(
-      new ApiResponse(
-        { businessTeam },
-        "BusinessTeam obtained successfully."
-      )
+      new ApiResponse({ businessTeam }, "BusinessTeam obtained successfully.")
     );
 });
 
@@ -123,6 +120,7 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "None",
   };
 
   delete businessTeam[0].refresh_token;
@@ -238,10 +236,7 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
   return res
     .status(201)
     .json(
-      new ApiResponse(
-        businessTeam,
-        "BusinessTeam registered successfully."
-      )
+      new ApiResponse(businessTeam, "BusinessTeam registered successfully.")
     );
 });
 

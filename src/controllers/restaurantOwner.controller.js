@@ -111,6 +111,7 @@ const loginRestaurantOwner = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "None",
   };
 
   delete restaurantOwner[0].refresh_token;
