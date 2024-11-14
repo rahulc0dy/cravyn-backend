@@ -18,7 +18,7 @@ import {
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
-import { cookieOptions } from "../utils/cookieOptions.js";
+import { cookieOptions } from "../constants.js";
 
 const getCustomerAccount = asyncHandler(async (req, res) => {
   if (!req.customer || !req.customer.id) {

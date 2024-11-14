@@ -27,7 +27,7 @@ import { getFoodsByRestaurantId } from "../database/queries/foodItem.query.js";
 import { getCoordinates } from "./geocode.controller.js";
 import { getGeocodeUrl } from "../utils/geocodeUrl.js";
 import { getPendingOrdersByRestaurantId } from "../database/queries/order.qury.js";
-import { cookieOptions } from "../utils/cookieOptions.js";
+import { cookieOptions } from "../constants.js";
 
 const getRestaurantsList = asyncHandler(async (req, res) => {
   const { limit, offset } = req.query;

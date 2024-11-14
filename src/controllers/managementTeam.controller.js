@@ -15,7 +15,7 @@ import {
   updateManagementTeamNamePhoneNo,
 } from "../database/queries/managementTeam.query.js";
 import jwt from "jsonwebtoken";
-import { cookieOptions } from "../utils/cookieOptions.js";
+import { cookieOptions } from "../constants.js";
 
 const getManagementTeamAccount = asyncHandler(async (req, res) => {
   if (!req.managementTeam || !req.managementTeam.id) {

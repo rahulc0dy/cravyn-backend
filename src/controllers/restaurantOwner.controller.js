@@ -15,7 +15,7 @@ import {
   getNonSensitiveRestaurantOwnerInfoById,
 } from "../database/queries/restaurantOwner.query.js";
 import jwt from "jsonwebtoken";
-import { cookieOptions } from "../utils/cookieOptions.js";
+import { cookieOptions } from "../constants.js";
 
 const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
   if (!req.restaurantOwner || !req.restaurantOwner.id) {

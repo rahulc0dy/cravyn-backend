@@ -15,7 +15,7 @@ import {
   updateBusinessTeamNamePhoneNo,
 } from "../database/queries/businessTeam.query.js";
 import jwt from "jsonwebtoken";
-import { cookieOptions } from "../utils/cookieOptions.js";
+import { cookieOptions } from "../constants.js";
 
 const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   if (!req.businessTeam || !req.businessTeam.id) {
