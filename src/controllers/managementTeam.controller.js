@@ -15,6 +15,7 @@ import {
   updateManagementTeamNamePhoneNo,
 } from "../database/queries/managementTeam.query.js";
 import jwt from "jsonwebtoken";
+import { cookieOptions } from "../constants.js";
 
 const getManagementTeamAccount = asyncHandler(async (req, res) => {
   if (!req.managementTeam || !req.managementTeam.id) {
@@ -108,18 +109,13 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
 
   managementTeam = await setRefreshToken(refreshToken, managementTeamId);
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
   delete managementTeam[0].refresh_token;
   delete managementTeam[0].password;
 
   return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
     .json(
       new ApiResponse(
         {
@@ -243,15 +239,10 @@ const logoutManagementTeam = asyncHandler(async (req, res) => {
       );
   }
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
   return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", cookieOptions)
+    .clearCookie("refreshToken", cookieOptions)
     .json(
       new ApiResponse(
         { reason: "Logout successful" },
@@ -316,8 +307,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", newRefreshToken, cookieOptions)
       .json(
         new ApiResponse(
           {
@@ -430,15 +421,10 @@ const deleteManagementTeamAccount = asyncHandler(async (req, res) => {
       );
   }
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
   return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", cookieOptions)
+    .clearCookie("refreshToken", cookieOptions)
     .json(
       new ApiResponse(
         { reason: "Deletion successful" },

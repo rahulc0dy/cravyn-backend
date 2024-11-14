@@ -27,6 +27,7 @@ import { getFoodsByRestaurantId } from "../database/queries/foodItem.query.js";
 import { getCoordinates } from "./geocode.controller.js";
 import { getGeocodeUrl } from "../utils/geocodeUrl.js";
 import { getPendingOrdersByRestaurantId } from "../database/queries/order.qury.js";
+import { cookieOptions } from "../constants.js";
 
 const getRestaurantsList = asyncHandler(async (req, res) => {
   const { limit, offset } = req.query;
@@ -408,8 +409,8 @@ const loginRestaurant = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
     .json(
       new ApiResponse(
         {
@@ -436,15 +437,10 @@ const logoutRestaurant = asyncHandler(async (req, res) => {
       );
   }
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
   return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", cookieOptions)
+    .clearCookie("refreshToken", cookieOptions)
     .json(
       new ApiResponse(
         { reason: "Logout successful" },
@@ -624,8 +620,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", newRefreshToken, cookieOptions)
       .json(
         new ApiResponse(
           {
