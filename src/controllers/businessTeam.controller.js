@@ -15,6 +15,7 @@ import {
   updateBusinessTeamNamePhoneNo,
 } from "../database/queries/businessTeam.query.js";
 import jwt from "jsonwebtoken";
+import { cookieOptions } from "../utils/cookieOptions.js";
 
 const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   if (!req.businessTeam || !req.businessTeam.id) {
@@ -48,10 +49,7 @@ const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(
-      new ApiResponse(
-        { businessTeam },
-        "BusinessTeam obtained successfully."
-      )
+      new ApiResponse({ businessTeam }, "BusinessTeam obtained successfully.")
     );
 });
 
@@ -120,18 +118,13 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
 
   businessTeam = await setRefreshToken(refreshToken, businessTeamId);
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
   delete businessTeam[0].refresh_token;
   delete businessTeam[0].password;
 
   return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
     .json(
       new ApiResponse(
         {
@@ -238,10 +231,7 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
   return res
     .status(201)
     .json(
-      new ApiResponse(
-        businessTeam,
-        "BusinessTeam registered successfully."
-      )
+      new ApiResponse(businessTeam, "BusinessTeam registered successfully.")
     );
 });
 
@@ -260,15 +250,10 @@ const logoutBusinessTeam = asyncHandler(async (req, res) => {
     );
   }
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
   return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", cookieOptions)
+    .clearCookie("refreshToken", cookieOptions)
     .json(
       new ApiResponse(
         {
@@ -338,8 +323,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", newRefreshToken, cookieOptions)
       .json(
         new ApiResponse(
           {
@@ -452,15 +437,10 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
       );
   }
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
   return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", cookieOptions)
+    .clearCookie("refreshToken", cookieOptions)
     .json(
       new ApiResponse(
         { reason: "Deletion successful" },
