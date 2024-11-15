@@ -15,11 +15,11 @@ import { upload } from "../middlewares/multer.middleware.js";
 const router = Router();
 
 router.route("/login").post(loginDeliveryPartner);
-router.route("/register").post(registerDeliveryPartner);
 router.route("/logout").post(verifyUserJwt, logoutDeliveryPartner);
 router.route("/refresh-token").post(refreshAccessToken);
 router
   .route("/")
+  .post(registerDeliveryPartner)
   .delete(verifyUserJwt, deleteDeliveryPartnerAccount)
   .patch(verifyUserJwt, updateDeliveryPartnerAccount)
   .get(verifyUserJwt, getDeliveryPartnerAccount);

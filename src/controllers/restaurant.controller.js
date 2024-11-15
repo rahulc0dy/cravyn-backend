@@ -27,6 +27,7 @@ import { getFoodsByRestaurantId } from "../database/queries/foodItem.query.js";
 import { getCoordinates } from "./geocode.controller.js";
 import { getGeocodeUrl } from "../utils/geocodeUrl.js";
 import { getPendingOrdersByRestaurantId } from "../database/queries/order.qury.js";
+import { cookieOptions } from "../constants.js";
 
 const getRestaurantsList = asyncHandler(async (req, res) => {
   const { limit, offset } = req.query;
@@ -117,8 +118,6 @@ const addRestaurant = asyncHandler(async (req, res) => {
     name,
     registrationNo,
     ownerId,
-    lat,
-    long,
     city,
     street,
     landmark,
@@ -132,6 +131,8 @@ const addRestaurant = asyncHandler(async (req, res) => {
     password,
     confirmPassword,
   } = req.body;
+
+  let { lat, long } = req.body;
 
   const requiredFields = [
     { field: name, message: "Name is required.", reason: `name is ${name}` },
@@ -210,7 +211,9 @@ const addRestaurant = asyncHandler(async (req, res) => {
 
       const data = await response.json();
 
-      const [lat, long] = [data[0].lat, data[0].long];
+      [lat, long] = [data[0].lat, data[0].lon];
+
+      if (!lat || !long) throw new Error("Failed to fetch geocode data");
     } catch (error) {
       return res
         .status(500)
@@ -399,19 +402,13 @@ const loginRestaurant = asyncHandler(async (req, res) => {
 
   restaurant = await setRefreshToken(refreshToken, restaurantId);
 
-  const options = {
-    httpOnly: true,
-    secure: false,
-    sameSite: "None",
-  };
-
   delete restaurant[0].refresh_token;
   delete restaurant[0].password;
 
   return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
     .json(
       new ApiResponse(
         {
@@ -438,15 +435,10 @@ const logoutRestaurant = asyncHandler(async (req, res) => {
       );
   }
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
   return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", cookieOptions)
+    .clearCookie("refreshToken", cookieOptions)
     .json(
       new ApiResponse(
         { reason: "Logout successful" },

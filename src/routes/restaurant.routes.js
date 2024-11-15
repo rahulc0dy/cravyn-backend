@@ -18,6 +18,10 @@ import {
   verifyRestaurantJwt,
   verifyUserJwt,
 } from "../middlewares/auth.middleware.js";
+import {
+  getRestaurantQueryByRestaurantId,
+  raiseRestaurantQuery,
+} from "../controllers/supportSystem.controller.js";
 
 const router = Router();
 
@@ -31,6 +35,11 @@ router
   .post(upload.single("licenseCopy"), addRestaurant)
   .patch(verifyRestaurantJwt, updateRestaurant)
   .delete(verifyUserJwt, deleteRestaurant);
+
+router
+  .route("/query")
+  .post(verifyRestaurantJwt, raiseRestaurantQuery)
+  .get(verifyRestaurantJwt, getRestaurantQueryByRestaurantId);
 
 router.route("/login").post(loginRestaurant);
 router.route("/logout").post(verifyRestaurantJwt, logoutRestaurant);

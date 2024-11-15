@@ -9,6 +9,12 @@ import {
   getManagementTeamAccount,
 } from "../controllers/managementTeam.controller.js";
 import { verifyUserJwt } from "../middlewares/auth.middleware.js";
+import {
+  answerCustomerQuery,
+  answerRestaurantQuery,
+  getCustomerQueries,
+  getRestaurantQueries,
+} from "../controllers/supportSystem.controller.js";
 
 const router = Router();
 
@@ -21,5 +27,14 @@ router
   .delete(verifyUserJwt, deleteManagementTeamAccount)
   .patch(verifyUserJwt, updateManagementTeamAccount)
   .get(verifyUserJwt, getManagementTeamAccount);
+
+router
+  .route("/query/customer")
+  .get(verifyUserJwt, getCustomerQueries)
+  .post(verifyUserJwt, answerCustomerQuery);
+router
+  .route("/query/restaurant")
+  .get(verifyUserJwt, getRestaurantQueries)
+  .post(verifyUserJwt, answerRestaurantQuery);
 
 export default router;
