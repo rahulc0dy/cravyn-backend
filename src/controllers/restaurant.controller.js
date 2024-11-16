@@ -856,7 +856,11 @@ const getRecommendedRestaurants = asyncHandler(async (req, res) => {
       );
   }
 
-  if (minRating > 5 || minRating < 0 || limit < 0) {
+  if (
+    parseFloat(minRating) > 5 ||
+    parseFloat(minRating) < 0 ||
+    parseInt(limit) < 0
+  ) {
     return res.status(400).json(
       new ApiResponse(
         {
@@ -873,10 +877,10 @@ const getRecommendedRestaurants = asyncHandler(async (req, res) => {
     const restaurants = await getRestaurantsByDistanceOrRating({
       lat,
       long,
-      minRating,
-      limit,
+      minRating: minRating ? parseFloat(minRating) : minRating,
+      limit: limit ? parseInt(limit) : limit,
       sortBy,
-      radius,
+      radius: radius ? parseFloat(radius) : radius,
     });
 
     if (restaurants.length === 0) {
