@@ -15,6 +15,7 @@ import {
   getCustomerQueries,
   getRestaurantQueries,
 } from "../controllers/supportSystem.controller.js";
+import { verifyRestaurant } from "../controllers/restaurant.controller.js";
 
 const router = Router();
 
@@ -36,5 +37,6 @@ router
   .route("/query/restaurant")
   .get(verifyUserJwt, getRestaurantQueries)
   .post(verifyUserJwt, answerRestaurantQuery);
+router.route("/verify").post(verifyUserJwt, verifyRestaurant);
 
 export default router;

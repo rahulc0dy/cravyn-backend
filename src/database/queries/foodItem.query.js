@@ -27,8 +27,23 @@ const fuzzySearchFoodItem = async (foodItemName) => {
     SELECT *
     FROM Food_Item
     WHERE similarity(food_name, ${foodItemName}) > ${threshold}
-    ORDER BY similarity(food_name, ${foodItemName}) DESC
+    ORDER BY similarity(food_name, ${foodItemName}) DESC ;
     `;
+  return foodItems;
+};
+
+const fuzzySearchRestaurantFoodItem = async ({
+  foodItemName,
+  restaurantId,
+}) => {
+  const threshold = 0.3;
+  const foodItems = sql`
+      SELECT *
+      FROM Food_Item
+      WHERE restaurant_id=${restaurantId} AND similarity(food_name, ${foodItemName}) > ${threshold}
+      ORDER BY similarity(food_name, ${foodItemName}) DESC
+    ;`;
+
   return foodItems;
 };
 
@@ -100,6 +115,7 @@ export {
   getFoodItemByName,
   getFoodsByRestaurantId,
   fuzzySearchFoodItem,
+  fuzzySearchRestaurantFoodItem,
   createFoodItem,
   updateFoodItemDiscountById,
   updateFoodItemById,
