@@ -890,7 +890,7 @@ const getRecommendedRestaurants = asyncHandler(async (req, res) => {
         );
     }
 
-    res
+    return res
       .status(200)
       .json(
         new ApiResponse(
@@ -899,8 +899,7 @@ const getRecommendedRestaurants = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    console.error(error);
-    res
+    return res
       .status(500)
       .json(
         new ApiResponse(
