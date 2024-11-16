@@ -12,8 +12,39 @@ import {
   getAllRestaurantQueries,
   getQueriesByCustomerId,
   getQueriesByRestaurantId,
+  getNoOfQueries,
+  getNoOfPartnerRequests,
 } from "../database/queries/supportSystem.query.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+
+const getDashboardData = asyncHandler(async (req, res) => {
+  try {
+    const noQueries = await getNoOfQueries();
+    const noPartnerRequests = await getNoOfPartnerRequests();
+
+    if (noPartnerRequests?.length < 0 || noQueries?.length < 0) {
+      return res
+        .status(404)
+        .json(new ApiResponse({ reason: "Fetch error" }, "No data"));
+    }
+
+    return res.status(200).json(
+      new ApiResponse({
+        activeQueries: noQueries[0]?.total_unanswered_queries,
+        pendingPartnerRequests: noPartnerRequests[0]?.pending_partner_requests,
+      })
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message },
+          "Details could not be found with error"
+        )
+      );
+  }
+});
 
 const getCustomerQueries = asyncHandler(async (req, res) => {
   const { limit, filter } = req.query;
@@ -377,4 +408,5 @@ export {
   getRestaurantQueryByRestaurantId,
   raiseRestaurantQuery,
   answerRestaurantQuery,
+  getDashboardData,
 };

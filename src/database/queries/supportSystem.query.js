@@ -1,10 +1,33 @@
 import { sql } from "./database.js";
 
+const getNoOfQueries = async () => {
+  const restaurantQueryNo = sql`
+    SELECT COUNT(*) AS total_unanswered_queries
+    FROM (
+        SELECT answer FROM restaurant_query WHERE answer IS NULL
+        UNION ALL
+        SELECT answer FROM customer_query WHERE answer IS NULL
+        ) AS combined_queries;`;
+
+  return restaurantQueryNo;
+};
+
+const getNoOfPartnerRequests = async () => {
+  const restaurantQueryNo = sql`
+      SELECT COUNT(*) AS pending_partner_requests FROM restaurant WHERE verify_status=FALSE;
+  `;
+
+  return restaurantQueryNo;
+};
+
 // Customer Queries
 
 const getAllCustomerQueries = async (limit = 50) => {
   const query = await sql`
-    SELECT * FROM Customer_Query LIMIT ${limit};
+    SELECT name,question,answer,manager_id, query_id
+    FROM Customer_Query cq,Customer c 
+    WHERE cq.customer_id=c.id 
+    LIMIT ${limit};
     `;
 
   return query;
@@ -12,7 +35,11 @@ const getAllCustomerQueries = async (limit = 50) => {
 
 const getUnansweredCustomerQueries = async (limit = 50) => {
   const query = await sql`
-    SELECT * FROM Customer_Query WHERE answer IS NULL;
+    SELECT name,question,answer,manager_id, query_id
+    FROM Customer_Query cq,Customer c 
+    WHERE cq.customer_id=c.id 
+      AND answer IS NULL
+    LIMIT ${limit};
     `;
 
   return query;
@@ -20,7 +47,11 @@ const getUnansweredCustomerQueries = async (limit = 50) => {
 
 const getAnsweredCustomerQueries = async (limit = 50) => {
   const query = await sql`
-    SELECT * FROM Customer_Query WHERE answer IS NOT NULL;
+    SELECT name,question,answer,manager_id, query_id
+    FROM Customer_Query cq,Customer c 
+    WHERE cq.customer_id=c.id 
+      AND answer IS NOT NULL
+    LIMIT ${limit};
     `;
 
   return query;
@@ -65,7 +96,10 @@ const setCustomerQueryAnswer = async ({ queryId, answer, managerId }) => {
 
 const getAllRestaurantQueries = async (limit = 50) => {
   const query = await sql`
-    SELECT * FROM Restaurant_Query LIMIT ${limit};
+    SELECT name,question,answer,manager_id, query_id
+    FROM Restaurant_Query, Restaurant 
+    WHERE restaurant.restaurant_id=restaurant_query.restaurant_id 
+    LIMIT ${limit};
     `;
 
   return query;
@@ -73,7 +107,11 @@ const getAllRestaurantQueries = async (limit = 50) => {
 
 const getUnansweredRestaurantQueries = async (limit = 50) => {
   const query = await sql`
-    SELECT * FROM Restaurant_Query WHERE answer IS NULL LIMIT ${limit};
+    SELECT name,question,answer,manager_id, query_id
+    FROM Restaurant_Query, Restaurant 
+    WHERE restaurant.restaurant_id=restaurant_query.restaurant_id 
+      AND answer IS NULL 
+    LIMIT ${limit};
     `;
 
   return query;
@@ -81,7 +119,11 @@ const getUnansweredRestaurantQueries = async (limit = 50) => {
 
 const getAnsweredRestaurantQueries = async (limit = 50) => {
   const query = await sql`
-    SELECT * FROM Restaurant_Query WHERE answer IS NOT NULL LIMIT ${limit};
+    SELECT name,question,answer,manager_id, query_id
+    FROM Restaurant_Query, Restaurant 
+    WHERE restaurant.restaurant_id=restaurant_query.restaurant_id 
+      AND answer IS NOT NULL 
+    LIMIT ${limit};
     `;
 
   return query;
@@ -137,4 +179,6 @@ export {
   getCustomerQueryById,
   createCustomerQuery,
   setCustomerQueryAnswer,
+  getNoOfQueries,
+  getNoOfPartnerRequests,
 };

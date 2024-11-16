@@ -34,7 +34,7 @@ import { getPendingOrdersByRestaurantId } from "../database/queries/order.qury.j
 import { cookieOptions } from "../constants.js";
 
 const getRestaurantsList = asyncHandler(async (req, res) => {
-  const { limit, offset } = req.query;
+  const { limit, offset, verifyStatus } = req.query;
 
   try {
     const restaurantsList = await getRestaurants(limit, offset);

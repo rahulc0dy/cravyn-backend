@@ -13,6 +13,7 @@ import {
   answerCustomerQuery,
   answerRestaurantQuery,
   getCustomerQueries,
+  getDashboardData,
   getRestaurantQueries,
 } from "../controllers/supportSystem.controller.js";
 import { verifyRestaurant } from "../controllers/restaurant.controller.js";
@@ -28,6 +29,8 @@ router
   .delete(verifyUserJwt, deleteManagementTeamAccount)
   .patch(verifyUserJwt, updateManagementTeamAccount)
   .get(verifyUserJwt, getManagementTeamAccount);
+
+router.route("/dashboard").get(verifyUserJwt, getDashboardData);
 
 router
   .route("/query/customer")

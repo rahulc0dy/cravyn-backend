@@ -4,7 +4,6 @@ import {
   getRestaurant,
   updateRestaurant,
   deleteRestaurant,
-  verifyRestaurant,
   loginRestaurant,
   refreshAccessToken,
   getRestaurantCatalog,
