@@ -130,6 +130,45 @@ const fuzzySearchRestaurant = async (name) => {
   return restaurants;
 };
 
+const getRestaurantsByDistanceOrRating = async ({
+  lat,
+  long,
+  minRating = 0,
+  limit = 50,
+  sortBy = "distance",
+  radius = 30,
+}) => {
+  const restaurants = await sql`
+      SELECT restaurant_id, name, restaurant_image_url, latitude, longitude, city, street, landmark, pin_code, availability_status, distance
+      FROM (
+               SELECT restaurant_id, name, restaurant_image_url, latitude, longitude, city, street, landmark, pin_code, availability_status,
+                   ( 6371 * acos( cos( radians(${lat}) ) * cos( radians(latitude) )
+                                      * cos( radians(longitude) - radians(${long}) )
+                       + sin( radians(${lat}) ) * sin( radians(latitude) ) )
+                       ) AS distance
+               FROM Restaurant
+           ) subquery
+      WHERE distance < ${radius}
+      ORDER BY ${sortBy}
+      LIMIT ${limit};
+  `;
+
+  // todo: calculating rating for the restaurant
+  restaurants.forEach((restaurant) => {
+    restaurant.rating = parseFloat(
+      (Math.random() * (5 - minRating) + minRating).toFixed(1)
+    );
+    const [minTime, maxTime] = [
+      restaurant.distance / 25 + 5,
+      restaurant.distance / 10 + 10,
+    ];
+    restaurant.minTime = Math.floor(minTime);
+    restaurant.maxTime = Math.ceil(maxTime);
+  });
+
+  return restaurants;
+};
+
 export {
   getRestaurantById,
   getNonSensitiveRestaurantInfoById,
@@ -143,4 +182,5 @@ export {
   setRefreshToken,
   deleteRestaurantById,
   fuzzySearchRestaurant,
+  getRestaurantsByDistanceOrRating,
 };

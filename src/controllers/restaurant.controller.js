@@ -11,6 +11,7 @@ import {
   setRefreshToken,
   getRestaurants,
   fuzzySearchRestaurant,
+  getRestaurantsByDistanceOrRating,
 } from "../database/queries/restaurant.query.js";
 import bcrypt from "bcrypt";
 import {
@@ -23,7 +24,10 @@ import {
   uploadImageOnCloudinary,
 } from "../utils/cloudinary.js";
 import fs from "fs";
-import { getFoodsByRestaurantId } from "../database/queries/foodItem.query.js";
+import {
+  fuzzySearchRestaurantFoodItem,
+  getFoodsByRestaurantId,
+} from "../database/queries/foodItem.query.js";
 import { getCoordinates } from "./geocode.controller.js";
 import { getGeocodeUrl } from "../utils/geocodeUrl.js";
 import { getPendingOrdersByRestaurantId } from "../database/queries/order.qury.js";
@@ -838,9 +842,119 @@ const getRestaurantPendingOrders = asyncHandler(async (req, res) => {
   }
 });
 
+const getRecommendedRestaurants = asyncHandler(async (req, res) => {
+  const { lat, long, minRating, limit, sortBy, radius } = req.query;
+
+  if (!lat || !long) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          { reason: "No latitude or longitude provided." },
+          "Error getting restaurant."
+        )
+      );
+  }
+
+  if (minRating > 5 || minRating < 0 || limit < 0) {
+    return res.status(400).json(
+      new ApiResponse(
+        {
+          reason: "Error at values",
+          minRating: `Minimum rating ${minRating} is ${minRating < 0 || minRating > 5 ? "not " : ""}in range [0, 5].`,
+          limit: `${limit < 0 ? "INVALID" : "OK"}: limit ${limit} is ${limit < 0 ? "not " : ""}greater than 0`,
+        },
+        "Error getting restaurant."
+      )
+    );
+  }
+
+  try {
+    const restaurants = await getRestaurantsByDistanceOrRating({
+      lat,
+      long,
+      minRating,
+      limit,
+      sortBy,
+      radius,
+    });
+
+    if (restaurants.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "No restaurants found" },
+            "Error getting restaurant."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          { restaurants },
+          "Recommended restaurants fetched successfully."
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message },
+          "Error getting recommended restaurants."
+        )
+      );
+  }
+});
+
+const getRestaurantFoods = asyncHandler(async (req, res) => {
+  const { search, restaurantId } = req.query;
+
+  if (!search || !restaurantId) {
+    return res
+      .status(404)
+      .json(
+        new ApiResponse(
+          { reason: "No search query or restaurantId provided." },
+          "Error getting food."
+        )
+      );
+  }
+
+  try {
+    const foodItems = await fuzzySearchRestaurantFoodItem({
+      foodItemName: search,
+      restaurantId,
+    });
+
+    if (foodItems.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "No food Items found." },
+            "Error getting food."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse({ foodItems }, "Food Items found."));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new ApiResponse({ reason: error.message }, "Error getting food."));
+  }
+});
+
 export {
   getRestaurant,
   getRestaurantsList,
+  getRestaurantFoods,
   addRestaurant,
   loginRestaurant,
   logoutRestaurant,
@@ -851,4 +965,5 @@ export {
   getRestaurantCatalog,
   searchRestaurantByName,
   getRestaurantPendingOrders,
+  getRecommendedRestaurants,
 };

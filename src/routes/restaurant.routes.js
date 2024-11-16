@@ -12,12 +12,15 @@ import {
   getRestaurantsList,
   searchRestaurantByName,
   getRestaurantPendingOrders,
+  getRecommendedRestaurants,
+  getRestaurantFoods,
 } from "../controllers/restaurant.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
   verifyRestaurantJwt,
   verifyUserJwt,
 } from "../middlewares/auth.middleware.js";
+import { getFood } from "../controllers/food.controller.js";
 
 const router = Router();
 
@@ -35,11 +38,13 @@ router
 router.route("/login").post(loginRestaurant);
 router.route("/logout").post(verifyRestaurantJwt, logoutRestaurant);
 router.route("/refresh-token").get(refreshAccessToken);
-router.route("/verify").post(verifyUserJwt, verifyRestaurant);
 
 router.route("/catalog").get(verifyRestaurantJwt, getRestaurantCatalog);
 router
   .route("/orders/pending")
   .get(verifyRestaurantJwt, getRestaurantPendingOrders);
+
+router.route("/recommended").get(getRecommendedRestaurants);
+router.route("/food").get(getRestaurantFoods);
 
 export default router;
