@@ -843,7 +843,7 @@ const getRestaurantPendingOrders = asyncHandler(async (req, res) => {
 });
 
 const getRecommendedRestaurants = asyncHandler(async (req, res) => {
-  const { lat, long, minRating, limit, sortBy, radius } = req.query;
+  const { lat, long, minRating, limit, sortBy, radius, descending } = req.query;
 
   if (!lat || !long) {
     return res
@@ -877,10 +877,12 @@ const getRecommendedRestaurants = asyncHandler(async (req, res) => {
     const restaurants = await getRestaurantsByDistanceOrRating({
       lat,
       long,
-      minRating: minRating ? parseFloat(minRating) : minRating,
-      limit: limit ? parseInt(limit) : limit,
+      minRating:
+        minRating && minRating.length !== 0 ? parseFloat(minRating) : undefined,
+      limit: limit && limit.length !== 0 ? parseInt(limit) : undefined,
       sortBy,
-      radius: radius ? parseFloat(radius) : radius,
+      radius: radius && radius.length !== 0 ? parseFloat(radius) : undefined,
+      descending: !!descending,
     });
 
     if (restaurants.length === 0) {

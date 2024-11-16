@@ -137,18 +137,28 @@ const getRestaurantsByDistanceOrRating = async ({
   limit = 50,
   sortBy = "distance",
   radius = 30,
+  descending = false,
 }) => {
   const restaurants = await sql`
-      SELECT restaurant_id, name, restaurant_image_url, latitude, longitude, city, street, landmark, pin_code, availability_status, distance
+      SELECT r.restaurant_id, r.name, r.restaurant_image_url, r.latitude, r.longitude, r.city, r.street, r.landmark, r.pin_code, r.availability_status, r.distance, f.max_discount_percent, f.max_discount_cap
       FROM (
-               SELECT restaurant_id, name, restaurant_image_url, latitude, longitude, city, street, landmark, pin_code, availability_status,
+                SELECT restaurant_id, name, restaurant_image_url, latitude, longitude, city, street, landmark, pin_code, availability_status,
                    ( 6371 * acos( cos( radians(${lat}) ) * cos( radians(latitude) )
                                       * cos( radians(longitude) - radians(${long}) )
                        + sin( radians(${lat}) ) * sin( radians(latitude) ) )
                        ) AS distance
                FROM Restaurant
-           ) subquery
-      WHERE distance < ${radius}
+           ) r
+               LEFT JOIN (
+          SELECT
+              restaurant_id,
+              MAX(discount_percent) AS max_discount_percent,
+              MAX(discount_cap) AS max_discount_cap
+          FROM food_item
+          GROUP BY restaurant_id
+      ) f
+      ON r.restaurant_id = f.restaurant_id
+      WHERE r.distance < ${radius}
       ORDER BY ${sortBy}
       LIMIT ${limit};
   `;
@@ -164,6 +174,7 @@ const getRestaurantsByDistanceOrRating = async ({
     ];
     restaurant.minTime = Math.floor(minTime);
     restaurant.maxTime = Math.ceil(maxTime);
+    restaurant.rating_number = Math.floor(Math.random() * (10000 - 100) + 100);
   });
 
   return restaurants;
