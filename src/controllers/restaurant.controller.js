@@ -880,7 +880,7 @@ const getRecommendedRestaurants = asyncHandler(async (req, res) => {
       limit: limit && limit.length !== 0 ? parseInt(limit) : undefined,
       sortBy,
       radius: radius && radius.length !== 0 ? parseFloat(radius) : undefined,
-      descending: !!descending,
+      descending: descending === "true",
     });
 
     if (restaurants.length === 0) {

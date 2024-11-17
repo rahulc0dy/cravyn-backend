@@ -195,6 +195,11 @@ const getRestaurantsByDistanceOrRating = async ({
     restaurant.rating_number = Math.floor(Math.random() * (10000 - 100) + 100);
   });
 
+  if (restaurants[0].hasOwnProperty(sortBy))
+    restaurants.sort((a, b) => {
+      return descending ? b[sortBy] - a[sortBy] : a[sortBy] - b[sortBy];
+    });
+
   return restaurants;
 };
 
