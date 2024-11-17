@@ -12,6 +12,7 @@ import {
   getRestaurants,
   fuzzySearchRestaurant,
   getRestaurantsByDistanceOrRating,
+  getRestaurantsByVerifyStatus,
 } from "../database/queries/restaurant.query.js";
 import bcrypt from "bcrypt";
 import {
@@ -37,11 +38,20 @@ const getRestaurantsList = asyncHandler(async (req, res) => {
   const { limit, offset, verifyStatus } = req.query;
 
   try {
-    const restaurantsList = await getRestaurants(limit, offset);
+    let restaurantsList;
+    if (
+      verifyStatus === "verified" ||
+      verifyStatus === "pending" ||
+      verifyStatus === "rejected"
+    ) {
+      restaurantsList = await getRestaurantsByVerifyStatus(limit, verifyStatus);
+    } else {
+      restaurantsList = await getRestaurants(limit, offset);
+    }
 
     if (restaurantsList.length === 0) {
       return res
-        .status(401)
+        .status(404)
         .json(
           new ApiResponse(
             { reason: "Restaurant List is empty" },

@@ -19,7 +19,18 @@ const getNonSensitiveRestaurantInfoByRegNo = async (
   restaurantRegistrationNo
 ) => {
   const restaurant = await sql`
-        SELECT restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url 
+        SELECT 
+            restaurant_id, 
+            name, 
+            registration_no, 
+            owner_id, 
+            latitude, 
+            longitude, 
+            city, 
+            street, 
+            landmark, 
+            pin_code, 
+            license_url 
         FROM Restaurant 
         WHERE registration_no = ${restaurantRegistrationNo}
         ;`;
@@ -28,7 +39,48 @@ const getNonSensitiveRestaurantInfoByRegNo = async (
 
 const getRestaurants = async (limit = null, offset = null) => {
   const restaurants = await sql`
-    SELECT restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url, verify_status, restaurant_image_url  FROM Restaurant LIMIT ${limit};
+    SELECT 
+        restaurant_id, 
+        name, 
+        registration_no, 
+        owner_id, 
+        latitude, 
+        longitude, 
+        city, 
+        street, 
+        landmark, 
+        pin_code, 
+        license_url, 
+        verify_status, 
+        restaurant_image_url 
+    FROM Restaurant 
+    LIMIT ${limit};
+    `;
+  return restaurants;
+};
+
+const getRestaurantsByVerifyStatus = async (
+  limit = null,
+  verifyStatus = null
+) => {
+  const restaurants = await sql`
+    SELECT 
+        restaurant_id, 
+        name, 
+        registration_no, 
+        owner_id, 
+        latitude, 
+        longitude, 
+        city, 
+        street, 
+        landmark, 
+        pin_code, 
+        license_url, 
+        verify_status, 
+        restaurant_image_url 
+    FROM Restaurant 
+    where verify_status=${verifyStatus}
+    LIMIT ${limit};
     `;
   return restaurants;
 };
@@ -217,4 +269,5 @@ export {
   deleteRestaurantById,
   fuzzySearchRestaurant,
   getRestaurantsByDistanceOrRating,
+  getRestaurantsByVerifyStatus,
 };
