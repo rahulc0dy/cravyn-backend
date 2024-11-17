@@ -741,7 +741,7 @@ const getRestaurantCatalog = asyncHandler(async (req, res) => {
       .status(200)
       .json(
         new ApiResponse(
-          { catalog, restaurant: restaurantId ? null : restaurant[0] },
+          { catalog, restaurant: restaurant[0] },
           "Catalog fetched successfully."
         )
       );
