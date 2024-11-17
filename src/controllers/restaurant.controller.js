@@ -521,7 +521,7 @@ const updateRestaurant = asyncHandler(async (req, res) => {
 
 const verifyRestaurant = asyncHandler(async (req, res) => {
   const { restaurantId, managementTeamMemberId } = req.body;
-  let { acceptVerification } = req.body;
+  let { approval } = req.body;
 
   if (!restaurantId) {
     return res.status(400).json(
@@ -534,7 +534,7 @@ const verifyRestaurant = asyncHandler(async (req, res) => {
     );
   }
 
-  if (acceptVerification === undefined) acceptVerification = true;
+  if (approval === undefined) approval = true;
 
   let restaurant = await getRestaurantById(restaurantId);
 
@@ -552,14 +552,14 @@ const verifyRestaurant = asyncHandler(async (req, res) => {
   try {
     restaurant = await setRestaurantVerificationStatusById(
       restaurantId,
-      acceptVerification
+      approval
     );
     return res
       .status(200)
       .json(
         new ApiResponse(
           { restaurant: restaurant[0] },
-          acceptVerification
+          approval
             ? "Restaurant verified."
             : "Restaurant verification rejected."
         )

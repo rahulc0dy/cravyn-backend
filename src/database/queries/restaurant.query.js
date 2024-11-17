@@ -43,6 +43,7 @@ const getRestaurants = async (limit = null, offset = null) => {
         restaurant_id, 
         name, 
         registration_no, 
+        gstin_no,
         owner_id, 
         latitude, 
         longitude, 
@@ -66,8 +67,9 @@ const getRestaurantsByVerifyStatus = async (
   const restaurants = await sql`
     SELECT 
         restaurant_id, 
-        name, 
+        name,
         registration_no, 
+        gstin_no,
         owner_id, 
         latitude, 
         longitude, 
@@ -174,7 +176,7 @@ const deleteRestaurantById = async (restaurantId) => {
 const fuzzySearchRestaurant = async (name) => {
   const threshold = 0.3; // Adjust this value for sensitivity
   const restaurants = await sql`
-    SELECT *
+    SELECT restaurant_id, name, restaurant_image_url, verify_status, pin_code, city,street, landmark, pin_code
     FROM restaurant
     WHERE similarity(name, ${name}) > ${threshold}
     ORDER BY similarity(name, ${name}) DESC

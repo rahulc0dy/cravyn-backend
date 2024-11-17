@@ -35,12 +35,13 @@ const getDashboardData = asyncHandler(async (req, res) => {
       })
     );
   } catch (error) {
+    console.error(error);
     return res
       .status(500)
       .json(
         new ApiResponse(
           { reason: error.message },
-          "Details could not be found with error"
+          "Details could not be obtained."
         )
       );
   }

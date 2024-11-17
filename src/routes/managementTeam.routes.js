@@ -16,7 +16,10 @@ import {
   getDashboardData,
   getRestaurantQueries,
 } from "../controllers/supportSystem.controller.js";
-import { verifyRestaurant } from "../controllers/restaurant.controller.js";
+import {
+  getRestaurantsList,
+  verifyRestaurant,
+} from "../controllers/restaurant.controller.js";
 
 const router = Router();
 
@@ -32,6 +35,8 @@ router
 
 router.route("/dashboard").get(verifyUserJwt, getDashboardData);
 
+router.route("/partner-requests").get(getRestaurantsList);
+
 router
   .route("/query/customer")
   .get(verifyUserJwt, getCustomerQueries)
@@ -40,6 +45,6 @@ router
   .route("/query/restaurant")
   .get(verifyUserJwt, getRestaurantQueries)
   .post(verifyUserJwt, answerRestaurantQuery);
-router.route("/verify").post(verifyUserJwt, verifyRestaurant);
+router.route("/verify-partner").post(verifyUserJwt, verifyRestaurant);
 
 export default router;

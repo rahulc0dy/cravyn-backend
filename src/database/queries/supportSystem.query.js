@@ -14,7 +14,7 @@ const getNoOfQueries = async () => {
 
 const getNoOfPartnerRequests = async () => {
   const restaurantQueryNo = sql`
-      SELECT COUNT(*) AS pending_partner_requests FROM restaurant WHERE verify_status=FALSE;
+      SELECT COUNT(*) AS pending_partner_requests FROM restaurant WHERE verify_status='pending';
   `;
 
   return restaurantQueryNo;
