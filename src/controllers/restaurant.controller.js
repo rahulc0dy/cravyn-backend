@@ -12,6 +12,7 @@ import {
   getRestaurants,
   fuzzySearchRestaurant,
   getRestaurantsByDistanceOrRating,
+  getRestaurantsByVerifyStatus,
 } from "../database/queries/restaurant.query.js";
 import bcrypt from "bcrypt";
 import {
@@ -34,14 +35,23 @@ import { getPendingOrdersByRestaurantId } from "../database/queries/order.qury.j
 import { cookieOptions } from "../constants.js";
 
 const getRestaurantsList = asyncHandler(async (req, res) => {
-  const { limit, offset } = req.query;
+  const { limit, offset, verifyStatus } = req.query;
 
   try {
-    const restaurantsList = await getRestaurants(limit, offset);
+    let restaurantsList;
+    if (
+      verifyStatus === "verified" ||
+      verifyStatus === "pending" ||
+      verifyStatus === "rejected"
+    ) {
+      restaurantsList = await getRestaurantsByVerifyStatus(limit, verifyStatus);
+    } else {
+      restaurantsList = await getRestaurants(limit, offset);
+    }
 
     if (restaurantsList.length === 0) {
       return res
-        .status(401)
+        .status(404)
         .json(
           new ApiResponse(
             { reason: "Restaurant List is empty" },
@@ -122,8 +132,6 @@ const addRestaurant = asyncHandler(async (req, res) => {
     name,
     registrationNo,
     ownerId,
-    lat,
-    long,
     city,
     street,
     landmark,
@@ -137,6 +145,8 @@ const addRestaurant = asyncHandler(async (req, res) => {
     password,
     confirmPassword,
   } = req.body;
+
+  let { lat, long } = req.body;
 
   const requiredFields = [
     { field: name, message: "Name is required.", reason: `name is ${name}` },
@@ -215,7 +225,9 @@ const addRestaurant = asyncHandler(async (req, res) => {
 
       const data = await response.json();
 
-      const [lat, long] = [data[0].lat, data[0].long];
+      [lat, long] = [data[0].lat, data[0].lon];
+
+      if (!lat || !long) throw new Error("Failed to fetch geocode data");
     } catch (error) {
       return res
         .status(500)
@@ -404,10 +416,6 @@ const loginRestaurant = asyncHandler(async (req, res) => {
 
   restaurant = await setRefreshToken(refreshToken, restaurantId);
 
-  const options = {
-    httpOnly: true,
-    secure: false,
-  };
   delete restaurant[0].refresh_token;
   delete restaurant[0].password;
 
@@ -513,7 +521,7 @@ const updateRestaurant = asyncHandler(async (req, res) => {
 
 const verifyRestaurant = asyncHandler(async (req, res) => {
   const { restaurantId, managementTeamMemberId } = req.body;
-  let { acceptVerification } = req.body;
+  let { approval } = req.body;
 
   if (!restaurantId) {
     return res.status(400).json(
@@ -526,7 +534,7 @@ const verifyRestaurant = asyncHandler(async (req, res) => {
     );
   }
 
-  if (acceptVerification === undefined) acceptVerification = true;
+  if (approval === undefined) approval = true;
 
   let restaurant = await getRestaurantById(restaurantId);
 
@@ -544,14 +552,14 @@ const verifyRestaurant = asyncHandler(async (req, res) => {
   try {
     restaurant = await setRestaurantVerificationStatusById(
       restaurantId,
-      acceptVerification
+      approval
     );
     return res
       .status(200)
       .json(
         new ApiResponse(
           { restaurant: restaurant[0] },
-          acceptVerification
+          approval
             ? "Restaurant verified."
             : "Restaurant verification rejected."
         )
@@ -743,7 +751,7 @@ const getRestaurantCatalog = asyncHandler(async (req, res) => {
       .status(200)
       .json(
         new ApiResponse(
-          { catalog, restaurant: restaurantId ? null : restaurant[0] },
+          { catalog, restaurant: restaurant[0] },
           "Catalog fetched successfully."
         )
       );
@@ -882,7 +890,7 @@ const getRecommendedRestaurants = asyncHandler(async (req, res) => {
       limit: limit && limit.length !== 0 ? parseInt(limit) : undefined,
       sortBy,
       radius: radius && radius.length !== 0 ? parseFloat(radius) : undefined,
-      descending: !!descending,
+      descending: descending === "true",
     });
 
     if (restaurants.length === 0) {

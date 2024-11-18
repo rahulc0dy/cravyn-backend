@@ -9,7 +9,17 @@ import {
   getManagementTeamAccount,
 } from "../controllers/managementTeam.controller.js";
 import { verifyUserJwt } from "../middlewares/auth.middleware.js";
-import { verifyRestaurant } from "../controllers/restaurant.controller.js";
+import {
+  answerCustomerQuery,
+  answerRestaurantQuery,
+  getCustomerQueries,
+  getDashboardData,
+  getRestaurantQueries,
+} from "../controllers/supportSystem.controller.js";
+import {
+  getRestaurantsList,
+  verifyRestaurant,
+} from "../controllers/restaurant.controller.js";
 
 const router = Router();
 
@@ -23,6 +33,18 @@ router
   .patch(verifyUserJwt, updateManagementTeamAccount)
   .get(verifyUserJwt, getManagementTeamAccount);
 
-router.route("/verify").post(verifyUserJwt, verifyRestaurant);
+router.route("/dashboard").get(verifyUserJwt, getDashboardData);
+
+router.route("/partner-requests").get(getRestaurantsList);
+
+router
+  .route("/query/customer")
+  .get(verifyUserJwt, getCustomerQueries)
+  .post(verifyUserJwt, answerCustomerQuery);
+router
+  .route("/query/restaurant")
+  .get(verifyUserJwt, getRestaurantQueries)
+  .post(verifyUserJwt, answerRestaurantQuery);
+router.route("/verify-partner").post(verifyUserJwt, verifyRestaurant);
 
 export default router;

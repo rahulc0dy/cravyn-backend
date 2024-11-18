@@ -11,6 +11,10 @@ import {
 } from "../controllers/customer.controller.js";
 import { verifyUserJwt } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import {
+  getCustomerQueryByCustomerId,
+  raiseCustomerQuery,
+} from "../controllers/supportSystem.controller.js";
 
 const router = Router();
 
@@ -18,6 +22,11 @@ router.route("/login").post(loginCustomer);
 router.route("/register").post(registerCustomer);
 router.route("/logout").post(verifyUserJwt, logoutCustomer);
 router.route("/refresh-token").post(refreshAccessToken);
+router
+  .route("/query")
+  .post(verifyUserJwt, raiseCustomerQuery)
+  .get(verifyUserJwt, getCustomerQueryByCustomerId);
+
 router
   .route("/")
   .delete(verifyUserJwt, deleteCustomerAccount)

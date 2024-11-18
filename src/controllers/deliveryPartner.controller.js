@@ -244,14 +244,15 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
   delete deliveryPartner.profile_image_url;
   delete deliveryPartner.password;
 
-  return res
-    .status(201)
-    .json(
-      new ApiResponse(
+  return res.status(201).json(
+    new ApiResponse(
+      {
         deliveryPartner,
-        "Delivery partner registered successfully."
-      )
-    );
+        user: deliveryPartner,
+      },
+      "Delivery partner registered successfully."
+    )
+  );
 });
 
 const logoutDeliveryPartner = asyncHandler(async (req, res) => {
