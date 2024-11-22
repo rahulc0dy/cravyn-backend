@@ -15,6 +15,20 @@ const getNonSensitiveRestaurantInfoById = async (restaurantId) => {
   return restaurant;
 };
 
+const getNonSensitiveRestaurantInfoByOwnerId = async (restaurantOwnerId) => {
+  const restaurants = await sql`
+        SELECT restaurant_id, name, email,phone_number , gstin_url, verify_status, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url
+        FROM Restaurant 
+        WHERE owner_id = ${restaurantOwnerId}
+        ;`;
+
+  restaurants.forEach((restaurant) => {
+    restaurant.rating = parseFloat((Math.random() * (5 - 3) + 3).toFixed(1));
+  });
+
+  return restaurants;
+};
+
 const getNonSensitiveRestaurantInfoByRegNo = async (
   restaurantRegistrationNo
 ) => {
@@ -282,6 +296,7 @@ const getRestaurantsByDistanceOrRating = async ({
 export {
   getRestaurantById,
   getNonSensitiveRestaurantInfoById,
+  getNonSensitiveRestaurantInfoByOwnerId,
   getNonSensitiveRestaurantInfoByRegNo,
   getRestaurants,
   createRestaurant,
