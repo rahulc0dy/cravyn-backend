@@ -54,9 +54,12 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
 const loginCustomer = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  checkRequiredFields({ email, password }, ({ field, message, reason }) =>
-    res.status(400).json(new ApiResponse({ reason }, message))
-  );
+  if (
+    !checkRequiredFields({ email, password }, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   let customer = await getCustomerByEmail(email);
 
@@ -114,11 +117,14 @@ const registerCustomer = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
     req.body;
 
-  checkRequiredFields(
-    { name, email, phoneNumber, dateOfBirth, password, confirmPassword },
-    ({ field, message, reason }) =>
-      res.status(400).json(new ApiResponse({ reason }, message))
-  );
+  if (
+    !checkRequiredFields(
+      { name, email, phoneNumber, dateOfBirth, password, confirmPassword },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   if (password !== confirmPassword) {
     return res

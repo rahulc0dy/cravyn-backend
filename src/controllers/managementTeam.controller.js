@@ -58,9 +58,12 @@ const getManagementTeamAccount = asyncHandler(async (req, res) => {
 const loginManagementTeam = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  checkRequiredFields({ email, password }, ({ field, message, reason }) =>
-    res.status(400).json(new ApiResponse({ reason }, message))
-  );
+  if (
+    !checkRequiredFields({ email, password }, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   let managementTeam = await getManagementTeamByEmail(email);
 
@@ -115,11 +118,14 @@ const loginManagementTeam = asyncHandler(async (req, res) => {
 const registerManagementTeam = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, password, confirmPassword } = req.body;
 
-  checkRequiredFields(
-    { name, email, phoneNumber, password, confirmPassword },
-    ({ field, message, reason }) =>
-      res.status(400).json(new ApiResponse({ reason }, message))
-  );
+  if (
+    !checkRequiredFields(
+      { name, email, phoneNumber, password, confirmPassword },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   if (password !== confirmPassword) {
     return res

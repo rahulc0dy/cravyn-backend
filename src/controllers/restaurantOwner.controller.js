@@ -58,9 +58,12 @@ const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
 const loginRestaurantOwner = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  checkRequiredFields({ email, password }, ({ field, message, reason }) =>
-    res.status(400).json(new ApiResponse({ reason }, message))
-  );
+  if (
+    !checkRequiredFields({ email, password }, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   let restaurantOwner = await getRestaurantOwnerByEmail(email);
 
@@ -118,11 +121,14 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, panNumber, password, confirmPassword } =
     req.body;
 
-  checkRequiredFields(
-    { name, email, phoneNumber, panNumber, password, confirmPassword },
-    ({ field, message, reason }) =>
-      res.status(400).json(new ApiResponse({ reason }, message))
-  );
+  if (
+    !checkRequiredFields(
+      { name, email, phoneNumber, panNumber, password, confirmPassword },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   if (password !== confirmPassword) {
     return res

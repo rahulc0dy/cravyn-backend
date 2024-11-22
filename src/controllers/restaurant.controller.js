@@ -195,9 +195,12 @@ const addRestaurant = asyncHandler(async (req, res) => {
         );
     }
 
-  checkRequiredFields(requiredFields, ({ field, message, reason }) =>
-    res.status(400).json(new ApiResponse({ reason: reason }, message))
-  );
+  if (
+    !checkRequiredFields(requiredFields, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason: reason }, message))
+    )
+  )
+    return;
 
   if (password !== confirmPassword) {
     return res.status(400).json(
@@ -306,11 +309,14 @@ const addRestaurant = asyncHandler(async (req, res) => {
 const loginRestaurant = asyncHandler(async (req, res) => {
   const { registrationNumber, password } = req.body;
 
-  checkRequiredFields(
-    { registrationNumber, password },
-    ({ field, message, reason }) =>
-      res.status(400).json(new ApiResponse({ reason }, message))
-  );
+  if (
+    !checkRequiredFields(
+      { registrationNumber, password },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   let restaurant =
     await getNonSensitiveRestaurantInfoByRegNo(registrationNumber);
@@ -712,6 +718,13 @@ const getRestaurantCatalog = asyncHandler(async (req, res) => {
 
 const searchRestaurantByName = asyncHandler(async (req, res) => {
   const { name } = req.query;
+
+  if (
+    !checkRequiredFields({ name }, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   try {
     const restaurantList = await fuzzySearchRestaurant(name);
