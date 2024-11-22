@@ -15,20 +15,31 @@ const getFoodItemByName = async (name) => {
 };
 
 const getFoodsByRestaurantId = async (restaurantId, limit = null) => {
-  const foodItem = await sql`
+  const foodItems = await sql`
     SELECT * FROM Food_Item WHERE restaurant_id = ${restaurantId} LIMIT ${limit};
     `;
-  return foodItem;
+
+  // todo: rating for food items.
+  foodItems.forEach((foodItem) => {
+    foodItem.rating = parseFloat((Math.random() * 5).toFixed(1));
+  });
+  return foodItems;
 };
 
 const fuzzySearchFoodItem = async (foodItemName) => {
   const threshold = 0.3;
-  const foodItems = sql`
+  const foodItems = await sql`
     SELECT *
     FROM Food_Item
     WHERE similarity(food_name, ${foodItemName}) > ${threshold}
     ORDER BY similarity(food_name, ${foodItemName}) DESC ;
     `;
+
+  // todo: food rating
+  foodItems.forEach((foodItem) => {
+    foodItem.rating = parseFloat((Math.random() * (5 - 3) + 3).toFixed(1));
+  });
+
   return foodItems;
 };
 
@@ -37,12 +48,17 @@ const fuzzySearchRestaurantFoodItem = async ({
   restaurantId,
 }) => {
   const threshold = 0.3;
-  const foodItems = sql`
+  const foodItems = await sql`
       SELECT *
       FROM Food_Item
       WHERE restaurant_id=${restaurantId} AND similarity(food_name, ${foodItemName}) > ${threshold}
       ORDER BY similarity(food_name, ${foodItemName}) DESC
     ;`;
+
+  // todo: food rating
+  foodItems.forEach((foodItem) => {
+    foodItem.rating = parseFloat((Math.random() * (5 - 3) + 3).toFixed(1));
+  });
 
   return foodItems;
 };

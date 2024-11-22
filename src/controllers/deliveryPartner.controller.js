@@ -19,6 +19,7 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 import { cookieOptions } from "../constants.js";
+import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 
 const getDeliveryPartnerAccount = asyncHandler(async (req, res) => {
   if (!req.deliveryPartner || !req.deliveryPartner.id) {
@@ -60,24 +61,9 @@ const getDeliveryPartnerAccount = asyncHandler(async (req, res) => {
 const loginDeliveryPartner = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const requiredFields = [
-    {
-      field: email,
-      message: "Email is required.",
-      reason: "Email is not defined",
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: "Password is not defined",
-    },
-  ];
-
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
+  checkRequiredFields({ email, password }, ({ field, message, reason }) =>
+    res.status(400).json(new ApiResponse({ reason }, message))
+  );
 
   let deliveryPartner = await getDeliveryPartnerByEmail(email);
 
@@ -142,45 +128,11 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
     confirmPassword,
   } = req.body;
 
-  const requiredFields = [
-    { field: name, message: "name is required.", reason: `name is ${name}` },
-    {
-      field: email,
-      message: "email is required.",
-      reason: `email is ${email}`,
-    },
-    {
-      field: phoneNumber,
-      message: "Phone number is required.",
-      reason: `phoneNumber is ${phoneNumber}`,
-    },
-    {
-      field: phoneNumber,
-      message: "Phone number is required.",
-      reason: `phoneNumber is ${phoneNumber}`,
-    },
-    {
-      field: vehicleType,
-      message: "Vehicle type is required.",
-      reason: `vehicleType is ${vehicleType}`,
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: `password is ${password}`,
-    },
-    {
-      field: confirmPassword,
-      message: "Confirm password is required.",
-      reason: `confirmPassword is ${confirmPassword}`,
-    },
-  ];
-
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
+  checkRequiredFields(
+    { name, email, phoneNumber, vehicleType, password, confirmPassword },
+    ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason }, message))
+  );
 
   if (password !== confirmPassword) {
     return res
@@ -286,10 +238,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     req.cookies?.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
-    res
+    return res
       .status(401)
       .json(
-        ApiResponse({ reason: "Request unauthorised" }, "Unauthorized request.")
+        new ApiResponse(
+          { reason: "Request unauthorised" },
+          "Unauthorized request."
+        )
       );
   }
 
@@ -315,7 +270,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
     if (incomingRefreshToken !== deliveryPartner?.refresh_token)
-      res
+      return res
         .status(401)
         .json(
           new ApiResponse(
@@ -346,7 +301,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    res.status(401).json(
+    return res.status(401).json(
       new ApiResponse(
         {
           reason:
@@ -496,7 +451,7 @@ const updateDeliveryPartnerAccount = asyncHandler(async (req, res) => {
     );
   }
 
-  res
+  return res
     .status(200)
     .json(
       new ApiResponse(
@@ -529,7 +484,7 @@ const updateDeliveryPartnerImage = asyncHandler(async (req, res) => {
         cloudinaryResponse.url
       );
 
-      res.status(200).json(
+      return res.status(200).json(
         new ApiResponse(
           {
             deliveryPartner: deliveryPartner[0],
@@ -542,7 +497,7 @@ const updateDeliveryPartnerImage = asyncHandler(async (req, res) => {
       throw new Error("Failed to upload image to Cloudinary.");
     }
   } catch (error) {
-    res
+    return res
       .status(500)
       .json(
         new ApiResponse(

@@ -16,6 +16,7 @@ import {
 } from "../database/queries/restaurantOwner.query.js";
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../constants.js";
+import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 
 const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
   if (!req.restaurantOwner || !req.restaurantOwner.id) {
@@ -57,24 +58,9 @@ const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
 const loginRestaurantOwner = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const requiredFields = [
-    {
-      field: email,
-      message: "Email is required.",
-      reason: "Email is not defined",
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: "Password is not defined",
-    },
-  ];
-
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
+  checkRequiredFields({ email, password }, ({ field, message, reason }) =>
+    res.status(400).json(new ApiResponse({ reason }, message))
+  );
 
   let restaurantOwner = await getRestaurantOwnerByEmail(email);
 
@@ -132,40 +118,11 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, panNumber, password, confirmPassword } =
     req.body;
 
-  const requiredFields = [
-    { field: name, message: "name is required.", reason: `name is ${name}` },
-    {
-      field: panNumber,
-      message: "Pan number is required.",
-      reason: `panNumber is ${panNumber}`,
-    },
-    {
-      field: email,
-      message: "Email is required.",
-      reason: `email is ${email}`,
-    },
-    {
-      field: phoneNumber,
-      message: "Phone number is required.",
-      reason: `phoneNumber is ${phoneNumber}`,
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: `password is ${password}`,
-    },
-    {
-      field: confirmPassword,
-      message: "Confirm password is required.",
-      reason: `confirmPassword is ${confirmPassword}`,
-    },
-  ];
-
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
+  checkRequiredFields(
+    { name, email, phoneNumber, panNumber, password, confirmPassword },
+    ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason }, message))
+  );
 
   if (password !== confirmPassword) {
     return res
