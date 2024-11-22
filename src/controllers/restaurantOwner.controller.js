@@ -193,7 +193,7 @@ const loginRestaurantOwner = asyncHandler(async (req, res) => {
 const registerRestaurantOwner = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, panNumber, password, confirmPassword } =
     req.body;
-  console.log(req.body);
+
   if (
     !checkRequiredFields(
       { name, email, phoneNumber, panNumber, password, confirmPassword },

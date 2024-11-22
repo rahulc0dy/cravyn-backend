@@ -117,8 +117,6 @@ const registerCustomer = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
     req.body;
 
-  console.log(req.body);
-
   if (
     !checkRequiredFields(
       { name, email, phoneNumber, dateOfBirth, password, confirmPassword },
