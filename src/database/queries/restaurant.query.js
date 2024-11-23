@@ -8,11 +8,25 @@ const getRestaurantById = async (restaurantId) => {
 
 const getNonSensitiveRestaurantInfoById = async (restaurantId) => {
   const restaurant = await sql`
-        SELECT restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url 
+        SELECT restaurant_id, name, email,phone_number , gstin_url, verify_status, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url
         FROM Restaurant 
         WHERE restaurant_id = ${restaurantId}
         ;`;
   return restaurant;
+};
+
+const getNonSensitiveRestaurantInfoByOwnerId = async (restaurantOwnerId) => {
+  const restaurants = await sql`
+        SELECT restaurant_id, name, email,phone_number , gstin_url, verify_status, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url
+        FROM Restaurant 
+        WHERE owner_id = ${restaurantOwnerId}
+        ;`;
+
+  restaurants.forEach((restaurant) => {
+    restaurant.rating = parseFloat((Math.random() * (5 - 3) + 3).toFixed(1));
+  });
+
+  return restaurants;
 };
 
 const getNonSensitiveRestaurantInfoByRegNo = async (
@@ -22,10 +36,14 @@ const getNonSensitiveRestaurantInfoByRegNo = async (
         SELECT 
             restaurant_id, 
             name, 
+            email,
+            phone_number,
+            gstin_url,
             registration_no, 
             owner_id, 
             latitude, 
             longitude, 
+            verify_status,
             city, 
             street, 
             landmark, 
@@ -42,7 +60,10 @@ const getRestaurants = async (limit = null, offset = null) => {
     SELECT 
         restaurant_id, 
         name, 
+        name as restaurant_name,
         registration_no, 
+        email,
+        phone_number,
         gstin_no,
         owner_id, 
         latitude, 
@@ -67,10 +88,14 @@ const getRestaurantsByVerifyStatus = async (
   const restaurants = await sql`
     SELECT 
         restaurant_id, 
-        name,
+        restaurant.name AS restaurant_name,
         registration_no, 
+        restaurant.email,
+        restaurant.phone_number,
+        gstin_url,
         gstin_no,
         owner_id, 
+        restaurant_owner.name AS restaurant_owner_name,
         latitude, 
         longitude, 
         city, 
@@ -80,8 +105,9 @@ const getRestaurantsByVerifyStatus = async (
         license_url, 
         verify_status, 
         restaurant_image_url 
-    FROM Restaurant 
-    where verify_status=${verifyStatus}
+    FROM restaurant, restaurant_owner
+    WHERE verify_status=${verifyStatus} 
+      AND restaurant.owner_id=restaurant_owner.id
     LIMIT ${limit};
     `;
   return restaurants;
@@ -95,6 +121,9 @@ const createRestaurant = async ({
   long,
   city,
   street,
+  email,
+  phoneNumber,
+  gstin_url,
   landmark,
   pinCode,
   availabilityStatus,
@@ -107,9 +136,9 @@ const createRestaurant = async ({
   passwordHash,
 }) => {
   const restaurant = await sql`
-    INSERT INTO Restaurant ( name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, availability_status, license_url, gstin_no, account_number, ifsc_code, bank_name, branch_city, password )
-    VALUES(${name}, ${registrationNo}, ${ownerId}, ${lat}, ${long}, ${city}, ${street}, ${landmark}, ${pinCode}, ${availabilityStatus}, ${licenseUrl}, ${gstinNo}, ${accountNo}, ${ifscCode}, ${bankName}, ${bankBranchCity}, ${passwordHash})
-    RETURNING restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
+    INSERT INTO Restaurant ( name, registration_no, email, phone_number, gstin_url, owner_id, latitude, longitude, city, street, landmark, pin_code, availability_status, license_url, gstin_no, account_number, ifsc_code, bank_name, branch_city, password )
+    VALUES(${name}, ${registrationNo}, ${email}, ${phoneNumber}, ${gstin_url}, ${ownerId}, ${lat}, ${long}, ${city}, ${street}, ${landmark}, ${pinCode}, ${availabilityStatus}, ${licenseUrl}, ${gstinNo}, ${accountNo}, ${ifscCode}, ${bankName}, ${bankBranchCity}, ${passwordHash})
+    RETURNING restaurant_id, name, email, phone_number ,gstin_url , registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
     `;
   return restaurant;
 };
@@ -121,7 +150,7 @@ const updateRestaurantNameOwnerAvailabilityById = async (
   const restaurant = await sql`
     UPDATE Restaurant SET name=${name}, license_url=${licenseUrl}, availability_status=${availabilityStatus}
     WHERE restaurant_id=${restaurantId}
-    RETURNING restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
+    RETURNING restaurant_id, name, email, phone_number, verify_status, gstin_url, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
     `;
   return restaurant;
 };
@@ -130,7 +159,7 @@ const setRestaurantVerificationStatusById = async (restaurantId, status) => {
   const restaurant = await sql`
     UPDATE Restaurant SET verify_status=${status}
     WHERE restaurant_id=${restaurantId}
-    RETURNING restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, verify_status, license_url ;
+    RETURNING restaurant_id, name, email, phone_number , gstin_url, verify_status,registration_no , owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
     `;
   return restaurant;
 };
@@ -140,7 +169,7 @@ const setRefreshToken = async (refreshToken, restaurantId) => {
     UPDATE Restaurant
     SET refresh_token = ${refreshToken}
     WHERE restaurant_id = ${restaurantId}
-    RETURNING restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url;
+    RETURNING restaurant_id, name, email, phone_number, verify_status, gstin_url, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url;
   `;
   return restaurant;
 };
@@ -152,7 +181,7 @@ const updateRestaurantPaymentDetailsById = async (
   const restaurant = await sql`
     UPDATE Restaurant SET gstin_no=${gstinNo}, account_number=${AccountNo}, ifsc_code=${ifscCode}, bank_name=${bankName}, branch_city=${bankBranchCity}
     WHERE restaurant_id=${restaurantId}
-    RETURNING restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
+    RETURNING restaurant_id, name, email, phone_number,gstin_url, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
     `;
   return restaurant;
 };
@@ -161,14 +190,16 @@ const updateRestaurantPasswordById = async (restaurantId, { password }) => {
   const restaurant = await sql`
     UPDATE Restaurant SET password=${password}
     WHERE restaurant_id=${restaurantId}
-    RETURNING restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
+    RETURNING restaurant_id, name, email, phone_number,verify_status , gstin_url, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
     `;
   return restaurant;
 };
 
 const deleteRestaurantById = async (restaurantId) => {
   const restaurant = await sql`
-    DELETE FROM Restaurant WHERE restaurant_id=${restaurantId} RETURNING restaurant_id, name, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
+    DELETE FROM Restaurant 
+    WHERE restaurant_id=${restaurantId} 
+    RETURNING restaurant_id, name, email, phone_number,gstin_url , registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url ;
     `;
   return restaurant;
 };
@@ -176,11 +207,16 @@ const deleteRestaurantById = async (restaurantId) => {
 const fuzzySearchRestaurant = async (name) => {
   const threshold = 0.3; // Adjust this value for sensitivity
   const restaurants = await sql`
-    SELECT restaurant_id, name, restaurant_image_url, verify_status, pin_code, city,street, landmark, pin_code
+    SELECT restaurant_id, name, email, phone_number ,gstin_url ,verify_status, registration_no, owner_id, latitude, longitude, city, street, landmark, pin_code, license_url
     FROM restaurant
     WHERE similarity(name, ${name}) > ${threshold}
     ORDER BY similarity(name, ${name}) DESC
   `;
+
+  restaurants.forEach((restaurant) => {
+    restaurant.rating = parseFloat((Math.random() * (5 - 3) + 3).toFixed(1));
+  });
+
   return restaurants;
 };
 
@@ -260,6 +296,7 @@ const getRestaurantsByDistanceOrRating = async ({
 export {
   getRestaurantById,
   getNonSensitiveRestaurantInfoById,
+  getNonSensitiveRestaurantInfoByOwnerId,
   getNonSensitiveRestaurantInfoByRegNo,
   getRestaurants,
   createRestaurant,

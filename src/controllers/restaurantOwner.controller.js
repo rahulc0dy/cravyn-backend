@@ -16,6 +16,8 @@ import {
 } from "../database/queries/restaurantOwner.query.js";
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../constants.js";
+import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
+import { getNonSensitiveRestaurantInfoByOwnerId } from "../database/queries/restaurant.query.js";
 
 const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
   if (!req.restaurantOwner || !req.restaurantOwner.id) {
@@ -54,118 +56,152 @@ const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
     );
 });
 
-const loginRestaurantOwner = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+const getDashboardData = asyncHandler(async (req, res) => {
+  const { restaurantOwner } = req;
+  const restaurantOwnerId = restaurantOwner?.id;
 
-  const requiredFields = [
-    {
-      field: email,
-      message: "Email is required.",
-      reason: "Email is not defined",
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: "Password is not defined",
-    },
-  ];
-
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
-
-  let restaurantOwner = await getRestaurantOwnerByEmail(email);
-
-  if (restaurantOwner.length <= 0) {
-    return res
-      .status(404)
-      .json(
-        new ApiResponse(
-          { reason: "No restaurantOwner found with given credentials" },
-          "Email is not registered."
-        )
-      );
-  }
-  const correctPassword = restaurantOwner[0].password;
-
-  const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
-
-  if (!isPasswordCorrect) {
+  if (!restaurantOwnerId) {
     return res
       .status(401)
       .json(
         new ApiResponse(
-          { reason: "Incorrect Password." },
-          "Invalid credentials, please try again."
+          { reason: `RestaurantOwnerId not found.` },
+          "User not found."
         )
       );
   }
-  const accessToken = generateAccessToken(restaurantOwner[0]);
-  const refreshToken = generateRefreshToken(restaurantOwner[0]);
 
-  const restaurantOwnerId = restaurantOwner[0].id;
+  try {
+    // todo: dashboard data
+    const sales = Math.ceil(Math.random() * 100000);
+    const orders = Math.ceil(Math.random() * 5000);
 
-  restaurantOwner = await setRefreshToken(refreshToken, restaurantOwnerId);
+    if (!orders || !sales) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: `failed to get data` },
+            "Error getting data."
+          )
+        );
+    }
 
-  delete restaurantOwner[0].refresh_token;
-  delete restaurantOwner[0].password;
+    const restaurants =
+      await getNonSensitiveRestaurantInfoByOwnerId(restaurantOwnerId);
 
-  return res
-    .status(200)
-    .cookie("accessToken", accessToken, cookieOptions)
-    .cookie("refreshToken", refreshToken, cookieOptions)
-    .json(
-      new ApiResponse(
-        {
-          restaurantOwner: restaurantOwner[0],
-          accessToken,
-          refreshToken,
-        },
-        "RestaurantOwner logged in successfully."
-      )
-    );
+    if (!restaurants || !restaurants.length) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: `No restaurant found.` },
+            "No restaurants found."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse({ orders, sales, restaurants }));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Failed to get dashboard" },
+          "Error occurred while retrieving dashboard data."
+        )
+      );
+  }
+});
+
+const loginRestaurantOwner = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (
+    !checkRequiredFields({ email, password }, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
+
+  try {
+    let restaurantOwner = await getRestaurantOwnerByEmail(email);
+
+    if (restaurantOwner.length <= 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "No restaurantOwner found with given credentials" },
+            "Email is not registered."
+          )
+        );
+    }
+    const correctPassword = restaurantOwner[0].password;
+
+    const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
+
+    if (!isPasswordCorrect) {
+      return res
+        .status(401)
+        .json(
+          new ApiResponse(
+            { reason: "Incorrect Password." },
+            "Invalid credentials, please try again."
+          )
+        );
+    }
+    const accessToken = generateAccessToken(restaurantOwner[0]);
+    const refreshToken = generateRefreshToken(restaurantOwner[0]);
+
+    const restaurantOwnerId = restaurantOwner[0].id;
+
+    restaurantOwner = await setRefreshToken(refreshToken, restaurantOwnerId);
+
+    delete restaurantOwner[0].refresh_token;
+    delete restaurantOwner[0].password;
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
+      .json(
+        new ApiResponse(
+          {
+            restaurantOwner: restaurantOwner[0],
+            user: restaurantOwner[0],
+            accessToken,
+            refreshToken,
+          },
+          "RestaurantOwner logged in successfully."
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Failed to log in." },
+          "Error Logging in."
+        )
+      );
+  }
 });
 
 const registerRestaurantOwner = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, panNumber, password, confirmPassword } =
     req.body;
 
-  const requiredFields = [
-    { field: name, message: "name is required.", reason: `name is ${name}` },
-    {
-      field: panNumber,
-      message: "Pan number is required.",
-      reason: `panNumber is ${panNumber}`,
-    },
-    {
-      field: email,
-      message: "Email is required.",
-      reason: `email is ${email}`,
-    },
-    {
-      field: phoneNumber,
-      message: "Phone number is required.",
-      reason: `phoneNumber is ${phoneNumber}`,
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: `password is ${password}`,
-    },
-    {
-      field: confirmPassword,
-      message: "Confirm password is required.",
-      reason: `confirmPassword is ${confirmPassword}`,
-    },
-  ];
-
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
+  if (
+    !checkRequiredFields(
+      { name, email, phoneNumber, panNumber, password, confirmPassword },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   if (password !== confirmPassword) {
     return res
@@ -186,7 +222,7 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           { reason: "RestaurantOwner already registered" },
-          "RestaurantOwner already exists."
+          "Restaurant owner already exists."
         )
       );
   }
@@ -537,6 +573,7 @@ const updateRestaurantOwnerImage = asyncHandler(async (req, res) => {
 
 export {
   getRestaurantOwnerAccount,
+  getDashboardData,
   loginRestaurantOwner,
   registerRestaurantOwner,
   logoutRestaurantOwner,

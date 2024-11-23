@@ -33,6 +33,7 @@ import { getCoordinates } from "./geocode.controller.js";
 import { getGeocodeUrl } from "../utils/geocodeUrl.js";
 import { getPendingOrdersByRestaurantId } from "../database/queries/order.qury.js";
 import { cookieOptions } from "../constants.js";
+import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 
 const getRestaurantsList = asyncHandler(async (req, res) => {
   const { limit, offset, verifyStatus } = req.query;
@@ -133,6 +134,8 @@ const addRestaurant = asyncHandler(async (req, res) => {
     registrationNo,
     ownerId,
     city,
+    email,
+    phoneNumber,
     street,
     landmark,
     pinCode,
@@ -148,70 +151,23 @@ const addRestaurant = asyncHandler(async (req, res) => {
 
   let { lat, long } = req.body;
 
-  const requiredFields = [
-    { field: name, message: "Name is required.", reason: `name is ${name}` },
-    {
-      field: registrationNo,
-      message: "Registration number is required.",
-      reason: `registrationNo is ${registrationNo}`,
-    },
-    {
-      field: ownerId,
-      message: "Unidentified request.",
-      reason: `ownerId is ${ownerId}`,
-    },
-    { field: city, message: "City is required.", reason: `city is ${city}` },
-    {
-      field: street,
-      message: "Street is required.",
-      reason: `street is ${street}`,
-    },
-    {
-      field: pinCode,
-      message: "Pin code is required.",
-      reason: `pinCode is ${pinCode}`,
-    },
-    {
-      field: availabilityStatus,
-      message: "Availability status is required.",
-      reason: `availabilityStatus is ${availabilityStatus}`,
-    },
-    {
-      field: gstinNo,
-      message: "GSTIN No. is required.",
-      reason: `gstinNo is ${gstinNo}`,
-    },
-    {
-      field: accountNo,
-      message: "AccountNo is required.",
-      reason: `accountNo is ${accountNo}`,
-    },
-    {
-      field: ifscCode,
-      message: "ifscCode is required.",
-      reason: `ifscCode is ${ifscCode}`,
-    },
-    {
-      field: bankName,
-      message: "Bank name is required.",
-      reason: `bankName is ${bankName}`,
-    },
-    {
-      field: bankBranchCity,
-      message: "BankBranchCity is required.",
-      reason: `bankBranchCity is ${bankBranchCity}`,
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: `password is ${password}`,
-    },
-    {
-      field: confirmPassword,
-      message: "Password is required.",
-      reason: `password is ${password}`,
-    },
-  ];
+  const requiredFields = {
+    name,
+    phoneNumber,
+    email,
+    registrationNo,
+    ownerId,
+    city,
+    street,
+    pinCode,
+    gstinNo,
+    accountNo,
+    ifscCode,
+    bankName,
+    bankBranchCity,
+    password,
+    confirmPassword,
+  };
 
   if (!lat || !long)
     try {
@@ -239,11 +195,12 @@ const addRestaurant = asyncHandler(async (req, res) => {
         );
     }
 
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
+  if (
+    !checkRequiredFields(requiredFields, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason: reason }, message))
+    )
+  )
+    return;
 
   if (password !== confirmPassword) {
     return res.status(400).json(
@@ -305,6 +262,8 @@ const addRestaurant = asyncHandler(async (req, res) => {
       bankName,
       bankBranchCity,
       passwordHash,
+      email,
+      phoneNumber,
     });
 
     if (!restaurant) {
@@ -350,24 +309,14 @@ const addRestaurant = asyncHandler(async (req, res) => {
 const loginRestaurant = asyncHandler(async (req, res) => {
   const { registrationNumber, password } = req.body;
 
-  const requiredFields = [
-    {
-      field: registrationNumber,
-      message: "Registration number is required.",
-      reason: "Registration number is not defined",
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: "Password is not defined",
-    },
-  ];
-
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
+  if (
+    !checkRequiredFields(
+      { registrationNumber, password },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   let restaurant =
     await getNonSensitiveRestaurantInfoByRegNo(registrationNumber);
@@ -465,9 +414,9 @@ const updateRestaurant = asyncHandler(async (req, res) => {
   const { restaurantId, name, licenseUrl, availabilityStatus } = req.body;
 
   if (
-    !restaurantId ||
-    !name ||
-    !licenseUrl ||
+    !restaurantId &&
+    !name &&
+    !licenseUrl &&
     availabilityStatus === undefined
   ) {
     return res.status(400).json(
@@ -769,6 +718,13 @@ const getRestaurantCatalog = asyncHandler(async (req, res) => {
 
 const searchRestaurantByName = asyncHandler(async (req, res) => {
   const { name } = req.query;
+
+  if (
+    !checkRequiredFields({ name }, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   try {
     const restaurantList = await fuzzySearchRestaurant(name);

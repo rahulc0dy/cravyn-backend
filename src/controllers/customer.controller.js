@@ -19,6 +19,7 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 import { cookieOptions } from "../constants.js";
+import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 
 const getCustomerAccount = asyncHandler(async (req, res) => {
   if (!req.customer || !req.customer.id) {
@@ -53,24 +54,12 @@ const getCustomerAccount = asyncHandler(async (req, res) => {
 const loginCustomer = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const requiredFields = [
-    {
-      field: email,
-      message: "Email is required.",
-      reason: "Email is not defined",
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: "Password is not defined",
-    },
-  ];
-
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
+  if (
+    !checkRequiredFields({ email, password }, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   let customer = await getCustomerByEmail(email);
 
@@ -128,40 +117,14 @@ const registerCustomer = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
     req.body;
 
-  const requiredFields = [
-    { field: name, message: "name is required.", reason: `name is ${name}` },
-    {
-      field: email,
-      message: "email is required.",
-      reason: `email is ${email}`,
-    },
-    {
-      field: phoneNumber,
-      message: "Phone number is required.",
-      reason: `phoneNumber is ${phoneNumber}`,
-    },
-    {
-      field: dateOfBirth,
-      message: "Date of birth is required.",
-      reason: `dateOfBirth is ${dateOfBirth}`,
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: `password is ${password}`,
-    },
-    {
-      field: confirmPassword,
-      message: "Confirm password is required.",
-      reason: `confirmPassword is ${confirmPassword}`,
-    },
-  ];
-
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
+  if (
+    !checkRequiredFields(
+      { name, email, phoneNumber, dateOfBirth, password, confirmPassword },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   if (password !== confirmPassword) {
     return res
@@ -338,24 +301,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const deleteCustomerAccount = asyncHandler(async (req, res) => {
   const { refreshToken, password } = req.body;
 
-  const requiredFields = [
-    {
-      field: refreshToken,
-      message: "Invalid Request.",
-      reason: `refreshToken is ${refreshToken}`,
-    },
-    {
-      field: password,
-      message: "Password is required.",
-      reason: `password is ${password}`,
-    },
-  ];
+  checkRequiredFields(
+    { refreshToken, password },
+    ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason }, message))
+  );
 
-  for (const { field, message, reason } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(new ApiResponse({ reason }, message));
-    }
-  }
   let customer;
 
   try {
