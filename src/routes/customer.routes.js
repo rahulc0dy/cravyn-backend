@@ -48,7 +48,7 @@ router
   .route("/cart/item")
   .post(verifyUserJwt, addItemToCart)
   .delete(verifyUserJwt, removeItemFromCart);
-router.route("/cart/item/plus").patch(incrementItemCount);
-router.route("/cart/item/minus").patch(decrementItemCount);
+router.route("/cart/item/plus").patch(verifyUserJwt, incrementItemCount);
+router.route("/cart/item/minus").patch(verifyUserJwt, decrementItemCount);
 
 export default router;
