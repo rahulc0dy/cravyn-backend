@@ -126,6 +126,13 @@ const deleteFoodItemById = async ({ foodItemId, restaurantId }) => {
   return foodItem;
 };
 
+const getRestaurantIdByItemId = async (foodItemId) => {
+  const restaurantId = await sql`
+    SELECT restaurant_id FROM Food_Item WHERE item_id = ${foodItemId};
+    `;
+  return restaurantId[0].restaurant_id;
+};
+
 export {
   getFoodItemById,
   getFoodItemByName,
@@ -136,4 +143,5 @@ export {
   updateFoodItemDiscountById,
   updateFoodItemById,
   deleteFoodItemById,
+  getRestaurantIdByItemId,
 };
