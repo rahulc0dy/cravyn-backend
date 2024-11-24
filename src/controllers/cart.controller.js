@@ -8,43 +8,20 @@ import {
 import { getRestaurantIdByItemId } from "../database/queries/foodItem.query.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { calculateCartSummary } from "../utils/cartUtils.js";
 
 const getCart = asyncHandler(async (req, res) => {
   const customerId = req.customer.id;
 
   try {
     const cart = await getCartByCustomerId(customerId);
-
-    let totalPrice = 0;
-    let totalDiscount = 0;
-
-    cart.map((item) => {
-      const originalPrice = parseFloat(item.food_price);
-      const discountPercent = parseFloat(item.food_discount_percent);
-      const discountCap = parseFloat(item.food_discount_cap);
-
-      const discountAmount = (originalPrice * discountPercent) / 100;
-      const discount =
-        discountAmount > discountCap ? discountCap : discountAmount;
-
-      totalPrice += originalPrice * item.quantity;
-      totalDiscount += discount * item.quantity;
-    });
-
-    // todo: calculate delivery charge based on distance
-    const deliveryCharge = 30;
-    const platformCharge = 5;
+    const cartSummary = calculateCartSummary(cart);
 
     return res.status(200).json(
       new ApiResponse(
         {
           cart,
-          totalDiscount,
-          totalPrice,
-          deliveryCharge,
-          platformCharge,
-          finalPrice:
-            totalPrice - totalDiscount + deliveryCharge + platformCharge,
+          ...cartSummary,
         },
         "Cart fetched successfully."
       )
@@ -152,14 +129,18 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
       restaurantId
     );
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(
-          removedItemId,
-          "Item removed from the cart successfully."
-        )
-      );
+    const cart = await getCartByCustomerId(customerId);
+    const cartSummary = calculateCartSummary(cart);
+
+    return res.status(200).json(
+      new ApiResponse(
+        {
+          cart,
+          ...cartSummary,
+        },
+        "Item removed from cart successfully."
+      )
+    );
   } catch (error) {
     return res.status(400).json(
       new ApiResponse(
@@ -219,11 +200,18 @@ const incrementItemCount = asyncHandler(async (req, res) => {
       );
     }
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(cartItem, "Item quantity incremented successfully.")
-      );
+    const cart = await getCartByCustomerId(customerId);
+    const cartSummary = calculateCartSummary(cart);
+
+    return res.status(200).json(
+      new ApiResponse(
+        {
+          cart,
+          ...cartSummary,
+        },
+        "Item quantity incremented successfully."
+      )
+    );
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
@@ -284,11 +272,18 @@ const decrementItemCount = asyncHandler(async (req, res) => {
       );
     }
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(cartItem, "Item quantity decremented successfully.")
-      );
+    const cart = await getCartByCustomerId(customerId);
+    const cartSummary = calculateCartSummary(cart);
+
+    return res.status(200).json(
+      new ApiResponse(
+        {
+          cart,
+          ...cartSummary,
+        },
+        "Item quantity decremented successfully."
+      )
+    );
   } catch (error) {
     return res.status(500).json(
       new ApiResponse(
