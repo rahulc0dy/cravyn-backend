@@ -1,6 +1,7 @@
 import {
   addItemtoCartByIds,
   decrementCartItem,
+  getCartByCustomerId,
   incrementCartItem,
   removeItemFromCartByIds,
 } from "../database/queries/cart.query.js";
@@ -8,7 +9,58 @@ import { getRestaurantIdByItemId } from "../database/queries/foodItem.query.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const getCart = asyncHandler(async (req, res) => {});
+const getCart = asyncHandler(async (req, res) => {
+  const customerId = req.customer.id;
+
+  try {
+    const cart = await getCartByCustomerId(customerId);
+
+    let totalPrice = 0;
+    let totalDiscount = 0;
+
+    cart.map((item) => {
+      const originalPrice = parseFloat(item.food_price);
+      const discountPercent = parseFloat(item.food_discount_percent);
+      const discountCap = parseFloat(item.food_discount_cap);
+
+      const discountAmount = (originalPrice * discountPercent) / 100;
+      const discount =
+        discountAmount > discountCap ? discountCap : discountAmount;
+
+      totalPrice += originalPrice * item.quantity;
+      totalDiscount += discount * item.quantity;
+    });
+
+    // todo: calculate delivery charge based on distance
+    const deliveryCharge = 30;
+    const platformCharge = 5;
+
+    return res.status(200).json(
+      new ApiResponse(
+        {
+          cart,
+          totalDiscount,
+          totalPrice,
+          deliveryCharge,
+          platformCharge,
+          finalPrice:
+            totalPrice - totalDiscount + deliveryCharge + platformCharge,
+        },
+        "Cart fetched successfully."
+      )
+    );
+  } catch (error) {
+    res.status(400).json(
+      new ApiResponse(
+        {
+          reason: error.message || "Food item ID is incorrect",
+          at: "cart.controller.js -> addItemToCart",
+        },
+        "An error occurred while fetching restaurant details for the food item."
+      )
+    );
+  }
+});
 
 const addItemToCart = asyncHandler(async (req, res) => {
   const { itemId } = req.body;

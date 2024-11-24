@@ -1,5 +1,27 @@
 import { sql } from "./database.js";
 
+const getCartByCustomerId = async (customerId) => {
+  const cart = await sql`
+    SELECT
+      cart.item_id,
+      cart.restaurant_id,
+      cart.quantity,
+      food_item.food_name,
+      food_item.description AS food_description,
+      food_item.price AS food_price,
+      food_item.discount_percent AS food_discount_percent,
+      food_item.discount_cap AS food_discount_cap,
+      food_item.food_image_url
+    FROM
+      cart
+    JOIN
+      food_item ON cart.item_id = food_item.item_id
+    WHERE
+      cart.customer_id = ${customerId};
+  `;
+  return cart;
+};
+
 const addItemtoCartByIds = async (customerId, itemId, restaurantId) => {
   const cartItem = await sql`
     INSERT INTO cart (customer_id, item_id, restaurant_id, quantity)
@@ -62,6 +84,7 @@ const decrementCartItem = async (customerId, itemId, restaurantId) => {
 };
 
 export {
+  getCartByCustomerId,
   addItemtoCartByIds,
   removeItemFromCartByIds,
   incrementCartItem,
