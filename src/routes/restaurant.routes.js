@@ -15,6 +15,7 @@ import {
   getRestaurantFoods,
   getRestaurantPackedOrders,
   getRestaurantCancelledOrders,
+  getRestaurantDeliveredOrders,
 } from "../controllers/restaurant.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
@@ -60,6 +61,9 @@ router
 router
   .route("/orders/cancelled")
   .get(verifyRestaurantJwt, getRestaurantCancelledOrders);
+router
+  .route("/orders/delivered")
+  .get(verifyRestaurantJwt, getRestaurantDeliveredOrders);
 
 router.route("/recommended").get(getRecommendedRestaurants);
 router.route("/food").get(getRestaurantFoods);

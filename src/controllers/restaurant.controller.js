@@ -901,6 +901,53 @@ const getRestaurantCancelledOrders = asyncHandler(async (req, res) => {
   }
 });
 
+const getRestaurantDeliveredOrders = asyncHandler(async (req, res) => {
+  const { limit } = req.query;
+  const { restaurant } = req;
+
+  if (!restaurant || !restaurant?.restaurant_id) {
+    return res
+      .status(404)
+      .json(
+        new ApiResponse(
+          { reason: "No restaurants found." },
+          "Error getting restaurant."
+        )
+      );
+  }
+
+  try {
+    const orders = await getOrdersByRestaurantId(
+      restaurant.restaurant_id,
+      "Delivered"
+    );
+
+    if (orders.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "No orders Processing." },
+            "No delivered orders."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse({ orders: orders }, "Orders found."));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message },
+          "Failed to get cancelled orders."
+        )
+      );
+  }
+});
+
 const getRecommendedRestaurants = asyncHandler(async (req, res) => {
   const { lat, long, minRating, limit, sortBy, radius, descending } = req.query;
 
@@ -1032,5 +1079,6 @@ export {
   getRestaurantPendingOrders,
   getRestaurantPackedOrders,
   getRestaurantCancelledOrders,
+  getRestaurantDeliveredOrders,
   getRecommendedRestaurants,
 };
