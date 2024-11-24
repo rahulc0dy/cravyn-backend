@@ -31,7 +31,7 @@ import {
 } from "../database/queries/foodItem.query.js";
 import { getCoordinates } from "./geocode.controller.js";
 import { getGeocodeUrl } from "../utils/geocodeUrl.js";
-import { getPendingOrdersByRestaurantId } from "../database/queries/order.query.js";
+import { getOrdersByRestaurantId } from "../database/queries/order.query.js";
 import { cookieOptions } from "../constants.js";
 import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 
@@ -776,8 +776,9 @@ const getRestaurantPendingOrders = asyncHandler(async (req, res) => {
   }
 
   try {
-    const orders = await getPendingOrdersByRestaurantId(
-      restaurant.restaurant_id
+    const orders = await getOrdersByRestaurantId(
+      restaurant.restaurant_id,
+      "Preparing"
     );
 
     if (orders.length === 0) {
@@ -801,6 +802,100 @@ const getRestaurantPendingOrders = asyncHandler(async (req, res) => {
         new ApiResponse(
           { reason: error.message },
           "Failed to get pending orders."
+        )
+      );
+  }
+});
+
+const getRestaurantPackedOrders = asyncHandler(async (req, res) => {
+  const { limit } = req.query;
+  const { restaurant } = req;
+
+  if (!restaurant || !restaurant?.restaurant_id) {
+    return res
+      .status(404)
+      .json(
+        new ApiResponse(
+          { reason: "No restaurants found." },
+          "Error getting restaurant."
+        )
+      );
+  }
+
+  try {
+    const orders = await getOrdersByRestaurantId(
+      restaurant.restaurant_id,
+      "Packed"
+    );
+
+    if (orders.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "No orders Processing." },
+            "No pending orders."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse({ orders: orders }, "Orders found."));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message },
+          "Failed to get pending orders."
+        )
+      );
+  }
+});
+
+const getRestaurantCancelledOrders = asyncHandler(async (req, res) => {
+  const { limit } = req.query;
+  const { restaurant } = req;
+
+  if (!restaurant || !restaurant?.restaurant_id) {
+    return res
+      .status(404)
+      .json(
+        new ApiResponse(
+          { reason: "No restaurants found." },
+          "Error getting restaurant."
+        )
+      );
+  }
+
+  try {
+    const orders = await getOrdersByRestaurantId(
+      restaurant.restaurant_id,
+      "Cancelled"
+    );
+
+    if (orders.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "No orders Processing." },
+            "No cancelled orders."
+          )
+        );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse({ orders: orders }, "Orders found."));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message },
+          "Failed to get cancelled orders."
         )
       );
   }
@@ -935,5 +1030,7 @@ export {
   getRestaurantCatalog,
   searchRestaurantByName,
   getRestaurantPendingOrders,
+  getRestaurantPackedOrders,
+  getRestaurantCancelledOrders,
   getRecommendedRestaurants,
 };

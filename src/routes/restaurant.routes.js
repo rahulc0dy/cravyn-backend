@@ -13,6 +13,8 @@ import {
   getRestaurantPendingOrders,
   getRecommendedRestaurants,
   getRestaurantFoods,
+  getRestaurantPackedOrders,
+  getRestaurantCancelledOrders,
 } from "../controllers/restaurant.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
@@ -48,9 +50,16 @@ router.route("/logout").post(verifyRestaurantJwt, logoutRestaurant);
 router.route("/refresh-token").get(refreshAccessToken);
 
 router.route("/catalog").get(verifyRestaurantJwt, getRestaurantCatalog);
+
 router
   .route("/orders/pending")
   .get(verifyRestaurantJwt, getRestaurantPendingOrders);
+router
+  .route("/orders/packed")
+  .get(verifyRestaurantJwt, getRestaurantPackedOrders);
+router
+  .route("/orders/cancelled")
+  .get(verifyRestaurantJwt, getRestaurantCancelledOrders);
 
 router.route("/recommended").get(getRecommendedRestaurants);
 router.route("/food").get(getRestaurantFoods);
