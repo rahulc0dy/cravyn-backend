@@ -8,6 +8,7 @@ import {
   deleteRestaurantOwnerAccount,
   updateRestaurantOwnerAccount,
   getDashboardData,
+  getRestaurantFoodSalesData,
 } from "../controllers/restaurantOwner.controller.js";
 import { verifyUserJwt } from "../middlewares/auth.middleware.js";
 
@@ -17,6 +18,7 @@ router.route("/login").post(loginRestaurantOwner);
 router.route("/logout").post(verifyUserJwt, logoutRestaurantOwner);
 router.route("/refresh-token").post(refreshAccessToken);
 router.route("/dashboard").get(verifyUserJwt, getDashboardData);
+router.route("/food-sales").get(verifyUserJwt, getRestaurantFoodSalesData);
 
 router
   .route("/")

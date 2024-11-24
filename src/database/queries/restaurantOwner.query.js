@@ -145,15 +145,15 @@ const getRestaurantSalesData = async (restaurantOwnerId) => {
   return salesData;
 };
 
-const getFoodSalesData = async (restaurantId) => {
+const getFoodSalesDataByRestaurantId = async (restaurantId) => {
   const salesData = await sql`
-      (SELECT count(*),sum(oi.price),fi.food_name
+      (SELECT count(*),sum(oi.price),fi.*
        FROM food_item fi,orders_list oi,orders o
        WHERE fi.item_id=oi.item_id
          AND o.list_id=oi.list_id
          AND o.restaurant_id=${restaurantId}
-       GROUP BY oi.item_id, fi.food_name) UNION (
-       SELECT 0,0,food_name
+       GROUP BY oi.item_id, fi.item_id,fi.food_name,fi.price,fi.description) UNION (
+       SELECT 0,0,*
        FROM food_item
        WHERE restaurant_id=${restaurantId} 
          AND food_name NOT IN (SELECT fi.food_name
@@ -179,5 +179,5 @@ export {
   updateRestaurantOwnerPassword,
   getSalesData,
   getRestaurantSalesData,
-  getFoodSalesData,
+  getFoodSalesDataByRestaurantId,
 };
