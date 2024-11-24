@@ -31,7 +31,7 @@ import {
 } from "../database/queries/foodItem.query.js";
 import { getCoordinates } from "./geocode.controller.js";
 import { getGeocodeUrl } from "../utils/geocodeUrl.js";
-import { getPendingOrdersByRestaurantId } from "../database/queries/order.qury.js";
+import { getPendingOrdersByRestaurantId } from "../database/queries/order.query.js";
 import { cookieOptions } from "../constants.js";
 import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 
