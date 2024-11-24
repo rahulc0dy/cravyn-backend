@@ -137,12 +137,17 @@ const getRestaurantQueryById = async (queryId) => {
   return query;
 };
 
-const getQueriesByRestaurantId = async (customerId) => {
-  const query = await sql`
-    SELECT * FROM Restaurant_Query WHERE restaurant_id = ${customerId};
-    `;
+const getQueriesByRestaurantId = async (restaurantId) => {
+  const queries = await sql`
+      SELECT rq.*, mt.name AS manager_name
+      FROM Restaurant_Query rq 
+          LEFT JOIN management_team mt 
+              ON rq.manager_id = mt.id
+      WHERE rq.restaurant_id = ${restaurantId}
+      ORDER BY timestamp DESC;
+  `;
 
-  return query;
+  return queries;
 };
 
 const createRestaurantQuery = async ({ question, restaurantId }) => {
