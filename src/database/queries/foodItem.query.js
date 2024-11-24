@@ -29,10 +29,10 @@ const getFoodsByRestaurantId = async (restaurantId, limit = null) => {
 const fuzzySearchFoodItem = async (foodItemName) => {
   const threshold = 0.3;
   const foodItems = await sql`
-    SELECT *
-    FROM Food_Item
-    WHERE similarity(food_name, ${foodItemName}) > ${threshold}
-    ORDER BY similarity(food_name, ${foodItemName}) DESC ;
+      SELECT food_item.*, restaurant.name as restaurant_name
+      FROM Food_Item JOIN restaurant ON food_item.restaurant_id=restaurant.restaurant_id
+      WHERE similarity(food_name, ${foodItemName}) > ${threshold}
+      ORDER BY similarity(food_name, ${foodItemName}) DESC ;
     `;
 
   // todo: food rating

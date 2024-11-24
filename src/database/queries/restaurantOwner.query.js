@@ -99,6 +99,74 @@ const updateRestaurantOwnerPassword = async (email, passwordHash) => {
   }
 };
 
+const getSalesData = async (restaurantOwnerId) => {
+  const salesData = await sql`
+      SELECT sum(orders.checkout_price) AS sales,count(*) as orders 
+      from orders,restaurant
+      WHERE restaurant.restaurant_id=orders.restaurant_id 
+        AND restaurant.owner_id= ${restaurantOwnerId}
+      GROUP BY owner_id
+    `;
+  return salesData;
+};
+
+const getRestaurantSalesData = async (restaurantOwnerId) => {
+  const salesData = await sql`
+      SELECT
+          r.restaurant_id,
+          r.name,
+          r.city,
+          r.street,
+          r.pin_code,
+          r.landmark,
+          r.verify_status,
+          r.restaurant_image_url,
+          COALESCE(SUM(o.checkout_price), 0) AS sales,
+          COALESCE(COUNT(o.order_id), 0) AS orders
+      FROM restaurant r 
+          LEFT JOIN orders o 
+            ON o.restaurant_id = r.restaurant_id
+      WHERE r.owner_id = ${restaurantOwnerId}
+      GROUP BY
+          r.restaurant_id,
+          r.name,
+          r.city,
+          r.street,
+          r.pin_code,
+          r.landmark,
+          r.verify_status,
+          r.restaurant_image_url;
+    `;
+
+  salesData.forEach((restaurant) => {
+    restaurant.rating = parseFloat((Math.random() * (5 - 3) + 3).toFixed(1));
+  });
+
+  return salesData;
+};
+
+const getFoodSalesData = async (restaurantId) => {
+  const salesData = await sql`
+      (SELECT count(*),sum(oi.price),fi.food_name
+       FROM food_item fi,orders_list oi,orders o
+       WHERE fi.item_id=oi.item_id
+         AND o.list_id=oi.list_id
+         AND o.restaurant_id=${restaurantId}
+       GROUP BY oi.item_id, fi.food_name) UNION (
+       SELECT 0,0,food_name
+       FROM food_item
+       WHERE restaurant_id=${restaurantId} 
+         AND food_name NOT IN (SELECT fi.food_name
+                               FROM food_item fi,orders_list oi,orders o
+                               WHERE fi.item_id=oi.item_id
+                                 AND o.list_id=oi.list_id
+                                 AND o.restaurant_id=${restaurantId}
+                               GROUP BY oi.item_id, fi.food_name)
+       ) ORDER BY count DESC;
+    `;
+  return salesData;
+};
+
 export {
   getRestaurantOwnerByPhoneNo,
   getRestaurantOwnerById,
@@ -109,4 +177,7 @@ export {
   deleteRestaurantOwner,
   updateRestaurantOwnerNamePhoneNo,
   updateRestaurantOwnerPassword,
+  getSalesData,
+  getRestaurantSalesData,
+  getFoodSalesData,
 };

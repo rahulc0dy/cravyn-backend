@@ -13,6 +13,8 @@ import {
   deleteRestaurantOwner,
   updateRestaurantOwnerNamePhoneNo,
   getNonSensitiveRestaurantOwnerInfoById,
+  getSalesData,
+  getRestaurantSalesData,
 } from "../database/queries/restaurantOwner.query.js";
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../constants.js";
@@ -72,11 +74,9 @@ const getDashboardData = asyncHandler(async (req, res) => {
   }
 
   try {
-    // todo: dashboard data
-    const sales = Math.ceil(Math.random() * 100000);
-    const orders = Math.ceil(Math.random() * 5000);
+    const salesAndOrders = await getSalesData(restaurantOwnerId);
 
-    if (!orders || !sales) {
+    if (salesAndOrders.length === 0) {
       return res
         .status(404)
         .json(
@@ -87,8 +87,9 @@ const getDashboardData = asyncHandler(async (req, res) => {
         );
     }
 
-    const restaurants =
-      await getNonSensitiveRestaurantInfoByOwnerId(restaurantOwnerId);
+    const { sales, orders } = salesAndOrders[0];
+
+    const restaurants = await getRestaurantSalesData(restaurantOwnerId);
 
     if (!restaurants || !restaurants.length) {
       return res

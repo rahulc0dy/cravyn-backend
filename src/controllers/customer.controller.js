@@ -105,6 +105,7 @@ const loginCustomer = asyncHandler(async (req, res) => {
       new ApiResponse(
         {
           customer: customer[0],
+          user: customer[0],
           accessToken,
           refreshToken,
         },
