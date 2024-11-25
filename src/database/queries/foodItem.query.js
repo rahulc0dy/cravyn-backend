@@ -29,10 +29,10 @@ const getFoodsByRestaurantId = async (restaurantId, limit = null) => {
 const fuzzySearchFoodItem = async (foodItemName) => {
   const threshold = 0.3;
   const foodItems = await sql`
-    SELECT *
-    FROM Food_Item
-    WHERE similarity(food_name, ${foodItemName}) > ${threshold}
-    ORDER BY similarity(food_name, ${foodItemName}) DESC ;
+      SELECT food_item.*, restaurant.name as restaurant_name
+      FROM Food_Item JOIN restaurant ON food_item.restaurant_id=restaurant.restaurant_id
+      WHERE similarity(food_name, ${foodItemName}) > ${threshold}
+      ORDER BY similarity(food_name, ${foodItemName}) DESC ;
     `;
 
   // todo: food rating
@@ -126,6 +126,13 @@ const deleteFoodItemById = async ({ foodItemId, restaurantId }) => {
   return foodItem;
 };
 
+const getRestaurantIdByItemId = async (foodItemId) => {
+  const restaurantId = await sql`
+    SELECT restaurant_id FROM Food_Item WHERE item_id = ${foodItemId};
+    `;
+  return restaurantId[0].restaurant_id;
+};
+
 export {
   getFoodItemById,
   getFoodItemByName,
@@ -136,4 +143,5 @@ export {
   updateFoodItemDiscountById,
   updateFoodItemById,
   deleteFoodItemById,
+  getRestaurantIdByItemId,
 };

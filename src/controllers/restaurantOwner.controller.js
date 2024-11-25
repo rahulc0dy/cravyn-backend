@@ -13,11 +13,17 @@ import {
   deleteRestaurantOwner,
   updateRestaurantOwnerNamePhoneNo,
   getNonSensitiveRestaurantOwnerInfoById,
+  getSalesData,
+  getRestaurantSalesData,
+  getFoodSalesDataByRestaurantId,
 } from "../database/queries/restaurantOwner.query.js";
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../constants.js";
 import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
-import { getNonSensitiveRestaurantInfoByOwnerId } from "../database/queries/restaurant.query.js";
+import {
+  getNonSensitiveRestaurantInfoById,
+  getNonSensitiveRestaurantInfoByOwnerId,
+} from "../database/queries/restaurant.query.js";
 
 const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
   if (!req.restaurantOwner || !req.restaurantOwner.id) {
@@ -72,11 +78,9 @@ const getDashboardData = asyncHandler(async (req, res) => {
   }
 
   try {
-    // todo: dashboard data
-    const sales = Math.ceil(Math.random() * 100000);
-    const orders = Math.ceil(Math.random() * 5000);
+    const salesAndOrders = await getSalesData(restaurantOwnerId);
 
-    if (!orders || !sales) {
+    if (salesAndOrders.length === 0) {
       return res
         .status(404)
         .json(
@@ -87,8 +91,9 @@ const getDashboardData = asyncHandler(async (req, res) => {
         );
     }
 
-    const restaurants =
-      await getNonSensitiveRestaurantInfoByOwnerId(restaurantOwnerId);
+    const { sales, orders } = salesAndOrders[0];
+
+    const restaurants = await getRestaurantSalesData(restaurantOwnerId);
 
     if (!restaurants || !restaurants.length) {
       return res
@@ -111,6 +116,69 @@ const getDashboardData = asyncHandler(async (req, res) => {
         new ApiResponse(
           { reason: error.message || "Failed to get dashboard" },
           "Error occurred while retrieving dashboard data."
+        )
+      );
+  }
+});
+
+const getRestaurantFoodSalesData = asyncHandler(async (req, res) => {
+  const { restaurantOwner } = req;
+  const { restaurantId } = req.query;
+  const restaurantOwnerId = restaurantOwner?.id;
+
+  if (!restaurantOwnerId) {
+    return res
+      .status(401)
+      .json(
+        new ApiResponse(
+          { reason: `RestaurantOwnerId not found.` },
+          "User not found."
+        )
+      );
+  }
+
+  if (!restaurantId) {
+    return res
+      .status(401)
+      .json(
+        new ApiResponse(
+          { reason: `RestaurantId not found.` },
+          "Error getting to restaurant."
+        )
+      );
+  }
+
+  try {
+    const foodSales = await getFoodSalesDataByRestaurantId(restaurantId);
+
+    const restaurant = await getNonSensitiveRestaurantInfoById(restaurantId);
+
+    if (!foodSales || !foodSales.length) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse({ reason: `No foodSales found.` }, "No data found.")
+        );
+    }
+
+    if (!restaurant || !restaurant.length) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse({ reason: `No restaurant found.` }, "No data found.")
+        );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse({ foodSales, restaurant: restaurant[0] }));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Failed to get dashboard" },
+          "Error occurred while retrieving sales data."
         )
       );
   }
@@ -580,4 +648,5 @@ export {
   refreshAccessToken,
   deleteRestaurantOwnerAccount,
   updateRestaurantOwnerAccount,
+  getRestaurantFoodSalesData,
 };
