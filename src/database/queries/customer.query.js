@@ -108,6 +108,73 @@ const updateCustomerPassword = async (email, passwordHash) => {
   }
 };
 
+const getCustomerAddressByAddressId = async (addressId) => {
+  const customer = await sql`
+    SELECT * 
+    FROM customer_address 
+    WHERE address_id = ${addressId};
+    `;
+  return customer[0];
+};
+
+const getCustomerAddressesByCustomerId = async (customerId, isDefault) => {
+  let addresses;
+
+  if (isDefault === undefined || isDefault === null) {
+    addresses = await sql`
+    SELECT * 
+    FROM customer_address
+    WHERE customer_id = ${customerId};
+    `;
+  } else {
+    addresses = await sql`
+    SELECT * 
+    FROM customer_address
+    WHERE customer_id = ${customerId} 
+      AND is_default = ${isDefault};
+    `;
+  }
+
+  return addresses;
+};
+
+const createCustomerAddress = async ({
+  customerId,
+  latitude,
+  longitude,
+  displayAddress,
+  isDefault = false,
+}) => {
+  const address = await sql`
+      INSERT INTO customer_address (latitude, longitude, display_address, is_default, customer_id)
+      VALUES (${latitude}, ${longitude}, ${displayAddress}, ${isDefault}, ${customerId})
+      RETURNING *;
+    `;
+
+  return address;
+};
+
+const deleteCustomerAddressByAddressId = async (addressId) => {
+  const response = await sql`
+    DELETE 
+    FROM customer_address 
+    WHERE address_id = ${addressId} 
+      AND is_default = FALSE;
+    `;
+  return response;
+};
+
+const updateCustomerDefaultAddressByAddressId = async (addressId) => {
+  const response = await sql`
+    UPDATE customer_address 
+    SET is_default = TRUE 
+    WHERE address_id = ${addressId}
+    RETURNING *;
+    `;
+
+  return response;
+};
+
 export {
   getCustomerByPhoneNo,
   getCustomerById,
@@ -119,4 +186,9 @@ export {
   updateCustomerNamePhoneNo,
   updateCustomerImageUrl,
   updateCustomerPassword,
+  getCustomerAddressesByCustomerId,
+  getCustomerAddressByAddressId,
+  createCustomerAddress,
+  deleteCustomerAddressByAddressId,
+  updateCustomerDefaultAddressByAddressId,
 };
