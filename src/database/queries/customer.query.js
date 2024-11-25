@@ -109,12 +109,12 @@ const updateCustomerPassword = async (email, passwordHash) => {
 };
 
 const getCustomerAddressByAddressId = async (addressId) => {
-  const customer = await sql`
+  const address = await sql`
     SELECT * 
     FROM customer_address 
     WHERE address_id = ${addressId};
     `;
-  return customer[0];
+  return address[0];
 };
 
 const getCustomerAddressesByCustomerId = async (customerId, isDefault) => {
