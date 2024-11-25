@@ -159,7 +159,8 @@ const deleteCustomerAddressByAddressId = async (addressId) => {
     DELETE 
     FROM customer_address 
     WHERE address_id = ${addressId} 
-      AND is_default = FALSE;
+      AND is_default = FALSE
+    RETURNING *;
     `;
   return response;
 };
