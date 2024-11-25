@@ -273,7 +273,21 @@ const updateFood = asyncHandler(async (req, res) => {
       }
     }
 
-    const foodImageUrl = cloudinaryResponse?.url;
+    const existingFoodItem = await getFoodItemById(foodItemId);
+
+    if (!existingFoodItem || existingFoodItem.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiResponse(
+            { reason: "getFoodItemById could not execute" },
+            "Failed to update food item."
+          )
+        );
+    }
+
+    const foodImageUrl =
+      cloudinaryResponse?.url ?? existingFoodItem[0].food_image_url;
 
     restaurant = await getRestaurantById(restaurant.restaurant_id);
 
