@@ -486,14 +486,15 @@ const getCustomerAddresses = asyncHandler(async (req, res) => {
   const customerId = customer.id;
 
   if (!customer || !customerId) {
-    return res
-      .status(400)
-      .json(
-        new ApiResponse(
-          { reason: "Unable to get customer address." },
-          "Unable to get customer."
-        )
-      );
+    return res.status(400).json(
+      new ApiResponse(
+        {
+          reason:
+            "Unable to retrieve customer address due to missing information.",
+        },
+        "We couldn't retrieve your address. Please ensure your account information is correct."
+      )
+    );
   }
 
   try {
@@ -507,26 +508,31 @@ const getCustomerAddresses = asyncHandler(async (req, res) => {
         .status(404)
         .json(
           new ApiResponse(
-            { reason: "No addresses found." },
-            "No addresses found."
+            { reason: "No addresses found for the customer." },
+            "You don't have any saved addresses yet."
           )
         );
     }
 
     return res.status(200).json(
-      new ApiResponse({
-        address: isDefault && isDefault === true ? address[0] : address,
-      })
+      new ApiResponse(
+        {
+          address: isDefault && isDefault === true ? address[0] : address,
+        },
+        "Address details retrieved successfully."
+      )
     );
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          { reason: error.message || "Internal server error." },
-          "Failed to get addresses."
-        )
-      );
+    return res.status(500).json(
+      new ApiResponse(
+        {
+          reason:
+            error.message ||
+            "Internal server error while retrieving addresses.",
+        },
+        "Something went wrong while fetching your addresses. Please try again later."
+      )
+    );
   }
 });
 
@@ -549,8 +555,8 @@ const addCustomerAddress = asyncHandler(async (req, res) => {
       .status(400)
       .json(
         new ApiResponse(
-          { reason: "no customer id found." },
-          "Could not add address."
+          { reason: "Missing customer ID." },
+          "We couldn't add the address. Please ensure you're logged in."
         )
       );
   }
@@ -569,22 +575,27 @@ const addCustomerAddress = asyncHandler(async (req, res) => {
         .status(400)
         .json(
           new ApiResponse(
-            { reason: "Error from database. the query function failed" },
-            "Could not add address."
+            { reason: "Database error while adding the address." },
+            "We couldn't save your address. Please try again later."
           )
         );
     }
 
-    return res.status(200).json(new ApiResponse({ address: address[0] }));
-  } catch (error) {
     return res
-      .status(500)
+      .status(200)
       .json(
-        new ApiResponse(
-          { reason: error.message || "Internal server error." },
-          "Some error occurred. Failed to add address."
-        )
+        new ApiResponse({ address: address[0] }, "Address added successfully.")
       );
+  } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        {
+          reason:
+            error.message || "Internal server error while adding address.",
+        },
+        "Something went wrong. We couldn't add your address. Please try again later."
+      )
+    );
   }
 });
 
@@ -600,7 +611,7 @@ const deleteCustomerAddress = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           { reason: { customer, customerId, addressId } },
-          "Error identifying address."
+          "We couldn't identify the address to delete. Please try again."
         )
       );
   }
@@ -609,40 +620,47 @@ const deleteCustomerAddress = asyncHandler(async (req, res) => {
     const existingAddress = await getCustomerAddressByAddressId(addressId);
 
     if (existingAddress.is_default) {
-      return res
-        .status(403)
-        .json(
-          new ApiResponse(
-            { reason: "cannot delete address." },
-            "Cannot delete default address. Please select another default address before deleting."
-          )
-        );
+      return res.status(403).json(
+        new ApiResponse(
+          {
+            reason: "Default address cannot be deleted without a replacement.",
+          },
+          "You cannot delete your default address. Please set another default address first."
+        )
+      );
     }
 
     const address = await deleteCustomerAddressByAddressId(addressId);
 
     if (!address || address.length === 0) {
-      return res.status(400).json(
-        new ApiResponse(
-          {
-            reason:
-              "database query failed. check server function deleteCustomerAddress.",
-          },
-          "Error deleting address."
-        )
-      );
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            { reason: "Error in database operation while deleting address." },
+            "We couldn't delete your address. Please try again later."
+          )
+        );
     }
 
-    return res.status(200).json(new ApiResponse({ address: address[0] }));
-  } catch (error) {
     return res
-      .status(500)
+      .status(200)
       .json(
         new ApiResponse(
-          { reason: error.message || "Internal server error." },
-          "Error deleting address."
+          { address: address[0] },
+          "Address deleted successfully."
         )
       );
+  } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        {
+          reason:
+            error.message || "Internal server error while deleting address.",
+        },
+        "Something went wrong. We couldn't delete your address. Please try again later."
+      )
+    );
   }
 });
 
@@ -655,8 +673,8 @@ const setCustomerDefaultAddress = asyncHandler(async (req, res) => {
       .status(400)
       .json(
         new ApiResponse(
-          { reason: "No customer id found." },
-          "Error setting default address."
+          { reason: "Missing customer or address ID." },
+          "We couldn't set your default address. Please try again."
         )
       );
   }
@@ -665,27 +683,35 @@ const setCustomerDefaultAddress = asyncHandler(async (req, res) => {
     const address = await updateCustomerDefaultAddressByAddressId(addressId);
 
     if (!address || address.length === 0) {
-      return res.status(400).json(
-        new ApiResponse(
-          {
-            reason:
-              "Database query failed. check server function setCustomerDefaultAddress.",
-          },
-          "Error setting default address."
-        )
-      );
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(
+            { reason: "Database error while updating default address." },
+            "We couldn't set your default address. Please try again later."
+          )
+        );
     }
 
-    return res.status(200).json(new ApiResponse({ address: address[0] }));
-  } catch (error) {
     return res
-      .status(500)
+      .status(200)
       .json(
         new ApiResponse(
-          { reason: error.message || "Internal server error." },
-          "Error deleting address."
+          { address: address[0] },
+          "Default address updated successfully."
         )
       );
+  } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        {
+          reason:
+            error.message ||
+            "Internal server error while setting default address.",
+        },
+        "Something went wrong. We couldn't set your default address. Please try again later."
+      )
+    );
   }
 });
 
