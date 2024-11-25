@@ -207,19 +207,33 @@ const deleteRestaurantById = async (restaurantId) => {
 const fuzzySearchRestaurant = async (name) => {
   const threshold = 0.3; // Adjust this value for sensitivity
   const restaurants = await sql`
-    SELECT restaurant_id,
-           name,
-           latitude,
-           longitude,
-           restaurant_image_url,
-           city,
-           street,
-           pin_code,
-           availability_status
-    FROM restaurant
-    WHERE similarity(name, ${name}) > ${threshold}
-    ORDER BY similarity(name, ${name}) DESC
-  `;
+    SELECT
+        r.restaurant_id AS restaurant_id,
+        r.name,
+        r.latitude,
+        r.longitude,
+        r.restaurant_image_url,
+        r.city,
+        r.street,
+        r.pin_code,
+        r.availability_status,
+        COALESCE(AVG(o.ratings), 0) AS avg_rating,
+        COUNT(o.ratings) as rating_count,
+        MAX(f.discount_percent) AS max_discount_percent,
+        MAX(f.discount_cap) AS max_discount_cap
+    FROM
+        restaurant r
+            LEFT JOIN
+        food_item f ON r.restaurant_id = f.restaurant_id
+            LEFT JOIN
+        orders o ON r.restaurant_id = o.restaurant_id
+    WHERE
+        similarity(r.name, ${name}) > ${threshold}
+    GROUP BY
+        r.restaurant_id, r.name, r.latitude, r.longitude
+    ORDER BY
+        similarity(r.name, ${name}) DESC
+    `;
 
   restaurants.forEach((restaurant) => {
     restaurant.rating = parseFloat((Math.random() * (5 - 3) + 3).toFixed(1));
@@ -257,6 +271,7 @@ const getRestaurantsByDistanceOrRating = async ({
               sin(radians(${lat})) * sin(radians(r.latitude))
           ) AS distance,
           COALESCE(AVG(o.ratings), 0) AS avg_rating,
+          COUNT(o.ratings) as rating_count,
           MAX(f.discount_percent) AS max_discount_percent,
           MAX(f.discount_cap) AS max_discount_cap
       FROM 
@@ -290,7 +305,6 @@ const getRestaurantsByDistanceOrRating = async ({
     ];
     restaurant.minTime = Math.floor(minTime);
     restaurant.maxTime = Math.ceil(maxTime);
-    restaurant.rating_number = Math.floor(Math.random() * (10000 - 100) + 100);
   });
 
   if (restaurants[0].hasOwnProperty(sortBy))
