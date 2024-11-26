@@ -601,7 +601,7 @@ const addCustomerAddress = asyncHandler(async (req, res) => {
 
 const deleteCustomerAddress = asyncHandler(async (req, res) => {
   const { customer } = req;
-  const { addressId } = req.body;
+  const { addressId } = req.query;
 
   const customerId = customer.id;
 
