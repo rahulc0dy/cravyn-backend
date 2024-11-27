@@ -20,7 +20,6 @@ const getCart = asyncHandler(async (req, res) => {
     return res.status(200).json(
       new ApiResponse(
         {
-          cart,
           ...cartSummary,
         },
         "Cart fetched successfully."
@@ -135,7 +134,6 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
     return res.status(200).json(
       new ApiResponse(
         {
-          cart,
           ...cartSummary,
         },
         "Item removed from cart successfully."
@@ -206,7 +204,6 @@ const incrementItemCount = asyncHandler(async (req, res) => {
     return res.status(200).json(
       new ApiResponse(
         {
-          cart,
           ...cartSummary,
         },
         "Item quantity incremented successfully."
@@ -278,7 +275,6 @@ const decrementItemCount = asyncHandler(async (req, res) => {
     return res.status(200).json(
       new ApiResponse(
         {
-          cart,
           ...cartSummary,
         },
         "Item quantity decremented successfully."

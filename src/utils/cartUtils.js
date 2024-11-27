@@ -11,6 +11,9 @@ const calculateCartSummary = (cart) => {
     const discount =
       discountAmount > discountCap ? discountCap : discountAmount;
 
+    const finalDiscountedPrice = originalPrice - discount;
+    item.final_discounted_price = finalDiscountedPrice;
+
     totalPrice += originalPrice * item.quantity;
     totalDiscount += discount * item.quantity;
   });
@@ -21,6 +24,7 @@ const calculateCartSummary = (cart) => {
     totalPrice - totalDiscount + deliveryCharge + platformCharge;
 
   return {
+    cart,
     totalPrice,
     totalDiscount,
     deliveryCharge,
