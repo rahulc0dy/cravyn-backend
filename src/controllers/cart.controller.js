@@ -75,7 +75,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(cartItem, "Cart item retrieved successfully."));
+      .json(new ApiResponse(cartItem, "Added to cart successfully."));
   } catch (error) {
     res.status(400).json(
       new ApiResponse(
