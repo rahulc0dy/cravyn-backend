@@ -3,9 +3,9 @@ const calculateCartSummary = (cart) => {
   let totalDiscount = 0;
 
   cart.forEach((item) => {
-    const originalPrice = parseFloat(item.food_price);
-    const discountPercent = parseFloat(item.food_discount_percent);
-    const discountCap = parseFloat(item.food_discount_cap);
+    const originalPrice = parseFloat(item.food_price) || 0;
+    const discountPercent = parseFloat(item.food_discount_percent) || 0;
+    const discountCap = parseFloat(item.food_discount_cap) || 0;
 
     const discountAmount = (originalPrice * discountPercent) / 100;
     const discount =
