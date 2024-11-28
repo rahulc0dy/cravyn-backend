@@ -25,7 +25,10 @@ import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 import { cookieOptions } from "../constants.js";
 import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
-import { getCartByCustomerId } from "../database/queries/cart.query.js";
+import {
+  deleteCartByCustomerId,
+  getCartByCustomerId,
+} from "../database/queries/cart.query.js";
 import { calculateCartSummary } from "../utils/cartUtils.js";
 import {
   createOrder,
@@ -756,6 +759,8 @@ const placeOrder = asyncHandler(async (req, res) => {
         item.final_discounted_price
       );
     }
+
+    await deleteCartByCustomerId(customerId);
 
     res.status(201).json(
       new ApiResponse(

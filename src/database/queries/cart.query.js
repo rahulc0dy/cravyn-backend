@@ -83,10 +83,20 @@ const decrementCartItem = async (customerId, itemId, restaurantId) => {
   return updatedItem[0] || null;
 };
 
+const deleteCartByCustomerId = async (customerId) => {
+  const deletedItem = await sql`
+    DELETE FROM cart
+    WHERE customer_id = ${customerId}
+  `;
+
+  return deletedItem[0];
+};
+
 export {
   getCartByCustomerId,
   addItemtoCartByIds,
   removeItemFromCartByIds,
   incrementCartItem,
   decrementCartItem,
+  deleteCartByCustomerId,
 };
