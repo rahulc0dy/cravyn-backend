@@ -43,4 +43,40 @@ const getOrdersByRestaurantId = async (restaurantId, orderStatus) => {
   return orders;
 };
 
-export { getOrdersByRestaurantId };
+const createOrder = async (
+  customerId,
+  restaurantId,
+  specifications = null,
+  checkoutPrice,
+  addressId
+) => {
+  const newOrder = await sql`
+    INSERT INTO orders (
+      customer_id,
+      restaurant_id,
+      specifications,
+      checkout_price,
+      address_id,
+      order_status
+    ) VALUES (
+      ${customerId}, 
+      ${restaurantId}, 
+      ${specifications}, 
+      ${checkoutPrice}, 
+      ${addressId}, 
+      'Preparing'
+    )
+    RETURNING *;
+  `;
+  return newOrder[0];
+};
+
+const createOrderList = async (listId, itemId, quantity, price) => {
+  await sql`
+    INSERT INTO orders_list (list_id, item_id, quantity, price)
+    VALUES (${listId}, ${itemId}, ${quantity}, ${price})
+    RETURNING list_id, item_id, quantity, price;
+  `;
+};
+
+export { getOrdersByRestaurantId, createOrder, createOrderList };
