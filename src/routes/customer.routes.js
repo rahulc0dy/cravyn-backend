@@ -12,6 +12,7 @@ import {
   addCustomerAddress,
   deleteCustomerAddress,
   setCustomerDefaultAddress,
+  placeOrder,
 } from "../controllers/customer.controller.js";
 import { verifyUserJwt } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -61,5 +62,7 @@ router
   .post(verifyUserJwt, addCustomerAddress)
   .delete(verifyUserJwt, deleteCustomerAddress)
   .patch(verifyUserJwt, setCustomerDefaultAddress);
+
+router.route("/place-order").post(verifyUserJwt, placeOrder);
 
 export default router;

@@ -25,6 +25,12 @@ import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 import { cookieOptions } from "../constants.js";
 import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
+import { getCartByCustomerId } from "../database/queries/cart.query.js";
+import { calculateCartSummary } from "../utils/cartUtils.js";
+import {
+  createOrder,
+  createOrderList,
+} from "../database/queries/order.query.js";
 
 const getCustomerAccount = asyncHandler(async (req, res) => {
   if (!req.customer || !req.customer.id) {
@@ -715,6 +721,63 @@ const setCustomerDefaultAddress = asyncHandler(async (req, res) => {
   }
 });
 
+const placeOrder = asyncHandler(async (req, res) => {
+  const customerId = req.customer.id;
+  const { specifications, addressId } = req.body;
+
+  if (!addressId) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          { reason: "Missing addressId." },
+          "Delivery address is missing."
+        )
+      );
+  }
+
+  try {
+    const cart = await getCartByCustomerId(customerId);
+    const cartSummary = calculateCartSummary(cart);
+
+    const order = await createOrder(
+      customerId,
+      cartSummary.cart[0].restaurant_id,
+      specifications,
+      cartSummary.finalPrice,
+      addressId
+    );
+
+    for (const item of cartSummary.cart) {
+      await createOrderList(
+        order.list_id,
+        item.item_id,
+        item.quantity,
+        item.final_discounted_price
+      );
+    }
+
+    res.status(201).json(
+      new ApiResponse(
+        {
+          orderId: order.order_id,
+        },
+        "Order placed successfully."
+      )
+    );
+  } catch (error) {
+    res.status(500).json(
+      new ApiResponse(
+        {
+          reason: error.message || "Error while placing the order",
+          at: "cart.controller.js -> placeOrder",
+        },
+        "An error occurred while placing the order."
+      )
+    );
+  }
+});
+
 export {
   getCustomerAccount,
   loginCustomer,
@@ -728,4 +791,5 @@ export {
   addCustomerAddress,
   deleteCustomerAddress,
   setCustomerDefaultAddress,
+  placeOrder,
 };
