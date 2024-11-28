@@ -46,7 +46,7 @@ const getOrdersByRestaurantId = async (restaurantId, orderStatus) => {
 const createOrder = async (
   customerId,
   restaurantId,
-  specifications,
+  specifications = null,
   checkoutPrice,
   addressId
 ) => {
@@ -61,7 +61,7 @@ const createOrder = async (
     ) VALUES (
       ${customerId}, 
       ${restaurantId}, 
-      ${specifications || null}, 
+      ${specifications}, 
       ${checkoutPrice}, 
       ${addressId}, 
       'Preparing'
