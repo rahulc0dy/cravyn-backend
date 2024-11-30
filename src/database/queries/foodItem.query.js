@@ -97,6 +97,17 @@ const updateFoodItemDiscountById = async ({
   return foodItem;
 };
 
+const setFoodAvailabilityStatus = async (foodItemId, availabilityStatus) => {
+  const foodItem = await sql`
+    UPDATE Food_Item
+    SET is_available = ${availabilityStatus}
+    WHERE item_id=${foodItemId}
+    RETURNING * ;
+    `;
+
+  return foodItem;
+};
+
 const updateFoodItemById = async ({
   foodItemId,
   restaurantId,
@@ -141,6 +152,7 @@ export {
   fuzzySearchRestaurantFoodItem,
   createFoodItem,
   updateFoodItemDiscountById,
+  setFoodAvailabilityStatus,
   updateFoodItemById,
   deleteFoodItemById,
   getRestaurantIdByItemId,

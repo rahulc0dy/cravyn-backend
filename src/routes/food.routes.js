@@ -5,6 +5,7 @@ import {
   getFood,
   searchFoodByName,
   updateFood,
+  updateFoodAvailabilityStatus,
   updateFoodDiscount,
 } from "../controllers/food.controller.js";
 import { verifyRestaurantJwt } from "../middlewares/auth.middleware.js";
@@ -20,6 +21,9 @@ router
   .delete(verifyRestaurantJwt, deleteFood);
 
 router.route("/discount").patch(verifyRestaurantJwt, updateFoodDiscount);
+router
+  .route("/availability")
+  .patch(verifyRestaurantJwt, updateFoodAvailabilityStatus);
 
 router.route("/search").get(searchFoodByName);
 
