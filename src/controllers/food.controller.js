@@ -11,6 +11,7 @@ import {
 import { getRestaurantById } from "../database/queries/restaurant.query.js";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
 import fs from "fs";
+import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 
 const getFood = asyncHandler(async (req, res) => {
   const restaurantId = req.restaurant?.restaurant_id;
@@ -347,41 +348,21 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
   const { foodItemId, discountPercent, discountCap } = req.body;
   let { restaurant } = req;
 
-  const requiredFields = [
-    {
-      field: restaurant,
-      reason: "restaurant not defined",
-      message: "Restaurant authorisation failure.",
-    },
-    {
-      field: foodItemId,
-      reason: "foodItemId Missing",
-      message: "Food identification failure.",
-    },
-    {
-      field: discountPercent,
-      reason: "discountPercent Missing",
-      message: "Discount percnt is reqiured.",
-    },
-    {
-      field: discountCap,
-      reason: "discountCap Missing",
-      message: "Discount Cap is Required.",
-    },
-  ];
-
-  for (const { field, reason, message } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(
-        new ApiResponse(
-          {
-            reason,
-          },
-          message
+  if (
+    !checkRequiredFields(
+      { restaurant, foodItemId, discountPercent, discountCap },
+      ({ field, message, reason }) =>
+        res.status(400).json(
+          new ApiResponse(
+            {
+              reason,
+            },
+            message
+          )
         )
-      );
-    }
-  }
+    )
+  )
+    return;
 
   try {
     restaurant = await getRestaurantById(restaurant.restaurant_id);
@@ -428,34 +409,17 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
 });
 
 const deleteFood = asyncHandler(async (req, res) => {
-  const { foodItemId } = req.body;
+  const { foodItemId } = req.query;
   let { restaurant } = req;
 
-  const requiredFields = [
-    {
-      field: restaurant,
-      reason: "restaurant not defined",
-      message: "Restaurant authorisation failure.",
-    },
-    {
-      field: foodItemId,
-      reason: "foodItemId Missing",
-      message: "Food identification failure.",
-    },
-  ];
-
-  for (const { field, reason, message } of requiredFields) {
-    if (!field) {
-      return res.status(400).json(
-        new ApiResponse(
-          {
-            reason,
-          },
-          message
-        )
-      );
-    }
-  }
+  if (
+    !checkRequiredFields(
+      { foodItemId, restaurant },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
 
   try {
     restaurant = await getRestaurantById(restaurant.restaurant_id);
