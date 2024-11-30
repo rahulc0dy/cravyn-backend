@@ -90,7 +90,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
 });
 
 const removeItemFromCart = asyncHandler(async (req, res) => {
-  const { itemId } = req.body;
+  const { itemId } = req.query;
   const customerId = req.customer.id;
 
   if (!itemId) {
