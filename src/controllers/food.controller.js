@@ -387,27 +387,21 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
 const updateFoodAvailabilityStatus = asyncHandler(async (req, res) => {
   const { foodItemId, availabilityStatus } = req.body;
 
-  if (!foodItemId) {
-    return res
-      .status(400)
-      .json(
-        new ApiResponse(
-          { reason: "food item id is missing." },
-          "Item not found."
+  if (
+    !checkRequiredFields(
+      { foodItemId, availabilityStatus },
+      ({ field, message, reason }) =>
+        res.status(400).json(
+          new ApiResponse(
+            {
+              reason,
+            },
+            message
+          )
         )
-      );
-  }
-
-  if (availabilityStatus === undefined || availabilityStatus === null) {
-    return res
-      .status(400)
-      .json(
-        new ApiResponse(
-          { reason: "status is missing." },
-          "Error making request."
-        )
-      );
-  }
+    )
+  )
+    return;
 
   try {
     const foodItem = await setFoodAvailabilityStatus(
