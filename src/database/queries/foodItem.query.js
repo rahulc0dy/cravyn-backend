@@ -16,7 +16,9 @@ const getFoodItemByName = async (name) => {
 
 const getFoodsByRestaurantId = async (restaurantId, limit = null) => {
   const foodItems = await sql`
-    SELECT * FROM Food_Item WHERE restaurant_id = ${restaurantId} LIMIT ${limit};
+      SELECT * FROM Food_Item
+      WHERE restaurant_id = ${restaurantId} AND is_available = true
+      LIMIT ${limit};
     `;
 
   // todo: rating for food items.

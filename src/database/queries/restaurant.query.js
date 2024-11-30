@@ -280,6 +280,8 @@ const getRestaurantsByDistanceOrRating = async ({
           food_item f ON r.restaurant_id = f.restaurant_id
       LEFT JOIN 
           orders o ON r.restaurant_id = o.restaurant_id
+      WHERE
+          r.verify_status = 'verified' AND r.availability_status = true
       GROUP BY 
           r.restaurant_id, r.name, r.latitude, r.longitude
       HAVING 
