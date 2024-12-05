@@ -18,6 +18,7 @@ import {
   getTotalUsers,
   getCategorySalesData,
   getMonthlySales,
+  getDailySales,
 } from "../database/queries/businessTeam.query.js";
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../constants.js";
@@ -488,6 +489,7 @@ const getDashboardData = asyncHandler(async (req, res) => {
     const totalUsers = await getTotalUsers();
     const categorySales = await getCategorySalesData();
     const monthlySales = await getMonthlySales();
+    const dailySales = await getDailySales();
 
     return res.status(200).json(
       new ApiResponse({
@@ -496,6 +498,7 @@ const getDashboardData = asyncHandler(async (req, res) => {
         totalUsers: totalUsers[0],
         categorySales,
         monthlySales,
+        dailySales,
       })
     );
   } catch (error) {

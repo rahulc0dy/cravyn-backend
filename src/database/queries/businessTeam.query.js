@@ -125,9 +125,9 @@ const getRestaurantYearlyMonthlySalesData = async ({
             r.restaurant_id = o.restaurant_id 
                 AND o.order_status = 'Delivered'
     WHERE
-        (${year} IS NULL OR EXTRACT(YEAR FROM o.order_timestamp) = ${year}) AND
-        (${month} IS NULL OR EXTRACT(MONTH FROM o.order_timestamp) = ${month}) AND 
-        (${day} IS NULL OR EXTRACT(DAY FROM o.order_timestamp) = ${day})
+        (${year}::INTEGER IS NULL OR EXTRACT(YEAR FROM o.order_timestamp) = ${year}) AND
+        (${month}::INTEGER IS NULL OR EXTRACT(MONTH FROM o.order_timestamp) = ${month}) AND 
+        (${day}::INTEGER IS NULL OR EXTRACT(DAY FROM o.order_timestamp) = ${day})
     GROUP BY
         r.restaurant_id, r.name
     ORDER BY
@@ -171,11 +171,29 @@ const getMonthlySales = async () => {
     SELECT
         TO_CHAR(DATE_TRUNC('month', o.order_timestamp), 'YYYY-MM') AS month,
         CAST(COALESCE(SUM(o.checkout_price), 0) AS INTEGER) AS monthly_total_sales,
-        (SELECT CAST(COALESCE(SUM(checkout_price), 0) AS INTEGER) FROM orders WHERE order_status = 'Delivered') AS total_sales
+        (SELECT CAST(COALESCE(SUM(checkout_price), 0) AS INTEGER) 
+         FROM orders 
+         WHERE order_status = 'Delivered') AS total_sales
     FROM orders o
     WHERE o.order_status = 'Delivered'
     GROUP BY DATE_TRUNC('month', o.order_timestamp)
     ORDER BY DATE_TRUNC('month', o.order_timestamp);
+  `;
+  return salesData;
+};
+
+const getDailySales = async () => {
+  const salesData = await sql`
+    SELECT
+        TO_CHAR(DATE_TRUNC('day', o.order_timestamp), 'YYYY-MM-DD') AS day,
+        CAST(COALESCE(SUM(o.checkout_price), 0) AS INTEGER) AS daily_total_sales,
+        (SELECT CAST(COALESCE(SUM(checkout_price), 0) AS INTEGER)
+         FROM orders
+         WHERE order_status = 'Delivered') AS total_sales
+    FROM orders o
+    WHERE o.order_status = 'Delivered'
+    GROUP BY DATE_TRUNC('day', o.order_timestamp)
+    ORDER BY DATE_TRUNC('day', o.order_timestamp);
   `;
   return salesData;
 };
@@ -194,4 +212,5 @@ export {
   getTotalUsers,
   getCategorySalesData,
   getMonthlySales,
+  getDailySales,
 };
