@@ -31,7 +31,10 @@ import {
 } from "../database/queries/foodItem.query.js";
 import { getCoordinates } from "./geocode.controller.js";
 import { getGeocodeUrl } from "../utils/geocodeUrl.js";
-import { getOrdersByRestaurantId } from "../database/queries/order.query.js";
+import {
+  getOrdersByRestaurantId,
+  updateOrderStatusByOrderId,
+} from "../database/queries/order.query.js";
 import { cookieOptions } from "../constants.js";
 import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 
@@ -1063,6 +1066,46 @@ const getRestaurantFoods = asyncHandler(async (req, res) => {
   }
 });
 
+const updateOrderStatus = asyncHandler(async (req, res) => {
+  const { restaurant } = req;
+  const { orderId, status } = req.body;
+
+  const restaurantId = restaurant?.restaurant_id;
+
+  if (
+    !checkRequiredFields(
+      { restaurantId, status, orderId },
+      ({ field, message, reason }) =>
+        res
+          .status(400)
+          .json(new ApiResponse({ reason }, "Error updating order status."))
+    )
+  )
+    return;
+
+  try {
+    const order = updateOrderStatusByOrderId(orderId, restaurantId, status);
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          { order: order[0] },
+          "Order status updated successfully."
+        )
+      );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Error updating order status." },
+          "Server error occurred."
+        )
+      );
+  }
+});
+
 export {
   getRestaurant,
   getRestaurantsList,
@@ -1081,4 +1124,5 @@ export {
   getRestaurantCancelledOrders,
   getRestaurantDeliveredOrders,
   getRecommendedRestaurants,
+  updateOrderStatus,
 };

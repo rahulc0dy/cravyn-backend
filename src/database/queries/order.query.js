@@ -18,6 +18,7 @@ const getOrdersByRestaurantId = async (restaurantId, orderStatus) => {
           dp.name AS delivery_partner_name,
           dp.vehicle_type,
           dp.phone_number,
+          ca.display_address,
           JSON_AGG(
                   JSON_BUILD_OBJECT(
                           'item_id', ol.item_id,
@@ -33,12 +34,13 @@ const getOrdersByRestaurantId = async (restaurantId, orderStatus) => {
               JOIN orders_list ol ON o.list_id = ol.list_id
               JOIN food_item fi ON ol.item_id = fi.item_id
               JOIN customer cu ON o.customer_id = cu.id
-              JOIN delivery_partner dp ON o.partner_id = dp.id
+              JOIN delivery_partner dp ON o.partner_id = dp.id 
+              JOIN customer_address ca on o.address_id = ca.address_id
       WHERE
           o.restaurant_id = ${restaurantId}
         AND o.order_status = ${orderStatus}
       GROUP BY
-          o.order_id, cu.name, dp.name, dp.vehicle_type, dp.phone_number;
+          o.order_id, cu.name, dp.name, dp.vehicle_type, dp.phone_number, ca.display_address;
   `;
   return orders;
 };
@@ -79,4 +81,20 @@ const createOrderList = async (listId, itemId, quantity, price) => {
   `;
 };
 
-export { getOrdersByRestaurantId, createOrder, createOrderList };
+const updateOrderStatusByOrderId = async (orderId, restaurantId, status) => {
+  const order = await sql`
+    UPDATE orders 
+    SET order_status = ${status}
+    WHERE order_id = ${orderId} 
+      AND restaurant_id = ${restaurantId}
+    RETURNING *;
+    `;
+  return order;
+};
+
+export {
+  getOrdersByRestaurantId,
+  createOrder,
+  createOrderList,
+  updateOrderStatusByOrderId,
+};
