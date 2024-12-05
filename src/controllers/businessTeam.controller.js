@@ -13,6 +13,11 @@ import {
   createBusinessTeam,
   deleteBusinessTeam,
   updateBusinessTeamNamePhoneNo,
+  getRestaurantSalesData,
+  getRestaurantYearlyMonthlySalesData,
+  getTotalUsers,
+  getCategorySalesData,
+  getMonthlySales,
 } from "../database/queries/businessTeam.query.js";
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../constants.js";
@@ -466,6 +471,45 @@ const updateBusinessTeamAccount = asyncHandler(async (req, res) => {
     );
 });
 
+const getDashboardData = asyncHandler(async (req, res) => {
+  const { businessTeam } = req;
+  const { year, month, day } = req.query;
+
+  try {
+    const totalSalesData = await getRestaurantSalesData();
+    const rangedSalesData =
+      year || month || day
+        ? await getRestaurantYearlyMonthlySalesData({
+            year,
+            month,
+            day,
+          })
+        : "";
+    const totalUsers = await getTotalUsers();
+    const categorySales = await getCategorySalesData();
+    const monthlySales = await getMonthlySales();
+
+    return res.status(200).json(
+      new ApiResponse({
+        totalSalesData,
+        rangedSalesData,
+        totalUsers: totalUsers[0],
+        categorySales,
+        monthlySales,
+      })
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Unable to get dashboard" },
+          "Failed to get dashboard."
+        )
+      );
+  }
+});
+
 export {
   getBusinessTeamAccount,
   loginBusinessTeam,
@@ -474,4 +518,5 @@ export {
   refreshAccessToken,
   deleteBusinessTeamAccount,
   updateBusinessTeamAccount,
+  getDashboardData,
 };
