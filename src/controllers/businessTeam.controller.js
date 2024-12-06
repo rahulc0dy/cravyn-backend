@@ -126,7 +126,7 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         {
-          businessTeam: businessTeam[0],
+          user: businessTeam[0],
           accessToken,
           refreshToken,
         },
