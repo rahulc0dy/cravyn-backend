@@ -198,6 +198,67 @@ const getDailySales = async () => {
   return salesData;
 };
 
+const getRestaurantMonthlySalesData = async ({ restaurantId, year = null }) => {
+  const monthlySalesData = await sql`
+    SELECT
+        EXTRACT(MONTH FROM o.order_timestamp) AS month,
+        COUNT(o.order_id) AS total_orders,
+        COALESCE(SUM(o.checkout_price), 0) AS total_sales
+    FROM
+        restaurant r
+            LEFT JOIN
+        orders o
+        ON
+            r.restaurant_id = o.restaurant_id 
+                AND o.order_status = 'Delivered'
+    WHERE
+        r.restaurant_id = ${restaurantId} AND
+        (${year}::INTEGER IS NULL OR EXTRACT(YEAR FROM o.order_timestamp) = ${year})
+    GROUP BY
+        EXTRACT(MONTH FROM o.order_timestamp)
+    ORDER BY
+        month;
+    `;
+  return monthlySalesData;
+};
+
+const getRestaurantDailySalesData = async ({
+  restaurantId,
+  year = null,
+  month = null,
+}) => {
+  const dailySalesData = await sql`
+    SELECT
+        EXTRACT(DAY FROM o.order_timestamp) AS day,
+        COUNT(o.order_id) AS total_orders,
+        COALESCE(SUM(o.checkout_price), 0) AS total_sales
+    FROM
+        restaurant r
+            LEFT JOIN
+        orders o
+        ON
+            r.restaurant_id = o.restaurant_id 
+                AND o.order_status = 'Delivered'
+    WHERE
+        r.restaurant_id = ${restaurantId} AND
+        (${year}::INTEGER IS NULL OR EXTRACT(YEAR FROM o.order_timestamp) = ${year}) AND
+        (${month}::INTEGER IS NULL OR EXTRACT(MONTH FROM o.order_timestamp) = ${month})
+    GROUP BY
+        EXTRACT(DAY FROM o.order_timestamp)
+    ORDER BY
+        day;
+    `;
+  return dailySalesData;
+};
+
+const getCustomerMetrics = async (month = 12, year = 2024) => {
+  const fmtMonth = `${year}-${month}`;
+  const customerMetrics = await sql`
+    select * from calculate_metrics(${fmtMonth});
+    `;
+  return customerMetrics;
+};
+
 export {
   getBusinessTeamByPhoneNo,
   getBusinessTeamById,
@@ -213,4 +274,7 @@ export {
   getCategorySalesData,
   getMonthlySales,
   getDailySales,
+  getRestaurantMonthlySalesData,
+  getRestaurantDailySalesData,
+  getCustomerMetrics,
 };

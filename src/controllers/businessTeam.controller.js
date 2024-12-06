@@ -19,6 +19,9 @@ import {
   getCategorySalesData,
   getMonthlySales,
   getDailySales,
+  getRestaurantDailySalesData,
+  getRestaurantMonthlySalesData,
+  getCustomerMetrics,
 } from "../database/queries/businessTeam.query.js";
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../constants.js";
@@ -477,7 +480,21 @@ const getDashboardData = asyncHandler(async (req, res) => {
   const { year, month, day } = req.query;
 
   try {
-    const totalSalesData = await getRestaurantSalesData();
+    const [
+      totalSalesData,
+      totalUsers,
+      categorySales,
+      monthlySales,
+      dailySales,
+      customerMetrics,
+    ] = await Promise.all([
+      getRestaurantSalesData(),
+      getTotalUsers(),
+      getCategorySalesData(),
+      getMonthlySales(),
+      getDailySales(),
+      getCustomerMetrics(),
+    ]);
     const rangedSalesData =
       year || month || day
         ? await getRestaurantYearlyMonthlySalesData({
@@ -485,11 +502,7 @@ const getDashboardData = asyncHandler(async (req, res) => {
             month,
             day,
           })
-        : "";
-    const totalUsers = await getTotalUsers();
-    const categorySales = await getCategorySalesData();
-    const monthlySales = await getMonthlySales();
-    const dailySales = await getDailySales();
+        : [];
 
     return res.status(200).json(
       new ApiResponse({
@@ -497,6 +510,7 @@ const getDashboardData = asyncHandler(async (req, res) => {
         rangedSalesData,
         totalUsers: totalUsers[0],
         categorySales,
+        customerMetrics: customerMetrics[0],
         monthlySales,
         dailySales,
       })
@@ -513,6 +527,39 @@ const getDashboardData = asyncHandler(async (req, res) => {
   }
 });
 
+const getRestaurantSales = asyncHandler(async (req, res) => {
+  const { businessTeam } = req;
+  const { year, month, restaurantId } = req.query;
+
+  if (
+    !checkRequiredFields({ year, restaurantId }, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason: reason }, message))
+    )
+  )
+    return;
+
+  try {
+    const salesData = month
+      ? await getRestaurantDailySalesData({ restaurantId, year, month })
+      : await getRestaurantMonthlySalesData({ restaurantId, year });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse({ salesData: salesData }, "Obtained successfully.")
+      );
+  } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        {
+          reason: error.message || "Unable to get restaurant sales details.",
+        },
+        "Failed to get restaurant sales details."
+      )
+    );
+  }
+});
+
 export {
   getBusinessTeamAccount,
   loginBusinessTeam,
@@ -522,4 +569,5 @@ export {
   deleteBusinessTeamAccount,
   updateBusinessTeamAccount,
   getDashboardData,
+  getRestaurantSales,
 };

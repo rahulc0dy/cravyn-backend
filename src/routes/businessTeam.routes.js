@@ -8,6 +8,7 @@ import {
   updateBusinessTeamAccount,
   getBusinessTeamAccount,
   getDashboardData,
+  getRestaurantSales,
 } from "../controllers/businessTeam.controller.js";
 import { verifyUserJwt } from "../middlewares/auth.middleware.js";
 
@@ -24,5 +25,6 @@ router
   .get(verifyUserJwt, getBusinessTeamAccount);
 
 router.route("/dashboard").get(verifyUserJwt, getDashboardData);
+router.route("/restaurant-sales").get(verifyUserJwt, getRestaurantSales);
 
 export default router;
