@@ -790,7 +790,7 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
   const customerId = req.customer.id;
 
   if (!customerId) {
-    res
+    return res
       .status(401)
       .json(
         new ApiResponse(
@@ -821,7 +821,7 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
   }
 
   if (orders.length === 0) {
-    res
+    return res
       .status(404)
       .json(
         new ApiResponse(
@@ -865,7 +865,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(
-      new ApiResponse(...cancelledOrder, "Order history obtained successfully.")
+      new ApiResponse(...cancelledOrder, "Order cancelled successfully.")
     );
 });
 
