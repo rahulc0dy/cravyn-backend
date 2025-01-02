@@ -833,7 +833,7 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
       );
   }
 
-  res
+  return res
     .status(200)
     .json(new ApiResponse({ orders }, "Order history obtained successfully."));
 });
@@ -854,7 +854,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
   let cancelledOrder = await cancelOrderById(orderId, customerId);
 
   if (!cancelledOrder || cancelledOrder.length === 0) {
-    res
+    return res
       .status(400)
       .json(
         new ApiResponse(
@@ -864,7 +864,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
       );
   }
 
-  res
+  return res
     .status(200)
     .json(new ApiResponse(...cancelledOrder, "Order cancelled successfully."));
 });
