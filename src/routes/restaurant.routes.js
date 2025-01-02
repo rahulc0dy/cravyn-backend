@@ -16,6 +16,7 @@ import {
   getRestaurantPackedOrders,
   getRestaurantCancelledOrders,
   getRestaurantDeliveredOrders,
+  updateOrderStatus,
 } from "../controllers/restaurant.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import {
@@ -51,6 +52,8 @@ router.route("/logout").post(verifyRestaurantJwt, logoutRestaurant);
 router.route("/refresh-token").get(refreshAccessToken);
 
 router.route("/catalog").get(verifyRestaurantJwt, getRestaurantCatalog);
+
+router.route("/orders").patch(verifyRestaurantJwt, updateOrderStatus);
 
 router
   .route("/orders/pending")

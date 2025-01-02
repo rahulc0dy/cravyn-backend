@@ -5,7 +5,7 @@
  */
 const checkRequiredFields = (fields, callback) => {
   for (const [key, value] of Object.entries(fields)) {
-    if (!value) {
+    if (value === undefined || value === null) {
       const message = `${camelToSentenceCase(key)} is required.`;
       const reason = `${key} is ${value}`;
       callback({ field: key, message, reason });

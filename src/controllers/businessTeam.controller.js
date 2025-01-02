@@ -13,6 +13,15 @@ import {
   createBusinessTeam,
   deleteBusinessTeam,
   updateBusinessTeamNamePhoneNo,
+  getRestaurantSalesData,
+  getRestaurantYearlyMonthlySalesData,
+  getTotalUsers,
+  getCategorySalesData,
+  getMonthlySales,
+  getDailySales,
+  getRestaurantDailySalesData,
+  getRestaurantMonthlySalesData,
+  getCustomerMetrics,
 } from "../database/queries/businessTeam.query.js";
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../constants.js";
@@ -117,7 +126,7 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         {
-          businessTeam: businessTeam[0],
+          user: businessTeam[0],
           accessToken,
           refreshToken,
         },
@@ -466,6 +475,91 @@ const updateBusinessTeamAccount = asyncHandler(async (req, res) => {
     );
 });
 
+const getDashboardData = asyncHandler(async (req, res) => {
+  const { businessTeam } = req;
+  const { year, month, day } = req.query;
+
+  try {
+    const [
+      totalSalesData,
+      totalUsers,
+      categorySales,
+      monthlySales,
+      dailySales,
+      customerMetrics,
+    ] = await Promise.all([
+      getRestaurantSalesData(),
+      getTotalUsers(),
+      getCategorySalesData(),
+      getMonthlySales(),
+      getDailySales(),
+      getCustomerMetrics(),
+    ]);
+    const rangedSalesData =
+      year || month || day
+        ? await getRestaurantYearlyMonthlySalesData({
+            year,
+            month,
+            day,
+          })
+        : [];
+
+    return res.status(200).json(
+      new ApiResponse({
+        totalSalesData,
+        rangedSalesData,
+        totalUsers: totalUsers[0],
+        categorySales,
+        customerMetrics: customerMetrics[0],
+        monthlySales,
+        dailySales,
+      })
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Unable to get dashboard" },
+          "Failed to get dashboard."
+        )
+      );
+  }
+});
+
+const getRestaurantSales = asyncHandler(async (req, res) => {
+  const { businessTeam } = req;
+  const { year, month, restaurantId } = req.query;
+
+  if (
+    !checkRequiredFields({ year, restaurantId }, ({ field, message, reason }) =>
+      res.status(400).json(new ApiResponse({ reason: reason }, message))
+    )
+  )
+    return;
+
+  try {
+    const salesData = month
+      ? await getRestaurantDailySalesData({ restaurantId, year, month })
+      : await getRestaurantMonthlySalesData({ restaurantId, year });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse({ salesData: salesData }, "Obtained successfully.")
+      );
+  } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        {
+          reason: error.message || "Unable to get restaurant sales details.",
+        },
+        "Failed to get restaurant sales details."
+      )
+    );
+  }
+});
+
 export {
   getBusinessTeamAccount,
   loginBusinessTeam,
@@ -474,4 +568,6 @@ export {
   refreshAccessToken,
   deleteBusinessTeamAccount,
   updateBusinessTeamAccount,
+  getDashboardData,
+  getRestaurantSales,
 };

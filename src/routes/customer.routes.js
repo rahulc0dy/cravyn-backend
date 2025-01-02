@@ -12,6 +12,7 @@ import {
   addCustomerAddress,
   deleteCustomerAddress,
   setCustomerDefaultAddress,
+  placeOrder,
   getCustomerOrderHistory,
 } from "../controllers/customer.controller.js";
 import { verifyUserJwt } from "../middlewares/auth.middleware.js";
@@ -63,6 +64,7 @@ router
   .delete(verifyUserJwt, deleteCustomerAddress)
   .patch(verifyUserJwt, setCustomerDefaultAddress);
 
+router.route("/place-order").post(verifyUserJwt, placeOrder);
 router.route("/order-history").get(verifyUserJwt, getCustomerOrderHistory);
 
 export default router;
