@@ -790,7 +790,7 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
   const customerId = req.customer.id;
 
   if (!customerId) {
-    res
+    return res
       .status(401)
       .json(
         new ApiResponse(
