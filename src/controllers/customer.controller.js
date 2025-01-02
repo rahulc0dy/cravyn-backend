@@ -810,7 +810,7 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
   );
 
   if (orders.length === 0) {
-    res
+    return res
       .status(404)
       .json(
         new ApiResponse(
