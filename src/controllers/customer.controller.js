@@ -19,6 +19,8 @@ import {
   deleteCustomerAddressByAddressId,
   updateCustomerDefaultAddressByAddressId,
   getCustomerAddressByAddressId,
+  getOrderHistoryByCustomerId,
+  getOrderListItemsByListId,
 } from "../database/queries/customer.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
@@ -715,6 +717,45 @@ const setCustomerDefaultAddress = asyncHandler(async (req, res) => {
   }
 });
 
+const getCustomerOrderHistory = asyncHandler(async (req, res) => {
+  const customerId = req.customer.id;
+
+  if (!customerId) {
+    res
+      .status(401)
+      .json(
+        new ApiResponse(
+          { reason: `req.customer is ${req.customer}` },
+          "Unauthorised Access."
+        )
+      );
+  }
+
+  let orders = await getOrderHistoryByCustomerId(customerId);
+
+  orders = await Promise.all(
+    orders.map(async (order) => {
+      order.items = await getOrderListItemsByListId(order.list_id);
+      return order;
+    })
+  );
+
+  if (orders.length === 0) {
+    res
+      .status(404)
+      .json(
+        new ApiResponse(
+          { reason: `No orders found for customer` },
+          "No orders found."
+        )
+      );
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse({ orders }, "Order history obtained successfully."));
+});
+
 export {
   getCustomerAccount,
   loginCustomer,
@@ -728,4 +769,5 @@ export {
   addCustomerAddress,
   deleteCustomerAddress,
   setCustomerDefaultAddress,
+  getCustomerOrderHistory,
 };

@@ -176,6 +176,32 @@ const updateCustomerDefaultAddressByAddressId = async (addressId) => {
   return response;
 };
 
+const getOrderHistoryByCustomerId = async (customerId) => {
+  const orders = await sql`
+    SELECT
+      orders.*,
+      customer_address.display_address,
+      delivery_partner.name as delivery_partner_name,
+      restaurant.name as restaurant_name
+    FROM orders 
+    JOIN customer_address ON orders.address_id = customer_address.address_id
+    JOIN delivery_partner ON orders.partner_id = delivery_partner.id
+    JOIN restaurant ON orders.restaurant_id = restaurant.restaurant_id
+    WHERE orders.customer_id = ${customerId};
+    `;
+  return orders;
+};
+
+const getOrderListItemsByListId = async (listId) => {
+  const items = await sql`
+    SELECT orders_list.quantity, food_item.food_image_url
+    FROM orders_list 
+    JOIN food_item ON orders_list.item_id = food_item.item_id
+    WHERE list_id = ${listId};
+    `;
+  return items;
+};
+
 export {
   getCustomerByPhoneNo,
   getCustomerById,
@@ -192,4 +218,6 @@ export {
   createCustomerAddress,
   deleteCustomerAddressByAddressId,
   updateCustomerDefaultAddressByAddressId,
+  getOrderHistoryByCustomerId,
+  getOrderListItemsByListId,
 };
