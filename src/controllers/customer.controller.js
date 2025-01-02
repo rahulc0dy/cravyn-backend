@@ -846,7 +846,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           { reason: "Order cannot be cancelled at this stage" },
-          "The order is already packed, delivered or cancelled and cannot be refunded."
+          "The order is already prepared and cannot be refunded."
         )
       );
   }

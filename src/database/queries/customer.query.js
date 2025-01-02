@@ -182,7 +182,11 @@ const getOrderHistoryByCustomerId = async (customerId) => {
       orders.*,
       customer_address.display_address,
       delivery_partner.name as delivery_partner_name,
-      restaurant.name as restaurant_name
+      restaurant.name as restaurant_name,
+      CASE 
+        WHEN orders.order_status = 'Preparing' THEN true
+        ELSE false
+      END as can_cancel
     FROM orders 
     JOIN customer_address ON orders.address_id = customer_address.address_id
     JOIN delivery_partner ON orders.partner_id = delivery_partner.id
@@ -207,7 +211,7 @@ const cancelOrderById = async (orderId, customerId) => {
     UPDATE orders
     SET order_status = 'Cancelled'
     WHERE order_id = ${orderId} AND customer_id = ${customerId} 
-      AND order_status NOT IN ('Delivered', 'Packed', 'Cancelled')
+      AND order_status IN ('Preparing')
     RETURNING *;
   `;
 
