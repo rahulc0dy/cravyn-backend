@@ -800,8 +800,10 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
       );
   }
 
+  let orders;
+
   try {
-    let orders = await getOrderHistoryByCustomerId(customerId);
+    orders = await getOrderHistoryByCustomerId(customerId);
 
     orders = await Promise.all(
       orders.map(async (order) => {
@@ -864,9 +866,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(
-      new ApiResponse(...cancelledOrder, "Order cancelled successfully.")
-    );
+    .json(new ApiResponse(...cancelledOrder, "Order cancelled successfully."));
 });
 
 export {
