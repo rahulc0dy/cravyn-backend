@@ -21,6 +21,7 @@ import {
   getCustomerAddressByAddressId,
   getOrderHistoryByCustomerId,
   getOrderListItemsByListId,
+  cancelOrderById,
 } from "../database/queries/customer.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
@@ -824,6 +825,39 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
     .json(new ApiResponse({ orders }, "Order history obtained successfully."));
 });
 
+const cancelOrder = asyncHandler(async (req, res) => {
+  const customerId = req.customer.id;
+  const { orderId } = req.body;
+
+  if (
+    !checkRequiredFields(
+      { customerId, orderId },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
+
+  let cancelledOrder = await cancelOrderById(orderId, customerId);
+
+  if (!cancelledOrder || cancelledOrder.length === 0) {
+    res
+      .status(400)
+      .json(
+        new ApiResponse(
+          { reason: "Order cannot be cancelled at this stage" },
+          "The order is already packed, delivered or cancelled and cannot be refunded."
+        )
+      );
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(...cancelledOrder, "Order history obtained successfully.")
+    );
+});
+
 export {
   getCustomerAccount,
   loginCustomer,
@@ -839,4 +873,5 @@ export {
   setCustomerDefaultAddress,
   placeOrder,
   getCustomerOrderHistory,
+  cancelOrder,
 };

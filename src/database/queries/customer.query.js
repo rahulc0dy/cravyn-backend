@@ -202,6 +202,18 @@ const getOrderListItemsByListId = async (listId) => {
   return items;
 };
 
+const cancelOrderById = async (orderId, customerId) => {
+  const cancelledOrder = await sql`
+    UPDATE orders
+    SET order_status = 'Cancelled'
+    WHERE order_id = ${orderId} AND customer_id = ${customerId} 
+      AND order_status NOT IN ('Delivered', 'Packed', 'Cancelled')
+    RETURNING *;
+  `;
+
+  return cancelledOrder;
+};
+
 export {
   getCustomerByPhoneNo,
   getCustomerById,
@@ -220,4 +232,5 @@ export {
   updateCustomerDefaultAddressByAddressId,
   getOrderHistoryByCustomerId,
   getOrderListItemsByListId,
+  cancelOrderById,
 };
