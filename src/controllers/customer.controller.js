@@ -800,14 +800,25 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
       );
   }
 
-  let orders = await getOrderHistoryByCustomerId(customerId);
+  try {
+    let orders = await getOrderHistoryByCustomerId(customerId);
 
-  orders = await Promise.all(
-    orders.map(async (order) => {
-      order.items = await getOrderListItemsByListId(order.list_id);
-      return order;
-    })
-  );
+    orders = await Promise.all(
+      orders.map(async (order) => {
+        order.items = await getOrderListItemsByListId(order.list_id);
+        return order;
+      })
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Error fetching order history" },
+          "An error occurred while retrieving your order history."
+        )
+      );
+  }
 
   if (orders.length === 0) {
     res
