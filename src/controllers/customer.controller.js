@@ -854,7 +854,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(
-      new ApiResponse(...cancelledOrder, "Order history obtained successfully.")
+      new ApiResponse(...cancelledOrder, "Order cancelled successfully.")
     );
 });
 
