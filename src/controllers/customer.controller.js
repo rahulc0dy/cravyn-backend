@@ -726,7 +726,6 @@ const setCustomerDefaultAddress = asyncHandler(async (req, res) => {
   }
 });
 
-
 const placeOrder = asyncHandler(async (req, res) => {
   const customerId = req.customer.id;
   const { specifications, addressId } = req.body;
