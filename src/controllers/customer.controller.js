@@ -19,6 +19,9 @@ import {
   deleteCustomerAddressByAddressId,
   updateCustomerDefaultAddressByAddressId,
   getCustomerAddressByAddressId,
+  getOrderHistoryByCustomerId,
+  getOrderListItemsByListId,
+  cancelOrderById,
 } from "../database/queries/customer.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
@@ -783,6 +786,89 @@ const placeOrder = asyncHandler(async (req, res) => {
   }
 });
 
+const getCustomerOrderHistory = asyncHandler(async (req, res) => {
+  const customerId = req.customer.id;
+
+  if (!customerId) {
+    return res
+      .status(401)
+      .json(
+        new ApiResponse(
+          { reason: `req.customer is ${req.customer}` },
+          "Unauthorised Access."
+        )
+      );
+  }
+
+  let orders;
+
+  try {
+    orders = await getOrderHistoryByCustomerId(customerId);
+
+    orders = await Promise.all(
+      orders.map(async (order) => {
+        order.items = await getOrderListItemsByListId(order.list_id);
+        return order;
+      })
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          { reason: error.message || "Error fetching order history" },
+          "An error occurred while retrieving your order history."
+        )
+      );
+  }
+
+  if (orders.length === 0) {
+    return res
+      .status(404)
+      .json(
+        new ApiResponse(
+          { reason: `No orders found for customer` },
+          "No orders found."
+        )
+      );
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse({ orders }, "Order history obtained successfully."));
+});
+
+const cancelOrder = asyncHandler(async (req, res) => {
+  const customerId = req.customer.id;
+  const { orderId } = req.body;
+
+  if (
+    !checkRequiredFields(
+      { customerId, orderId },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
+
+  let cancelledOrder = await cancelOrderById(orderId, customerId);
+
+  if (!cancelledOrder || cancelledOrder.length === 0) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          { reason: "Order cannot be cancelled at this stage" },
+          "The order is already prepared and cannot be refunded."
+        )
+      );
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(...cancelledOrder, "Order cancelled successfully."));
+});
+
 export {
   getCustomerAccount,
   loginCustomer,
@@ -797,4 +883,6 @@ export {
   deleteCustomerAddress,
   setCustomerDefaultAddress,
   placeOrder,
+  getCustomerOrderHistory,
+  cancelOrder,
 };
