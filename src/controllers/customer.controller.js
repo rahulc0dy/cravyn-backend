@@ -840,7 +840,7 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
 
 const cancelOrder = asyncHandler(async (req, res) => {
   const customerId = req.customer.id;
-  const { orderId } = req.body;
+  const { orderId } = req.query;
 
   if (
     !checkRequiredFields(
