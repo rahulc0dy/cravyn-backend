@@ -178,21 +178,30 @@ const updateCustomerDefaultAddressByAddressId = async (addressId) => {
 
 const getOrderHistoryByCustomerId = async (customerId) => {
   const orders = await sql`
-    SELECT
-      orders.*,
-      customer_address.display_address,
-      delivery_partner.name as delivery_partner_name,
-      restaurant.name as restaurant_name,
-      CASE 
-        WHEN orders.order_status = 'Preparing' THEN true
-        ELSE false
-      END as can_cancel
-    FROM orders 
-    JOIN customer_address ON orders.address_id = customer_address.address_id
-    JOIN delivery_partner ON orders.partner_id = delivery_partner.id
-    JOIN restaurant ON orders.restaurant_id = restaurant.restaurant_id
-    WHERE orders.customer_id = ${customerId};
-    `;
+      SELECT
+          orders.*,
+          customer_address.display_address,
+          delivery_partner.name AS delivery_partner_name,
+          restaurant.name AS restaurant_name,
+          CASE
+              WHEN orders.order_status = 'Preparing' THEN true
+              ELSE false
+              END AS can_cancel
+      FROM orders
+               JOIN customer_address ON orders.address_id = customer_address.address_id
+               JOIN delivery_partner ON orders.partner_id = delivery_partner.id
+               JOIN restaurant ON orders.restaurant_id = restaurant.restaurant_id
+      WHERE orders.customer_id = ${customerId}
+      ORDER BY
+          CASE
+              WHEN orders.order_status = 'Preparing' THEN 1
+              WHEN orders.order_status = 'Packed' THEN 2
+              WHEN orders.order_status = 'Delivered' THEN 3
+              WHEN orders.order_status = 'Cancelled' THEN 4
+              ELSE 5
+              END,
+          orders.order_timestamp DESC;
+  `;
   return orders;
 };
 
