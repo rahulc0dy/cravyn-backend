@@ -191,7 +191,7 @@ const getOrderHistoryByCustomerId = async (customerId) => {
                JOIN customer_address ON orders.address_id = customer_address.address_id
                JOIN delivery_partner ON orders.partner_id = delivery_partner.id
                JOIN restaurant ON orders.restaurant_id = restaurant.restaurant_id
-      WHERE orders.customer_id = 'f056aa9c-dcaf-479c-a6a2-31ac3899b47e'
+      WHERE orders.customer_id = ${customerId}
       ORDER BY
           CASE
               WHEN orders.order_status = 'Preparing' THEN 1
