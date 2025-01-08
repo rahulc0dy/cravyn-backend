@@ -259,6 +259,31 @@ const getCustomerMetrics = async (month = 12, year = 2024) => {
   return customerMetrics;
 };
 
+const getRestaurantWiseCategorySales = async () => {
+  const data = await sql`
+      SELECT
+          r.restaurant_id,
+          r.name AS restaurant_name,
+          fi.type AS food_type,
+          SUM(ol.quantity * ol.price) AS total_sales
+      FROM
+          restaurant r
+              JOIN
+          orders o ON r.restaurant_id = o.restaurant_id
+              JOIN
+          orders_list ol ON o.list_id = ol.list_id
+              JOIN
+          food_item fi ON ol.item_id = fi.item_id
+      WHERE
+          r.verify_status = 'verified'
+      GROUP BY
+          r.restaurant_id, r.name, fi.type
+      ORDER BY
+          r.name, fi.type;
+    `;
+  return data;
+};
+
 export {
   getBusinessTeamByPhoneNo,
   getBusinessTeamById,

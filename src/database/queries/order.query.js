@@ -102,7 +102,11 @@ const getOrderHistoryByCustomerId = async (customerId) => {
           CASE
               WHEN orders.order_status = 'Preparing' THEN true
               ELSE false
-              END AS can_cancel
+              END AS can_cancel,
+          CASE
+              WHEN orders.order_status = 'Delivered' THEN true
+              ELSE false
+                END AS can_repeat
       FROM orders
                JOIN customer_address ON orders.address_id = customer_address.address_id
                JOIN delivery_partner ON orders.partner_id = delivery_partner.id
@@ -143,6 +147,42 @@ const cancelOrderById = async (orderId, customerId) => {
   return cancelledOrder;
 };
 
+const copyOrderByOrderIdAndCustomerId = async (orderId, customerId) => {
+  const copyOrder = await sql`
+      INSERT INTO orders (
+          customer_id,
+          restaurant_id,
+          specifications,
+          checkout_price,
+          address_id,
+          order_status
+      )
+      SELECT customer_id,
+             restaurant_id,
+             specifications,
+             checkout_price,
+             address_id,
+             'Preparing'
+      FROM orders 
+      WHERE order_id = ${orderId}
+      RETURNING *;
+    `;
+
+  const listId = copyOrder[0].list_id;
+
+  const copyOrdersList = await sql`
+      INSERT INTO orders_list(list_id,item_id,quantity,price)
+      SELECT ${listId},item_id,quantity,price FROM orders_list
+      WHERE list_id = (
+      SELECT list_id 
+      FROM orders 
+      WHERE order_id=${orderId}) 
+      RETURNING*;
+    `;
+
+  return copyOrdersList;
+};
+
 export {
   getOrdersByRestaurantId,
   createOrder,
@@ -151,4 +191,5 @@ export {
   getOrderHistoryByCustomerId,
   getOrderListItemsByListId,
   cancelOrderById,
+  copyOrderByOrderIdAndCustomerId,
 };

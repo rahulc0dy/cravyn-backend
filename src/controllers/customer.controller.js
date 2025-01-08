@@ -36,6 +36,7 @@ import {
   getOrderHistoryByCustomerId,
   getOrderListItemsByListId,
   cancelOrderById,
+  copyOrderByOrderIdAndCustomerId,
 } from "../database/queries/order.query.js";
 
 const getCustomerAccount = asyncHandler(async (req, res) => {
@@ -882,22 +883,33 @@ const repeatOrder = asyncHandler(async (req, res) => {
   )
     return;
 
-  let cancelledOrder = await cancelOrderById(orderId, customerId);
+  try {
+    const copiedOrderList = await copyOrderByOrderIdAndCustomerId(
+      orderId,
+      customerId
+    );
 
-  if (!cancelledOrder || cancelledOrder.length === 0) {
+    // todo: actual order.
+
     return res
-      .status(400)
+      .status(200)
       .json(
         new ApiResponse(
-          { reason: "Order cannot be cancelled at this stage" },
-          "The order is already prepared and cannot be refunded."
+          { reason: "There are no checks be careful." },
+          "Repeat order placed successfully."
         )
       );
+  } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        {
+          reason:
+            error.message || "Error occurred while retrieving your order.",
+        },
+        "An error occurred while retrieving your order."
+      )
+    );
   }
-
-  return res
-    .status(200)
-    .json(new ApiResponse(...cancelledOrder, "Order cancelled successfully."));
 });
 
 export {
@@ -916,4 +928,5 @@ export {
   placeOrder,
   getCustomerOrderHistory,
   cancelOrder,
+  repeatOrder,
 };
