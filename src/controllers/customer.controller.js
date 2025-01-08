@@ -19,9 +19,6 @@ import {
   deleteCustomerAddressByAddressId,
   updateCustomerDefaultAddressByAddressId,
   getCustomerAddressByAddressId,
-  getOrderHistoryByCustomerId,
-  getOrderListItemsByListId,
-  cancelOrderById,
 } from "../database/queries/customer.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
@@ -36,6 +33,10 @@ import { calculateCartSummary } from "../utils/cartUtils.js";
 import {
   createOrder,
   createOrderList,
+  getOrderHistoryByCustomerId,
+  getOrderListItemsByListId,
+  cancelOrderById,
+  copyOrderByOrderIdAndCustomerId,
 } from "../database/queries/order.query.js";
 
 const getCustomerAccount = asyncHandler(async (req, res) => {
@@ -869,6 +870,48 @@ const cancelOrder = asyncHandler(async (req, res) => {
     .json(new ApiResponse(...cancelledOrder, "Order cancelled successfully."));
 });
 
+const repeatOrder = asyncHandler(async (req, res) => {
+  const customerId = req.customer.id;
+  const { orderId } = req.query;
+
+  if (
+    !checkRequiredFields(
+      { customerId, orderId },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
+
+  try {
+    const copiedOrderList = await copyOrderByOrderIdAndCustomerId(
+      orderId,
+      customerId
+    );
+
+    // todo: actual order.
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          { reason: "There are no checks be careful." },
+          "Repeat order placed successfully."
+        )
+      );
+  } catch (error) {
+    return res.status(500).json(
+      new ApiResponse(
+        {
+          reason:
+            error.message || "Error occurred while retrieving your order.",
+        },
+        "An error occurred while retrieving your order."
+      )
+    );
+  }
+});
+
 export {
   getCustomerAccount,
   loginCustomer,
@@ -885,4 +928,5 @@ export {
   placeOrder,
   getCustomerOrderHistory,
   cancelOrder,
+  repeatOrder,
 };

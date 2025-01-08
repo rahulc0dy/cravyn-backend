@@ -92,9 +92,104 @@ const updateOrderStatusByOrderId = async (orderId, restaurantId, status) => {
   return order;
 };
 
+const getOrderHistoryByCustomerId = async (customerId) => {
+  const orders = await sql`
+      SELECT
+          orders.*,
+          customer_address.display_address,
+          delivery_partner.name AS delivery_partner_name,
+          restaurant.name AS restaurant_name,
+          CASE
+              WHEN orders.order_status = 'Preparing' THEN true
+              ELSE false
+              END AS can_cancel,
+          CASE
+              WHEN orders.order_status = 'Delivered' THEN true
+              ELSE false
+                END AS can_repeat
+      FROM orders
+               JOIN customer_address ON orders.address_id = customer_address.address_id
+               JOIN delivery_partner ON orders.partner_id = delivery_partner.id
+               JOIN restaurant ON orders.restaurant_id = restaurant.restaurant_id
+      WHERE orders.customer_id = ${customerId}
+      ORDER BY
+          CASE
+              WHEN orders.order_status = 'Preparing' THEN 1
+              WHEN orders.order_status = 'Packed' THEN 2
+              WHEN orders.order_status = 'Delivered' THEN 3
+              WHEN orders.order_status = 'Cancelled' THEN 4
+              ELSE 5
+              END,
+          orders.order_timestamp DESC;
+  `;
+  return orders;
+};
+
+const getOrderListItemsByListId = async (listId) => {
+  const items = await sql`
+    SELECT orders_list.quantity, food_item.food_image_url
+    FROM orders_list 
+    JOIN food_item ON orders_list.item_id = food_item.item_id
+    WHERE list_id = ${listId};
+    `;
+  return items;
+};
+
+const cancelOrderById = async (orderId, customerId) => {
+  const cancelledOrder = await sql`
+    UPDATE orders
+    SET order_status = 'Cancelled'
+    WHERE order_id = ${orderId} AND customer_id = ${customerId} 
+      AND order_status IN ('Preparing')
+    RETURNING *;
+  `;
+
+  return cancelledOrder;
+};
+
+const copyOrderByOrderIdAndCustomerId = async (orderId, customerId) => {
+  const copyOrder = await sql`
+      INSERT INTO orders (
+          customer_id,
+          restaurant_id,
+          specifications,
+          checkout_price,
+          address_id,
+          order_status
+      )
+      SELECT customer_id,
+             restaurant_id,
+             specifications,
+             checkout_price,
+             address_id,
+             'Preparing'
+      FROM orders 
+      WHERE order_id = ${orderId}
+      RETURNING *;
+    `;
+
+  const listId = copyOrder[0].list_id;
+
+  const copyOrdersList = await sql`
+      INSERT INTO orders_list(list_id,item_id,quantity,price)
+      SELECT ${listId},item_id,quantity,price FROM orders_list
+      WHERE list_id = (
+      SELECT list_id 
+      FROM orders 
+      WHERE order_id=${orderId}) 
+      RETURNING*;
+    `;
+
+  return copyOrdersList;
+};
+
 export {
   getOrdersByRestaurantId,
   createOrder,
   createOrderList,
   updateOrderStatusByOrderId,
+  getOrderHistoryByCustomerId,
+  getOrderListItemsByListId,
+  cancelOrderById,
+  copyOrderByOrderIdAndCustomerId,
 };
