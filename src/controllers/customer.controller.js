@@ -19,9 +19,6 @@ import {
   deleteCustomerAddressByAddressId,
   updateCustomerDefaultAddressByAddressId,
   getCustomerAddressByAddressId,
-  getOrderHistoryByCustomerId,
-  getOrderListItemsByListId,
-  cancelOrderById,
 } from "../database/queries/customer.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
@@ -36,6 +33,9 @@ import { calculateCartSummary } from "../utils/cartUtils.js";
 import {
   createOrder,
   createOrderList,
+  getOrderHistoryByCustomerId,
+  getOrderListItemsByListId,
+  cancelOrderById,
 } from "../database/queries/order.query.js";
 
 const getCustomerAccount = asyncHandler(async (req, res) => {
@@ -839,6 +839,37 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
 });
 
 const cancelOrder = asyncHandler(async (req, res) => {
+  const customerId = req.customer.id;
+  const { orderId } = req.query;
+
+  if (
+    !checkRequiredFields(
+      { customerId, orderId },
+      ({ field, message, reason }) =>
+        res.status(400).json(new ApiResponse({ reason }, message))
+    )
+  )
+    return;
+
+  let cancelledOrder = await cancelOrderById(orderId, customerId);
+
+  if (!cancelledOrder || cancelledOrder.length === 0) {
+    return res
+      .status(400)
+      .json(
+        new ApiResponse(
+          { reason: "Order cannot be cancelled at this stage" },
+          "The order is already prepared and cannot be refunded."
+        )
+      );
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(...cancelledOrder, "Order cancelled successfully."));
+});
+
+const repeatOrder = asyncHandler(async (req, res) => {
   const customerId = req.customer.id;
   const { orderId } = req.query;
 
