@@ -15,7 +15,6 @@ import {
   placeOrder,
   getCustomerOrderHistory,
   cancelOrder,
-  repeatOrder,
 } from "../controllers/customer.controller.js";
 import { verifyUserJwt } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -69,6 +68,5 @@ router
 router.route("/place-order").post(verifyUserJwt, placeOrder);
 router.route("/order-history").get(verifyUserJwt, getCustomerOrderHistory);
 router.route("/cancel-order").post(verifyUserJwt, cancelOrder);
-router.route("/repeat-order").post(verifyUserJwt, repeatOrder);
 
 export default router;
