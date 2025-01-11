@@ -26,6 +26,7 @@ import {
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../constants.js";
 import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
+import ApiError from "../utils/apiError.js";
 
 const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   if (!req.businessTeam || !req.businessTeam.id) {
@@ -66,47 +67,26 @@ const getBusinessTeamAccount = asyncHandler(async (req, res) => {
 const loginBusinessTeam = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (
-    !checkRequiredFields({ email, password }, ({ field, message, reason }) =>
-      res.status(400).json(
-        new ApiResponse(
-          {
-            reason,
-            at: "businessTeam.controller.js -> loginBusinessTeam",
-          },
-          message
-        )
-      )
-    )
-  )
-    return;
+  checkRequiredFields({ email, password });
 
   let businessTeam = await getBusinessTeamByEmail(email);
 
-  if (businessTeam.length <= 0) {
-    return res.status(404).json(
-      new ApiResponse(
-        {
-          reason: "No businessTeam found with given credentials",
-          at: "businessTeam.controller.js -> loginBusinessTeam",
-        },
-        "Phone number is not registered."
-      )
+  if (businessTeam.length <= 0)
+    throw new ApiError(
+      404,
+      `BusinessTeam member not found with email ${email}`,
+      { businessTeam }
     );
-  }
+
   const correctPassword = businessTeam[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
   if (!isPasswordCorrect) {
-    return res.status(401).json(
-      new ApiResponse(
-        {
-          reason: "Incorrect Password.",
-          at: "businessTeam.controller.js -> loginBusinessTeam",
-        },
-        "Invalid credentials, please try again."
-      )
+    throw new ApiError(
+      401,
+      "Password is incorrect.",
+      "Passwords do not match from db."
     );
   }
   const accessToken = generateAccessToken(businessTeam[0]);
