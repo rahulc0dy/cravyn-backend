@@ -12,7 +12,7 @@ import foodRouter from "./routes/food.routes.js";
 import passwordResetRouter from "./routes/passwordReset.routes.js";
 import geocodeRouter from "./routes/geocode.routes.js";
 import searchRouter from "./routes/search.routes.js";
-import { errorHandler } from "./utils/asyncHandler.js";
+import { errorHandler } from "./utils/errorHandler.js";
 
 const app = express();
 
