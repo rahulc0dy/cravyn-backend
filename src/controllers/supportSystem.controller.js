@@ -1,21 +1,22 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
-  getAllCustomerQueries,
-  getAnsweredCustomerQueries,
-  getUnansweredCustomerQueries,
   createCustomerQuery,
-  setCustomerQueryAnswer,
-  setRestaurantQueryAnswer,
   createRestaurantQuery,
-  getAnsweredRestaurantQueries,
-  getUnansweredRestaurantQueries,
+  getAllCustomerQueries,
   getAllRestaurantQueries,
+  getAnsweredCustomerQueries,
+  getAnsweredRestaurantQueries,
+  getNoOfPartnerRequests,
+  getNoOfQueries,
   getQueriesByCustomerId,
   getQueriesByRestaurantId,
-  getNoOfQueries,
-  getNoOfPartnerRequests,
+  getUnansweredCustomerQueries,
+  getUnansweredRestaurantQueries,
+  setCustomerQueryAnswer,
+  setRestaurantQueryAnswer,
 } from "../database/queries/supportSystem.query.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import { STATUS } from "../constants.js";
 
 const getDashboardData = asyncHandler(async (req, res) => {
   try {
@@ -86,7 +87,7 @@ const getCustomerQueryByCustomerId = asyncHandler(async (req, res) => {
 
   if (!customerId) {
     return res
-      .status(400)
+      .status(STATUS.CLIENT_ERROR.BAD_REQUEST)
       .json(
         new ApiResponse(
           { reason: "customerId is not provided." },

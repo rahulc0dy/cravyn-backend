@@ -24,14 +24,14 @@ import {
   updateBusinessTeamNamePhoneNo,
 } from "../database/queries/businessTeam.query.js";
 import jwt from "jsonwebtoken";
-import { cookieOptions } from "../constants.js";
+import { cookieOptions, STATUS } from "../constants.js";
 import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 import ApiError from "../utils/apiError.js";
 
 const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   if (!req.businessTeam || !req.businessTeam.id)
     throw new ApiError(
-      400,
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
       "Business Team not found.",
       "req.businessTeam not found."
     );
@@ -42,13 +42,13 @@ const getBusinessTeamAccount = asyncHandler(async (req, res) => {
 
   if (!businessTeam)
     throw new ApiError(
-      404,
+      STATUS.CLIENT_ERROR.NOT_FOUND,
       `Business Team not found.`,
       "businessTeam not found."
     );
 
   return res
-    .status(200)
+    .status(STATUS.SUCCESS.OK)
     .json(
       new ApiResponse({ businessTeam }, "BusinessTeam obtained successfully.")
     );
@@ -63,7 +63,7 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
 
   if (businessTeam.length <= 0)
     throw new ApiError(
-      404,
+      STATUS.CLIENT_ERROR.NOT_FOUND,
       `BusinessTeam member not found with email ${email}`,
       "no businessTeam member found with invalid email."
     );
@@ -74,7 +74,7 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
 
   if (!isPasswordCorrect) {
     throw new ApiError(
-      401,
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
       "Password is incorrect.",
       "Passwords do not match from db."
     );
@@ -90,7 +90,7 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
   delete businessTeam[0].password;
 
   return res
-    .status(200)
+    .status(STATUS.SUCCESS.OK)
     .cookie("accessToken", accessToken, cookieOptions)
     .cookie("refreshToken", refreshToken, cookieOptions)
     .json(
@@ -112,7 +112,7 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
 
   if (password !== confirmPassword) {
     throw new ApiError(
-      400,
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
       "Passwords do not match.",
       "Passwords do not match."
     );
@@ -122,7 +122,7 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
 
   if (existedBusinessTeam.length > 0) {
     throw new ApiError(
-      400,
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
       "This email is already registered.",
       "Duplicate email."
     );
@@ -137,7 +137,7 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
 
   if (!businessTeam) {
     throw new ApiError(
-      500,
+      STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR,
       "Failed to register business team.",
       "businessTeam not created."
     );
@@ -148,7 +148,7 @@ const registerBusinessTeam = asyncHandler(async (req, res) => {
   delete businessTeam.password;
 
   return res
-    .status(201)
+    .status(STATUS.SUCCESS.CREATED)
     .json(
       new ApiResponse(businessTeam, "BusinessTeam registered successfully.")
     );
@@ -158,11 +158,15 @@ const logoutBusinessTeam = asyncHandler(async (req, res) => {
   try {
     await setRefreshToken("NULL", req.businessTeam.id);
   } catch (error) {
-    throw new ApiError(500, "Unable to get login session.", error.message);
+    throw new ApiError(
+      STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR,
+      "Unable to get login session.",
+      error.message
+    );
   }
 
   return res
-    .status(200)
+    .status(STATUS.SUCCESS.OK)
     .clearCookie("accessToken", cookieOptions)
     .clearCookie("refreshToken", cookieOptions)
     .json(
@@ -180,7 +184,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     req.cookies?.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
-    throw new ApiError(401, "Unauthorized request.", "invalid refresh token.");
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
+      "Unauthorized request.",
+      "invalid refresh token."
+    );
   }
 
   const decodedToken = jwt.verify(
@@ -193,12 +201,16 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   businessTeam = businessTeam[0];
 
   if (!businessTeam) {
-    throw new ApiError(401, "Invalid refresh token.", "invalid refresh token.");
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
+      "Invalid refresh token.",
+      "invalid refresh token."
+    );
   }
 
   if (incomingRefreshToken !== businessTeam?.refresh_token) {
     throw new ApiError(
-      401,
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
       "Authentication expired.",
       "refresh tokens do not match."
     );
@@ -208,7 +220,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   const newRefreshToken = generateRefreshToken(businessTeam);
 
   return res
-    .status(200)
+    .status(STATUS.SUCCESS.OK)
     .cookie("accessToken", accessToken, cookieOptions)
     .cookie("refreshToken", newRefreshToken, cookieOptions)
     .json(
@@ -238,7 +250,7 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
 
   if (businessTeam.length === 0) {
     throw new ApiError(
-      404,
+      STATUS.CLIENT_ERROR.NOT_FOUND,
       "Business Team not found.",
       "Invalid refresh token."
     );
@@ -250,7 +262,7 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
 
   if (!isPasswordCorrect) {
     throw new ApiError(
-      401,
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
       "Invalid credentials, please try again.",
       "passwords do not match."
     );
@@ -259,11 +271,15 @@ const deleteBusinessTeamAccount = asyncHandler(async (req, res) => {
   try {
     await deleteBusinessTeam(businessTeam[0].id);
   } catch (error) {
-    throw new ApiError(500, "Failed to delete business team.", error.message);
+    throw new ApiError(
+      STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR,
+      "Failed to delete business team.",
+      error.message
+    );
   }
 
   return res
-    .status(200)
+    .status(STATUS.SUCCESS.OK)
     .clearCookie("accessToken", cookieOptions)
     .clearCookie("refreshToken", cookieOptions)
     .json(
@@ -294,13 +310,21 @@ const updateBusinessTeamAccount = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
-      throw new ApiError(409, "Phone number already in use", error.message);
+      throw new ApiError(
+        STATUS.CLIENT_ERROR.CONFLICT,
+        "Phone number already in use",
+        error.message
+      );
     }
-    +throw new ApiError(500, "Failed to update business team", error.message);
+    throw new ApiError(
+      STATUS.SERVER_ERROR.SERVICE_UNAVAILABLE,
+      "Failed to update business team",
+      error.message
+    );
   }
 
   res
-    .status(200)
+    .status(STATUS.SUCCESS.OK)
     .json(
       new ApiResponse(
         { businessTeam: businessTeam[0] },
@@ -338,7 +362,7 @@ const getDashboardData = asyncHandler(async (req, res) => {
           })
         : [];
 
-    return res.status(200).json(
+    return res.status(STATUS.SUCCESS.OK).json(
       new ApiResponse({
         totalSalesData,
         rangedSalesData,
@@ -350,7 +374,11 @@ const getDashboardData = asyncHandler(async (req, res) => {
       })
     );
   } catch (error) {
-    throw new ApiError(500, "Failed to get dashboard.", error.message);
+    throw new ApiError(
+      STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR,
+      "Failed to get dashboard.",
+      error.message
+    );
   }
 });
 
@@ -366,12 +394,16 @@ const getRestaurantSales = asyncHandler(async (req, res) => {
       : await getRestaurantMonthlySalesData({ restaurantId, year });
 
     return res
-      .status(200)
+      .status(STATUS.SUCCESS.OK)
       .json(
         new ApiResponse({ salesData: salesData }, "Obtained successfully.")
       );
   } catch (error) {
-    throw new ApiError(500, "Failed to get restaurant sales.", error.message);
+    throw new ApiError(
+      STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR,
+      "Failed to get restaurant sales.",
+      error.message
+    );
   }
 });
 
