@@ -49,7 +49,7 @@ const addItemToCart = asyncHandler(async (req, res) => {
     restaurantId = await getRestaurantIdByItemId(itemId);
   } catch (error) {
     throw new ApiError(
-      STATUS.CLIENT_ERROR.BAD_REQUEST,
+      STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR,
       "An error occurred while fetching restaurant details for the food item.",
       error.message
     );

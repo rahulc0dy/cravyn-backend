@@ -19,8 +19,8 @@ export const verifyUserJwt = asyncHandler(async (req, res, next) => {
   if (!token || !userType) {
     throw new ApiError(
       STATUS.CLIENT_ERROR.UNAUTHORIZED,
-      "Unauthorized request.",
-      `Token is ${token}, userType is ${req.query}`
+      !token ? "Authentication token is missing" : "User type is missing",
+      "Authorization header or cookie is required"
     );
   }
 
@@ -53,9 +53,9 @@ export const verifyUserJwt = asyncHandler(async (req, res, next) => {
 
     if (user.length === 0) {
       throw new ApiError(
-        STATUS.CLIENT_ERROR.NOT_FOUND,
-        "User not found.",
-        "Invalid Access Token"
+        STATUS.CLIENT_ERROR.UNAUTHORIZED,
+        "Invalid or expired token",
+        "Authentication failed"
       );
     }
 
@@ -84,8 +84,10 @@ export const verifyUserJwt = asyncHandler(async (req, res, next) => {
   } catch (error) {
     throw new ApiError(
       STATUS.CLIENT_ERROR.UNAUTHORIZED,
-      "Unauthorized request.",
-      error.message
+      error.name === "TokenExpiredError"
+        ? "Token has expired"
+        : "Invalid token format",
+      "Please authenticate with valid credentials"
     );
   }
 });
@@ -98,8 +100,8 @@ export const verifyRestaurantJwt = asyncHandler(async (req, res, next) => {
   if (!token) {
     throw new ApiError(
       STATUS.CLIENT_ERROR.UNAUTHORIZED,
-      "Unauthorized request.",
-      `Token is ${token}`
+      "Authentication token is missing",
+      "Authorization header or cookie is required"
     );
   }
 
