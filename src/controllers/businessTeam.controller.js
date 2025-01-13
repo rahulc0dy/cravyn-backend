@@ -65,7 +65,7 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
     throw new ApiError(
       404,
       `BusinessTeam member not found with email ${email}`,
-      { businessTeam }
+      "no businessTeam member found with invalid email."
     );
 
   const correctPassword = businessTeam[0].password;
@@ -108,7 +108,7 @@ const loginBusinessTeam = asyncHandler(async (req, res) => {
 const registerBusinessTeam = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, password, confirmPassword } = req.body;
 
-  !checkRequiredFields({ name, email, phoneNumber, password, confirmPassword });
+  checkRequiredFields({ name, email, phoneNumber, password, confirmPassword });
 
   if (password !== confirmPassword) {
     throw new ApiError(
@@ -293,7 +293,10 @@ const updateBusinessTeamAccount = asyncHandler(async (req, res) => {
       phoneNumber,
     });
   } catch (error) {
-    throw new ApiError(500, "Failed to update business team.", error.message);
+    if (error.code === "ER_DUP_ENTRY") {
+      throw new ApiError(409, "Phone number already in use", error.message);
+    }
+    +throw new ApiError(500, "Failed to update business team", error.message);
   }
 
   res
