@@ -6,27 +6,27 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import {
-  getCustomerByEmail,
-  setRefreshToken,
+  cancelOrderById,
   createCustomer,
-  getCustomerById,
-  deleteCustomer,
-  updateCustomerNamePhoneNo,
-  getNonSensitiveCustomerInfoById,
-  updateCustomerImageUrl,
-  getCustomerAddressesByCustomerId,
   createCustomerAddress,
+  deleteCustomer,
   deleteCustomerAddressByAddressId,
-  updateCustomerDefaultAddressByAddressId,
   getCustomerAddressByAddressId,
+  getCustomerAddressesByCustomerId,
+  getCustomerByEmail,
+  getCustomerById,
+  getNonSensitiveCustomerInfoById,
   getOrderHistoryByCustomerId,
   getOrderListItemsByListId,
-  cancelOrderById,
+  setRefreshToken,
+  updateCustomerDefaultAddressByAddressId,
+  updateCustomerImageUrl,
+  updateCustomerNamePhoneNo,
 } from "../database/queries/customer.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
-import { cookieOptions } from "../constants.js";
+import { cookieOptions, STATUS } from "../constants.js";
 import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 import {
   deleteCartByCustomerId,
@@ -37,72 +37,56 @@ import {
   createOrder,
   createOrderList,
 } from "../database/queries/order.query.js";
+import ApiError from "../utils/apiError.js";
 
 const getCustomerAccount = asyncHandler(async (req, res) => {
   if (!req.customer || !req.customer.id) {
-    res
-      .status(401)
-      .json(
-        new ApiResponse(
-          { reason: `req.customer is ${req.customer}` },
-          "Unauthorised Access."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.UNAUTHORIZED,
+      "Unauthorized access.",
+      "no customer attached to request object"
+    );
   }
 
   const customer = (await getNonSensitiveCustomerInfoById(req.customer.id))[0];
 
   if (!customer) {
-    res
-      .status(404)
-      .json(
-        new ApiResponse(
-          { reason: `Customer not found by id` },
-          "User not found."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.FORBIDDEN,
+      "Unidentified user.",
+      "no customer found with that id"
+    );
   }
 
   res
-    .status(200)
+    .status(STATUS.SUCCESS.OK)
     .json(new ApiResponse({ customer }, "Customer obtained successfully."));
 });
 
 const loginCustomer = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (
-    !checkRequiredFields({ email, password }, ({ field, message, reason }) =>
-      res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({ email, password });
 
   let customer = await getCustomerByEmail(email);
 
   if (customer.length <= 0) {
-    return res
-      .status(404)
-      .json(
-        new ApiResponse(
-          { reason: "No customer found with given credentials" },
-          "Email is not registered."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.FORBIDDEN,
+      "Email is not registered.",
+      "no customer found with that email"
+    );
   }
   const correctPassword = customer[0].password;
 
   const isPasswordCorrect = await bcrypt.compare(password, correctPassword);
 
   if (!isPasswordCorrect) {
-    return res
-      .status(401)
-      .json(
-        new ApiResponse(
-          { reason: "Incorrect Password." },
-          "Invalid credentials, please try again."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.UNAUTHORIZED,
+      "Invalid credentials, please try again.",
+      "Password incorrect."
+    );
   }
   const accessToken = generateAccessToken(customer[0]);
   const refreshToken = generateRefreshToken(customer[0]);
@@ -115,7 +99,7 @@ const loginCustomer = asyncHandler(async (req, res) => {
   delete customer[0].password;
 
   return res
-    .status(200)
+    .status(STATUS.SUCCESS.OK)
     .cookie("accessToken", accessToken, cookieOptions)
     .cookie("refreshToken", refreshToken, cookieOptions)
     .json(
@@ -135,37 +119,31 @@ const registerCustomer = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, dateOfBirth, password, confirmPassword } =
     req.body;
 
-  if (
-    !checkRequiredFields(
-      { name, email, phoneNumber, dateOfBirth, password, confirmPassword },
-      ({ field, message, reason }) =>
-        res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({
+    name,
+    phoneNumber,
+    email,
+    dateOfBirth,
+    password,
+    confirmPassword,
+  });
 
   if (password !== confirmPassword) {
-    return res
-      .status(400)
-      .json(
-        new ApiResponse(
-          { reason: "Passwords do not match" },
-          "Password confirmation does not match."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
+      "Password confirmation do not match.",
+      "Passwords do not match."
+    );
   }
 
   const existedCustomer = await getCustomerByEmail(email);
 
   if (existedCustomer.length > 0) {
-    return res
-      .status(409)
-      .json(
-        new ApiResponse(
-          { reason: "Customer already registered" },
-          "User already exists."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.CONFLICT,
+      "User already exists.",
+      "Email already exists."
+    );
   }
 
   let customer;
@@ -179,26 +157,19 @@ const registerCustomer = asyncHandler(async (req, res) => {
       password
     );
   } catch (error) {
-    return res.status(500).json(
-      new ApiResponse(
-        {
-          error,
-          reason: error.message || "Error at customer controller",
-        },
-        "Something went wrong while registering the user."
-      )
+    throw new ApiError(
+      STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR,
+      "Something went wrong while registering the user.",
+      error.message || "Error at customer controller."
     );
   }
 
   if (!customer) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          { reason: "Customer is not defined" },
-          "Failed to register user."
-        )
-      );
+    throw new ApiError(
+      STATUS.SERVER_ERROR.SERVICE_UNAVAILABLE,
+      "Failed to register customer.",
+      "customer could not be created at db."
+    );
   }
 
   delete customer.refresh_token;
@@ -206,7 +177,7 @@ const registerCustomer = asyncHandler(async (req, res) => {
   delete customer.password;
 
   return res
-    .status(201)
+    .status(STATUS.SUCCESS.CREATED)
     .json(new ApiResponse(customer, "Customer registered successfully."));
 });
 
@@ -214,18 +185,15 @@ const logoutCustomer = asyncHandler(async (req, res) => {
   try {
     await setRefreshToken("NULL", req.customer.id);
   } catch (error) {
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          { reason: error.message || "Unable to set refresh token" },
-          "Unable to fetch the logged in user."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.INTERNAL_SERVER_ERROR,
+      "Unable to get logged in state.",
+      error.message || "Unable to log out."
+    );
   }
 
   return res
-    .status(200)
+    .status(STATUS.SUCCESS.OK)
     .clearCookie("accessToken", cookieOptions)
     .clearCookie("refreshToken", cookieOptions)
     .json(
@@ -319,11 +287,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const deleteCustomerAccount = asyncHandler(async (req, res) => {
   const { refreshToken, password } = req.body;
 
-  checkRequiredFields(
-    { refreshToken, password },
-    ({ field, message, reason }) =>
-      res.status(400).json(new ApiResponse({ reason }, message))
-  );
+  checkRequiredFields({ refreshToken, password });
 
   let customer;
 
@@ -552,14 +516,7 @@ const addCustomerAddress = asyncHandler(async (req, res) => {
   const { customer } = req;
   const { latitude, longitude, displayAddress, isDefault } = req.body;
 
-  if (
-    !checkRequiredFields(
-      { latitude, longitude, displayAddress },
-      ({ field, message, reason }) =>
-        res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({ latitude, longitude, displayAddress });
 
   const customerId = customer.id;
   if (!customer || !customerId) {
@@ -841,15 +798,7 @@ const getCustomerOrderHistory = asyncHandler(async (req, res) => {
 const cancelOrder = asyncHandler(async (req, res) => {
   const customerId = req.customer.id;
   const { orderId } = req.query;
-
-  if (
-    !checkRequiredFields(
-      { customerId, orderId },
-      ({ field, message, reason }) =>
-        res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({ customerId, orderId });
 
   let cancelledOrder = await cancelOrderById(orderId, customerId);
 

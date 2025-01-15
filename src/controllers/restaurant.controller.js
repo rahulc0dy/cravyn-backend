@@ -1,18 +1,18 @@
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
-  getRestaurantById,
   createRestaurant,
-  updateRestaurantNameOwnerAvailabilityById,
   deleteRestaurantById,
-  setRestaurantVerificationStatusById,
+  fuzzySearchRestaurant,
   getNonSensitiveRestaurantInfoById,
   getNonSensitiveRestaurantInfoByRegNo,
-  setRefreshToken,
+  getRestaurantById,
   getRestaurants,
-  fuzzySearchRestaurant,
   getRestaurantsByDistanceOrRating,
   getRestaurantsByVerifyStatus,
+  setRefreshToken,
+  setRestaurantVerificationStatusById,
+  updateRestaurantNameOwnerAvailabilityById,
 } from "../database/queries/restaurant.query.js";
 import bcrypt from "bcrypt";
 import {
@@ -29,7 +29,6 @@ import {
   fuzzySearchRestaurantFoodItem,
   getFoodsByRestaurantId,
 } from "../database/queries/foodItem.query.js";
-import { getCoordinates } from "./geocode.controller.js";
 import { getGeocodeUrl } from "../utils/geocodeUrl.js";
 import {
   getOrdersByRestaurantId,
@@ -198,12 +197,7 @@ const addRestaurant = asyncHandler(async (req, res) => {
         );
     }
 
-  if (
-    !checkRequiredFields(requiredFields, ({ field, message, reason }) =>
-      res.status(400).json(new ApiResponse({ reason: reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields(requiredFields);
 
   if (password !== confirmPassword) {
     return res.status(400).json(
@@ -312,14 +306,7 @@ const addRestaurant = asyncHandler(async (req, res) => {
 const loginRestaurant = asyncHandler(async (req, res) => {
   const { registrationNumber, password } = req.body;
 
-  if (
-    !checkRequiredFields(
-      { registrationNumber, password },
-      ({ field, message, reason }) =>
-        res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({ registrationNumber, password });
 
   let restaurant =
     await getNonSensitiveRestaurantInfoByRegNo(registrationNumber);
@@ -722,12 +709,7 @@ const getRestaurantCatalog = asyncHandler(async (req, res) => {
 const searchRestaurantByName = asyncHandler(async (req, res) => {
   const { name } = req.query;
 
-  if (
-    !checkRequiredFields({ name }, ({ field, message, reason }) =>
-      res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({ name });
 
   try {
     const restaurantList = await fuzzySearchRestaurant(name);
@@ -1072,16 +1054,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
   const restaurantId = restaurant?.restaurant_id;
 
-  if (
-    !checkRequiredFields(
-      { restaurantId, status, orderId },
-      ({ field, message, reason }) =>
-        res
-          .status(400)
-          .json(new ApiResponse({ reason }, "Error updating order status."))
-    )
-  )
-    return;
+  checkRequiredFields({ restaurantId, status, orderId });
 
   try {
     const order = updateOrderStatusByOrderId(orderId, restaurantId, status);

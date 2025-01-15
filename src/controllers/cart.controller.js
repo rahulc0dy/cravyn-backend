@@ -9,6 +9,9 @@ import { getRestaurantIdByItemId } from "../database/queries/foodItem.query.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { calculateCartSummary } from "../utils/cartUtils.js";
+import { STATUS } from "../constants.js";
+import ApiError from "../utils/apiError.js";
+import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
 
 const getCart = asyncHandler(async (req, res) => {
   const customerId = req.customer.id;
@@ -17,7 +20,7 @@ const getCart = asyncHandler(async (req, res) => {
     const cart = await getCartByCustomerId(customerId);
     const cartSummary = calculateCartSummary(cart);
 
-    return res.status(200).json(
+    return res.status(STATUS.SUCCESS.OK).json(
       new ApiResponse(
         {
           ...cartSummary,
@@ -26,14 +29,10 @@ const getCart = asyncHandler(async (req, res) => {
       )
     );
   } catch (error) {
-    res.status(400).json(
-      new ApiResponse(
-        {
-          reason: error.message || "Food item ID is incorrect",
-          at: "cart.controller.js -> addItemToCart",
-        },
-        "An error occurred while fetching restaurant details for the food item."
-      )
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
+      "An error occurred while fetching restaurant details for the food item.",
+      error.message
     );
   }
 });
@@ -42,49 +41,39 @@ const addItemToCart = asyncHandler(async (req, res) => {
   const { itemId } = req.body;
   const customerId = req.customer.id;
 
-  if (!itemId) {
-    return res.status(400).json(
-      new ApiResponse(
-        {
-          reason: "itemId could not be retrieved from req.body",
-          at: "cart.controller.js -> addItemToCart",
-        },
-        "Item ID is required."
-      )
-    );
-  }
+  checkRequiredFields({ itemId });
 
   let restaurantId;
 
   try {
     restaurantId = await getRestaurantIdByItemId(itemId);
   } catch (error) {
-    res.status(400).json(
-      new ApiResponse(
-        {
-          reason: error.message || "Food item ID is incorrect",
-          at: "cart.controller.js -> addItemToCart",
-        },
-        "An error occurred while fetching restaurant details for the food item."
-      )
+    throw new ApiError(
+      STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR,
+      "An error occurred while fetching restaurant details for the food item.",
+      error.message
     );
   }
 
   try {
     const cartItem = await addItemtoCartByIds(customerId, itemId, restaurantId);
 
+    if (!cartItem) {
+      throw new ApiError(
+        STATUS.CLIENT_ERROR.BAD_REQUEST,
+        "An error occurred while adding item to cart.",
+        "failed function addItemToCartByIds"
+      );
+    }
+
     return res
-      .status(200)
+      .status(STATUS.SUCCESS.OK)
       .json(new ApiResponse(cartItem, "Added to cart successfully."));
   } catch (error) {
-    res.status(400).json(
-      new ApiResponse(
-        {
-          reason: error.message,
-          at: "cart.controller.js -> addItemToCart",
-        },
-        "An error occurred while inserting the item in the cart."
-      )
+    throw new ApiError(
+      STATUS.SERVER_ERROR.SERVICE_UNAVAILABLE,
+      "Error occurred at our end.",
+      error.message
     );
   }
 });
@@ -93,31 +82,17 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
   const { itemId } = req.query;
   const customerId = req.customer.id;
 
-  if (!itemId) {
-    return res.status(400).json(
-      new ApiResponse(
-        {
-          reason: "itemId could not be retrieved from req.body",
-          at: "cart.controller.js -> removeItemFromCart",
-        },
-        "Item ID is required."
-      )
-    );
-  }
+  checkRequiredFields({ itemId });
 
   let restaurantId;
 
   try {
     restaurantId = await getRestaurantIdByItemId(itemId);
   } catch (error) {
-    return res.status(400).json(
-      new ApiResponse(
-        {
-          reason: error.message || "Food item ID is incorrect",
-          at: "cart.controller.js -> removeItemFromCart",
-        },
-        "An error occurred while fetching restaurant details for the food item."
-      )
+    throw new ApiError(
+      STATUS.SERVER_ERROR.GATEWAY_TIMEOUT,
+      "An error occurred while fetching restaurant details for the food item.",
+      error.message
     );
   }
 
@@ -131,7 +106,7 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
     const cart = await getCartByCustomerId(customerId);
     const cartSummary = calculateCartSummary(cart);
 
-    return res.status(200).json(
+    return res.status(STATUS.SUCCESS.OK).json(
       new ApiResponse(
         {
           ...cartSummary,
@@ -140,14 +115,10 @@ const removeItemFromCart = asyncHandler(async (req, res) => {
       )
     );
   } catch (error) {
-    return res.status(400).json(
-      new ApiResponse(
-        {
-          reason: error.message,
-          at: "cart.controller.js -> removeItemFromCart",
-        },
-        "An error occurred while removing the item from the cart."
-      )
+    throw new ApiError(
+      STATUS.SERVER_ERROR.SERVICE_UNAVAILABLE,
+      "An error occurred while adding item to cart.",
+      error.message
     );
   }
 });
@@ -156,30 +127,16 @@ const incrementItemCount = asyncHandler(async (req, res) => {
   const { itemId } = req.body;
   const customerId = req.customer.id;
 
-  if (!itemId) {
-    return res.status(400).json(
-      new ApiResponse(
-        {
-          reason: "itemId could not be retrieved from req.body",
-          at: "cart.controller.js -> incrementItemCount",
-        },
-        "Item ID is required."
-      )
-    );
-  }
+  checkRequiredFields({ itemId });
 
   let restaurantId;
   try {
     restaurantId = await getRestaurantIdByItemId(itemId);
   } catch (error) {
-    return res.status(400).json(
-      new ApiResponse(
-        {
-          reason: error.message || "Food item ID is incorrect",
-          at: "cart.controller.js -> incrementItemCount",
-        },
-        "An error occurred while fetching restaurant details for the food item."
-      )
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
+      "An error occurred while fetching restaurant details for the food item.",
+      error.message
     );
   }
 
@@ -187,21 +144,17 @@ const incrementItemCount = asyncHandler(async (req, res) => {
     const cartItem = await incrementCartItem(customerId, itemId, restaurantId);
 
     if (!cartItem) {
-      return res.status(404).json(
-        new ApiResponse(
-          {
-            reason: "Item not found in the cart",
-            at: "cart.controller.js -> incrementItemCount",
-          },
-          "Item not found in the cart."
-        )
+      throw new ApiError(
+        STATUS.SERVER_ERROR.SERVICE_UNAVAILABLE,
+        "An error occurred while adding item to cart.",
+        "failed function incrementCartItem"
       );
     }
 
     const cart = await getCartByCustomerId(customerId);
     const cartSummary = calculateCartSummary(cart);
 
-    return res.status(200).json(
+    return res.status(STATUS.SUCCESS.OK).json(
       new ApiResponse(
         {
           ...cartSummary,
@@ -210,14 +163,10 @@ const incrementItemCount = asyncHandler(async (req, res) => {
       )
     );
   } catch (error) {
-    return res.status(500).json(
-      new ApiResponse(
-        {
-          reason: error.message,
-          at: "cart.controller.js -> incrementItemCount",
-        },
-        "An error occurred while incrementing the item count."
-      )
+    throw new ApiError(
+      STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR,
+      "An error occurred while adding item to cart.",
+      error.message
     );
   }
 });
@@ -226,31 +175,17 @@ const decrementItemCount = asyncHandler(async (req, res) => {
   const { itemId } = req.body;
   const customerId = req.customer.id;
 
-  if (!itemId) {
-    return res.status(400).json(
-      new ApiResponse(
-        {
-          reason: "itemId could not be retrieved from req.body",
-          at: "cart.controller.js -> decrementItemCount",
-        },
-        "Item ID is required."
-      )
-    );
-  }
+  checkRequiredFields({ itemId });
 
   let restaurantId;
 
   try {
     restaurantId = await getRestaurantIdByItemId(itemId);
   } catch (error) {
-    return res.status(400).json(
-      new ApiResponse(
-        {
-          reason: error.message || "Food item ID is incorrect",
-          at: "cart.controller.js -> decrementItemCount",
-        },
-        "An error occurred while fetching restaurant details for the food item."
-      )
+    throw new ApiError(
+      STATUS.SERVER_ERROR.GATEWAY_TIMEOUT,
+      "An error occurred while reaching restaurant.",
+      error.message
     );
   }
 
@@ -258,21 +193,17 @@ const decrementItemCount = asyncHandler(async (req, res) => {
     const cartItem = await decrementCartItem(customerId, itemId, restaurantId);
 
     if (!cartItem) {
-      return res.status(404).json(
-        new ApiResponse(
-          {
-            reason: "Item not found in the cart",
-            at: "cart.controller.js -> decrementItemCount",
-          },
-          "Item not found in the cart."
-        )
+      throw new ApiError(
+        STATUS.CLIENT_ERROR.BAD_REQUEST,
+        "An error occurred while decrementing item from cart.",
+        "failed function decrementCartItem."
       );
     }
 
     const cart = await getCartByCustomerId(customerId);
     const cartSummary = calculateCartSummary(cart);
 
-    return res.status(200).json(
+    return res.status(STATUS.SUCCESS.OK).json(
       new ApiResponse(
         {
           ...cartSummary,
@@ -281,14 +212,10 @@ const decrementItemCount = asyncHandler(async (req, res) => {
       )
     );
   } catch (error) {
-    return res.status(500).json(
-      new ApiResponse(
-        {
-          reason: error.message,
-          at: "cart.controller.js -> decrementItemCount",
-        },
-        "An error occurred while decrementing the item count."
-      )
+    throw new ApiError(
+      STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR,
+      "An error occurred while decrementing item count.",
+      error.message
     );
   }
 });

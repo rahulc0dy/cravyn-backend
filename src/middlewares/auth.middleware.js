@@ -1,5 +1,4 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 import { getNonSensitiveCustomerInfoById } from "../database/queries/customer.query.js";
 import { getNonSensitiveManagementTeamInfoById } from "../database/queries/managementTeam.query.js";
@@ -7,6 +6,8 @@ import { getNonSensitiveRestaurantOwnerInfoById } from "../database/queries/rest
 import { getNonSensitiveBusinessTeamInfoById } from "../database/queries/businessTeam.query.js";
 import { getNonSensitiveDeliveryPartnerInfoById } from "../database/queries/deliveryPartner.query.js";
 import { getRestaurantById } from "../database/queries/restaurant.query.js";
+import ApiError from "../utils/apiError.js";
+import { STATUS } from "../constants.js";
 
 export const verifyUserJwt = asyncHandler(async (req, res, next) => {
   const token =
@@ -16,14 +17,11 @@ export const verifyUserJwt = asyncHandler(async (req, res, next) => {
   const userType = req.baseUrl.split("/")[3];
 
   if (!token || !userType) {
-    return res
-      .status(401)
-      .json(
-        new ApiResponse(
-          { reason: `Token is ${token}, userType is ${req.query}` },
-          "Unauthorized request."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.UNAUTHORIZED,
+      !token ? "Authentication token is missing" : "User type is missing",
+      "Authorization header or cookie is required"
+    );
   }
 
   try {
@@ -54,11 +52,11 @@ export const verifyUserJwt = asyncHandler(async (req, res, next) => {
     }
 
     if (user.length === 0) {
-      return res
-        .status(401)
-        .json(
-          new ApiResponse({ reason: "Invalid Access Token" }, "User not found.")
-        );
+      throw new ApiError(
+        STATUS.CLIENT_ERROR.UNAUTHORIZED,
+        "Invalid or expired token",
+        "Authentication failed"
+      );
     }
 
     switch (userType) {
@@ -84,14 +82,13 @@ export const verifyUserJwt = asyncHandler(async (req, res, next) => {
 
     next();
   } catch (error) {
-    return res
-      .status(401)
-      .json(
-        new ApiResponse(
-          { reason: error.message || "Error at auth middleware" },
-          error?.message || "Invalid Access Token."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.UNAUTHORIZED,
+      error.name === "TokenExpiredError"
+        ? "Token has expired"
+        : "Invalid token format",
+      "Please authenticate with valid credentials"
+    );
   }
 });
 
@@ -101,14 +98,11 @@ export const verifyRestaurantJwt = asyncHandler(async (req, res, next) => {
     req.header("Authorization")?.replace("Bearer ", "");
 
   if (!token) {
-    return res
-      .status(401)
-      .json(
-        new ApiResponse(
-          { reason: `Token is ${token}` },
-          "Unauthorized request."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.UNAUTHORIZED,
+      "Authentication token is missing",
+      "Authorization header or cookie is required"
+    );
   }
 
   try {
@@ -118,33 +112,21 @@ export const verifyRestaurantJwt = asyncHandler(async (req, res, next) => {
     const restaurant = await getRestaurantById(restaurantId);
 
     if (restaurant.length === 0) {
-      return res
-        .status(401)
-        .json(
-          new ApiResponse(
-            { reason: "Invalid Access Token" },
-            "Restaurant not found."
-          )
-        );
+      throw new ApiError(
+        STATUS.CLIENT_ERROR.UNAUTHORIZED,
+        "Unauthorized request.",
+        "Invalid Access Token"
+      );
     }
 
     req.restaurant = restaurant[0];
 
     next();
   } catch (error) {
-    return res
-      .status(401)
-      .json(
-        new ApiResponse(
-          {
-            reason: error.message.includes("jwt expired")
-              ? "Token expired"
-              : error.message,
-          },
-          error.message.includes("jwt expired")
-            ? "Session expired. Please log in again."
-            : "Invalid Access Token."
-        )
-      );
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.UNAUTHORIZED,
+      "Unauthorized request.",
+      error.message
+    );
   }
 });

@@ -12,6 +12,7 @@ import foodRouter from "./routes/food.routes.js";
 import passwordResetRouter from "./routes/passwordReset.routes.js";
 import geocodeRouter from "./routes/geocode.routes.js";
 import searchRouter from "./routes/search.routes.js";
+import { errorHandler } from "./utils/errorHandler.js";
 
 const app = express();
 
@@ -41,5 +42,14 @@ app.use("/api/v1/restaurants", restaurantRouter);
 app.use("/api/v1/search", searchRouter);
 
 app.use("/api/v1/forgot-password", passwordResetRouter);
+
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: "API endpoint not found",
+  });
+});
+
+app.use(errorHandler);
 
 export { app };

@@ -6,24 +6,21 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import {
-  setRefreshToken,
   createRestaurantOwner,
-  getRestaurantOwnerById,
-  getRestaurantOwnerByEmail,
   deleteRestaurantOwner,
-  updateRestaurantOwnerNamePhoneNo,
-  getNonSensitiveRestaurantOwnerInfoById,
-  getSalesData,
-  getRestaurantSalesData,
   getFoodSalesDataByRestaurantId,
+  getNonSensitiveRestaurantOwnerInfoById,
+  getRestaurantOwnerByEmail,
+  getRestaurantOwnerById,
+  getRestaurantSalesData,
+  getSalesData,
+  setRefreshToken,
+  updateRestaurantOwnerNamePhoneNo,
 } from "../database/queries/restaurantOwner.query.js";
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../constants.js";
 import { checkRequiredFields } from "../utils/requiredFieldsCheck.js";
-import {
-  getNonSensitiveRestaurantInfoById,
-  getNonSensitiveRestaurantInfoByOwnerId,
-} from "../database/queries/restaurant.query.js";
+import { getNonSensitiveRestaurantInfoById } from "../database/queries/restaurant.query.js";
 
 const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {
   if (!req.restaurantOwner || !req.restaurantOwner.id) {
@@ -187,12 +184,7 @@ const getRestaurantFoodSalesData = asyncHandler(async (req, res) => {
 const loginRestaurantOwner = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (
-    !checkRequiredFields({ email, password }, ({ field, message, reason }) =>
-      res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({ email, password });
 
   try {
     let restaurantOwner = await getRestaurantOwnerByEmail(email);
@@ -262,14 +254,14 @@ const registerRestaurantOwner = asyncHandler(async (req, res) => {
   const { name, phoneNumber, email, panNumber, password, confirmPassword } =
     req.body;
 
-  if (
-    !checkRequiredFields(
-      { name, email, phoneNumber, panNumber, password, confirmPassword },
-      ({ field, message, reason }) =>
-        res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({
+    name,
+    email,
+    phoneNumber,
+    panNumber,
+    password,
+    confirmPassword,
+  });
 
   if (password !== confirmPassword) {
     return res

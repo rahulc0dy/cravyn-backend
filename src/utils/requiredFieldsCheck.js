@@ -1,15 +1,15 @@
+import ApiError from "./apiError.js";
+
 /**
  * Utility function to validate required fields.
  * @param {Object} fields - An object with field names as keys and their values to validate.
- * @param {Function} callback - Callback to execute when a field is missing.
  */
-const checkRequiredFields = (fields, callback) => {
+const checkRequiredFields = (fields) => {
   for (const [key, value] of Object.entries(fields)) {
     if (value === undefined || value === null) {
       const message = `${camelToSentenceCase(key)} is required.`;
       const reason = `${key} is ${value}`;
-      callback({ field: key, message, reason });
-      return false;
+      throw new ApiError(400, message, reason);
     }
   }
   return true;
