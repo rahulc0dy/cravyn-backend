@@ -6,12 +6,12 @@ import {
   generateRefreshToken,
 } from "../utils/tokenGenerator.js";
 import {
-  getDeliveryPartnerByEmail,
-  setRefreshToken,
   createDeliveryPartner,
-  getDeliveryPartnerById,
   deleteDeliveryPartner,
+  getDeliveryPartnerByEmail,
+  getDeliveryPartnerById,
   getNonSensitiveDeliveryPartnerInfoById,
+  setRefreshToken,
   updateDeliveryPartnerImageUrl,
   updateDeliveryPartnerNamePhoneNoVehicleAvailability,
 } from "../database/queries/deliveryPartner.query.js";
@@ -61,12 +61,7 @@ const getDeliveryPartnerAccount = asyncHandler(async (req, res) => {
 const loginDeliveryPartner = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (
-    !checkRequiredFields({ email, password }, ({ field, message, reason }) =>
-      res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({ email, password });
 
   let deliveryPartner = await getDeliveryPartnerByEmail(email);
 
@@ -131,14 +126,14 @@ const registerDeliveryPartner = asyncHandler(async (req, res) => {
     confirmPassword,
   } = req.body;
 
-  if (
-    !checkRequiredFields(
-      { name, email, phoneNumber, vehicleType, password, confirmPassword },
-      ({ field, message, reason }) =>
-        res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({
+    name,
+    email,
+    phoneNumber,
+    vehicleType,
+    password,
+    confirmPassword,
+  });
 
   if (password !== confirmPassword) {
     return res

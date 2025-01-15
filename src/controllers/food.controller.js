@@ -1,13 +1,13 @@
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {
-  getFoodItemById,
   createFoodItem,
-  updateFoodItemDiscountById,
   deleteFoodItemById,
   fuzzySearchFoodItem,
-  updateFoodItemById,
+  getFoodItemById,
   setFoodAvailabilityStatus,
+  updateFoodItemById,
+  updateFoodItemDiscountById,
 } from "../database/queries/foodItem.query.js";
 import { getRestaurantById } from "../database/queries/restaurant.query.js";
 import { uploadImageOnCloudinary } from "../utils/cloudinary.js";
@@ -120,21 +120,7 @@ const addFood = asyncHandler(async (req, res) => {
   const { name, type, price, description } = req.body;
   let { restaurant } = req;
 
-  if (
-    !checkRequiredFields(
-      { restaurant, name, type, price, description },
-      ({ field, message, reason }) =>
-        res.status(400).json(
-          new ApiResponse(
-            {
-              reason,
-            },
-            message
-          )
-        )
-    )
-  )
-    return;
+  checkRequiredFields({ restaurant, name, type, price, description });
 
   try {
     if (!req.file) {
@@ -324,21 +310,7 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
   const { foodItemId, discountPercent, discountCap } = req.body;
   let { restaurant } = req;
 
-  if (
-    !checkRequiredFields(
-      { restaurant, foodItemId, discountPercent, discountCap },
-      ({ field, message, reason }) =>
-        res.status(400).json(
-          new ApiResponse(
-            {
-              reason,
-            },
-            message
-          )
-        )
-    )
-  )
-    return;
+  checkRequiredFields({ restaurant, foodItemId, discountPercent, discountCap });
 
   try {
     restaurant = await getRestaurantById(restaurant.restaurant_id);
@@ -387,21 +359,7 @@ const updateFoodDiscount = asyncHandler(async (req, res) => {
 const updateFoodAvailabilityStatus = asyncHandler(async (req, res) => {
   const { foodItemId, availabilityStatus } = req.body;
 
-  if (
-    !checkRequiredFields(
-      { foodItemId, availabilityStatus },
-      ({ field, message, reason }) =>
-        res.status(400).json(
-          new ApiResponse(
-            {
-              reason,
-            },
-            message
-          )
-        )
-    )
-  )
-    return;
+  checkRequiredFields({ foodItemId, availabilityStatus });
 
   try {
     const foodItem = await setFoodAvailabilityStatus(
@@ -444,14 +402,7 @@ const deleteFood = asyncHandler(async (req, res) => {
   const { foodItemId } = req.query;
   let { restaurant } = req;
 
-  if (
-    !checkRequiredFields(
-      { foodItemId, restaurant },
-      ({ field, message, reason }) =>
-        res.status(400).json(new ApiResponse({ reason }, message))
-    )
-  )
-    return;
+  checkRequiredFields({ foodItemId, restaurant });
 
   try {
     restaurant = await getRestaurantById(restaurant.restaurant_id);
