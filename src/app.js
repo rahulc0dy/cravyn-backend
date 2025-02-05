@@ -2,8 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./utils/errorHandler.js";
-import { configV1Routes } from "./routes/v1/routes.config.js";
-import { configV2Routes } from "./routes/v2/routes.config.js";
+import v1Routes from "./routes/v1/routes.config.js";
+import v2Routes from "./routes/v2/routes.config.js";
 import { STATUS } from "./constants/statusCodes.js";
 
 const app = express();
@@ -20,8 +20,8 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-configV1Routes(app);
-configV2Routes(app);
+app.use("/api/v1", v1Routes);
+app.use("/api/v2", v2Routes);
 
 app.use((_req, res, _next) => {
   res.status(STATUS.CLIENT_ERROR.NOT_FOUND).json({
