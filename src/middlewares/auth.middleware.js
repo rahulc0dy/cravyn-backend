@@ -1,11 +1,11 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
-import { getNonSensitiveCustomerInfoById } from "../database/queries/customer.query.js";
-import { getNonSensitiveManagementTeamInfoById } from "../database/queries/managementTeam.query.js";
-import { getNonSensitiveRestaurantOwnerInfoById } from "../database/queries/restaurantOwner.query.js";
-import { getNonSensitiveBusinessTeamInfoById } from "../database/queries/businessTeam.query.js";
-import { getNonSensitiveDeliveryPartnerInfoById } from "../database/queries/deliveryPartner.query.js";
-import { getRestaurantById } from "../database/queries/restaurant.query.js";
+import { getNonSensitiveCustomerInfoById } from "../database/v1/queries/customer.query.js";
+import { getNonSensitiveManagementTeamInfoById } from "../database/v1/queries/managementTeam.query.js";
+import { getNonSensitiveRestaurantOwnerInfoById } from "../database/v1/queries/restaurantOwner.query.js";
+import { getNonSensitiveBusinessTeamInfoById } from "../database/v1/queries/businessTeam.query.js";
+import { getNonSensitiveDeliveryPartnerInfoById } from "../database/v1/queries/deliveryPartner.query.js";
+import { getRestaurantById } from "../database/v1/queries/restaurant.query.js";
 import ApiError from "../utils/apiError.js";
 import { STATUS } from "../constants.js";
 
