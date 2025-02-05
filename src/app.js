@@ -1,17 +1,6 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import healthCheckRouter from "./routes/v1/healthCheck.routes.js";
-import customerRouter from "./routes/v1/customer.routes.js";
-import managementTeamRouter from "./routes/v1/managementTeam.routes.js";
-import businessTeamRouter from "./routes/v1/businessTeam.routes.js";
-import restaurantOwnerRouter from "./routes/v1/restaurantOwner.routes.js";
-import restaurantRouter from "./routes/v1/restaurant.routes.js";
-import deliveryPartnerRouter from "./routes/v1/deliveryPartner.routes.js";
-import foodRouter from "./routes/v1/food.routes.js";
-import passwordResetRouter from "./routes/v1/passwordReset.routes.js";
-import geocodeRouter from "./routes/v1/geocode.routes.js";
-import searchRouter from "./routes/v1/search.routes.js";
 import { errorHandler } from "./utils/errorHandler.js";
 import { STATUS } from "./constants.js";
 import { configV1Routes } from "./routes/v1/routes.config.js";
