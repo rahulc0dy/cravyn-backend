@@ -14,6 +14,8 @@ import geocodeRouter from "./routes/v1/geocode.routes.js";
 import searchRouter from "./routes/v1/search.routes.js";
 import { errorHandler } from "./utils/errorHandler.js";
 import { STATUS } from "./constants.js";
+import { configV1Routes } from "./routes/v1/routes.config.js";
+import { configV2Routes } from "./routes/v2/routes.config.js";
 
 const app = express();
 
@@ -29,21 +31,10 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-app.use("/api/v1/health-check", healthCheckRouter);
-app.use("/api/v1/geocode", geocodeRouter);
-app.use("/api/v1/customer", customerRouter);
-app.use("/api/v1/delivery-partner", deliveryPartnerRouter);
-app.use("/api/v1/management-team", managementTeamRouter);
-app.use("/api/v1/business-team", businessTeamRouter);
-app.use("/api/v1/restaurant-owner", restaurantOwnerRouter);
-app.use("/api/v1/foods", foodRouter);
-app.use("/api/v1/restaurants", restaurantRouter);
-app.use("/api/v1/search", searchRouter);
-app.use("/api/v1/forgot-password", passwordResetRouter);
+configV1Routes(app);
+configV2Routes(app);
 
-app.use("/api/v2/health-check", healthCheckRouter);
-
-app.use((req, res, next) => {
+app.use((_req, res, _next) => {
   res.status(STATUS.CLIENT_ERROR.NOT_FOUND).json({
     success: false,
     message: "API endpoint not found",
