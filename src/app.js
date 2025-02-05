@@ -25,8 +25,8 @@ configV2Routes(app);
 
 app.use((_req, res, _next) => {
   res.status(STATUS.CLIENT_ERROR.NOT_FOUND).json({
-    success: false,
-    message: "API endpoint not found",
+    data: {},
+    message: "API endpoint not found.",
   });
 });
 
