@@ -7,7 +7,7 @@ import { getNonSensitiveBusinessTeamInfoById } from "../database/v1/queries/busi
 import { getNonSensitiveDeliveryPartnerInfoById } from "../database/v1/queries/deliveryPartner.query.js";
 import { getRestaurantById } from "../database/v1/queries/restaurant.query.js";
 import ApiError from "../utils/apiError.js";
-import { STATUS } from "../constants.js";
+import { STATUS } from "../constants/statusCodes.js";
 
 export const verifyUserJwt = asyncHandler(async (req, res, next) => {
   const token =

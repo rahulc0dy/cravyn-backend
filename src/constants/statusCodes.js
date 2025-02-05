@@ -1,23 +1,4 @@
 /**
- * @file Configuration and HTTP status codes for the backend application.
- */
-
-/**
- * Cookie options for setting HTTP cookies.
- * @constant {Object} cookieOptions
- * @property {boolean} cookieOptions.httpOnly - Ensures the cookie is accessible only by the web server.
- * @property {boolean} cookieOptions.secure - Ensures the cookie is sent over HTTPS in production.
- * @property {string} cookieOptions.sameSite - Controls whether cookies are sent with cross-site requests.
- *    - "None" in production for cross-site usage.
- *    - "Lax" in development for security.
- */
-const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-};
-
-/**
  * HTTP status codes organized by category.
  * @constant {Object} STATUS
  * @property {Object} STATUS.SUCCESS - Success status codes.
@@ -69,7 +50,7 @@ const cookieOptions = {
  * @property {number} STATUS.SERVER_ERROR.GATEWAY_TIMEOUT - Upstream server timed out (504).
  * @property {number} STATUS.SERVER_ERROR.HTTP_VERSION_NOT_SUPPORTED - HTTP version not supported (505).
  */
-const STATUS = {
+export const STATUS = {
   SUCCESS: {
     // Request succeeded
     OK: 200,
@@ -199,5 +180,3 @@ const STATUS = {
     HTTP_VERSION_NOT_SUPPORTED: 505,
   },
 };
-
-export { cookieOptions, STATUS };

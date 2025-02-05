@@ -26,7 +26,8 @@ import {
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import { uploadImageOnCloudinary } from "../../utils/cloudinary.js";
-import { cookieOptions, STATUS } from "../../constants.js";
+import { cookieOptions } from "../../constants/cookieOptions.js";
+import { STATUS } from "../../constants/statusCodes.js";
 import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
 import {
   deleteCartByCustomerId,

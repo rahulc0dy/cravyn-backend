@@ -24,7 +24,8 @@ import {
   updateBusinessTeamNamePhoneNo,
 } from "../../database/v1/queries/businessTeam.query.js";
 import jwt from "jsonwebtoken";
-import { cookieOptions, STATUS } from "../../constants.js";
+import { cookieOptions } from "../../constants/cookieOptions.js";
+import { STATUS } from "../../constants/statusCodes.js";
 import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
 import ApiError from "../../utils/apiError.js";
 

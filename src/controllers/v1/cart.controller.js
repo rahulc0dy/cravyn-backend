@@ -9,9 +9,9 @@ import { getRestaurantIdByItemId } from "../../database/v1/queries/foodItem.quer
 import { ApiResponse } from "../../utils/apiResponse.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { calculateCartSummary } from "../../utils/cartUtils.js";
-import { STATUS } from "../../constants.js";
 import ApiError from "../../utils/apiError.js";
 import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
+import { STATUS } from "../../constants/statusCodes.js";
 
 const getCart = asyncHandler(async (req, res) => {
   const customerId = req.customer.id;

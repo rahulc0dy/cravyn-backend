@@ -12,7 +12,7 @@ import searchRouter from "./search.routes.js";
 import passwordResetRouter from "./passwordReset.routes.js";
 
 export const configV1Routes = (app) => {
-  const v1Routes = new express();
+  const v1Routes = express.Router();
 
   v1Routes.use("/health-check", healthCheckRouter);
   v1Routes.use("/geocode", geocodeRouter);

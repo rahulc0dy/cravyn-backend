@@ -16,7 +16,7 @@ import {
   setRestaurantQueryAnswer,
 } from "../../database/v1/queries/supportSystem.query.js";
 import { ApiResponse } from "../../utils/apiResponse.js";
-import { STATUS } from "../../constants.js";
+import { STATUS } from "../../constants/statusCodes.js";
 
 const getDashboardData = asyncHandler(async (req, res) => {
   try {

@@ -18,7 +18,7 @@ import {
   updateRestaurantOwnerNamePhoneNo,
 } from "../../database/v1/queries/restaurantOwner.query.js";
 import jwt from "jsonwebtoken";
-import { cookieOptions } from "../../constants.js";
+import { cookieOptions } from "../../constants/cookieOptions.js";
 import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
 import { getNonSensitiveRestaurantInfoById } from "../../database/v1/queries/restaurant.query.js";
 

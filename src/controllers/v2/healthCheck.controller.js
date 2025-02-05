@@ -1,10 +1,10 @@
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { ApiResponse } from "../../utils/apiResponse.js";
-import { STATUS } from "../../constants.js";
 import os from "os";
 import ApiError from "../../utils/apiError.js";
+import { STATUS } from "../../constants/statusCodes.js";
 
-const healthCheck = asyncHandler(async (req, res) => {
+const serverHealthCheck = asyncHandler(async (req, res) => {
   let systemInfo;
 
   try {
@@ -27,4 +27,4 @@ const healthCheck = asyncHandler(async (req, res) => {
     .json(new ApiResponse(systemInfo, "Status OK."));
 });
 
-export { healthCheck };
+export { serverHealthCheck };

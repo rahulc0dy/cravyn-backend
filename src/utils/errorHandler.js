@@ -1,4 +1,4 @@
-import { STATUS } from "../constants.js";
+import { STATUS } from "../constants/statusCodes.js";
 
 const errorHandler = (err, _req, res, _next) => {
   const isProduction = process.env.NODE_ENV === "production";

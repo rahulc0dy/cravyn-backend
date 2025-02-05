@@ -34,7 +34,7 @@ import {
   getOrdersByRestaurantId,
   updateOrderStatusByOrderId,
 } from "../../database/v1/queries/order.query.js";
-import { cookieOptions } from "../../constants.js";
+import { cookieOptions } from "../../constants/cookieOptions.js";
 import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
 
 const getRestaurantsList = asyncHandler(async (req, res) => {

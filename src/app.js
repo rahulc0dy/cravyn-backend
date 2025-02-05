@@ -2,9 +2,9 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./utils/errorHandler.js";
-import { STATUS } from "./constants.js";
 import { configV1Routes } from "./routes/v1/routes.config.js";
 import { configV2Routes } from "./routes/v2/routes.config.js";
+import { STATUS } from "./constants/statusCodes.js";
 
 const app = express();
 
