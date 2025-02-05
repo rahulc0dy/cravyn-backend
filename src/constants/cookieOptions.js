@@ -7,8 +7,25 @@
  *    - "None" in production for cross-site usage.
  *    - "Lax" in development for security.
  */
-export const cookieOptions = {
+
+const NODE_ENV = process.env.NODE_ENV;
+
+if (!NODE_ENV) {
+  throw new Error(
+    "NODE_ENV is not defined. Please set NODE_ENV to 'development', 'production', or 'staging'."
+  );
+}
+
+const isProd = NODE_ENV === "production" || NODE_ENV === "staging";
+
+const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+  secure: isProd,
+  sameSite: isProd ? "None" : "Lax",
 };
+
+if (cookieOptions.sameSite === "None" && !cookieOptions.secure) {
+  throw new Error("Cookies with sameSite='None' must also have secure=true.");
+}
+
+export { cookieOptions };
