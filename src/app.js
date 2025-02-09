@@ -11,7 +11,6 @@ import "./utils/instrument.js";
 import * as Sentry from "@sentry/node";
 
 const app = express();
-
 Sentry.setupExpressErrorHandler(app);
 
 app.use(
