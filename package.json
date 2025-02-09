@@ -9,7 +9,8 @@
     "dev": "nodemon src/index.js",
     "prisma:gen-client": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:pull": "prisma db pull"
+    "prisma:pull": "prisma db pull",
+    "prisma:push": "prisma db push"
   },
   "author": "Group 3",
   "license": "ISC",
