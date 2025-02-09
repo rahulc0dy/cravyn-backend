@@ -57,9 +57,9 @@ model DeliveryPartner {
 }
 
 model RestaurantOwner {
-  id                String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  phone             BigInt
-  panNumber         String
-  restaurantOwnerId String @unique @db.Uuid
-  user              User   @relation(fields: [restaurantOwnerId], references: [id], onDelete: Cascade)
+  id        String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  phone     BigInt
+  panNumber String
+  userId    String @unique @db.Uuid
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
