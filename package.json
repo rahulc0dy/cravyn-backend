@@ -5,10 +5,10 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "predev": "prisma:gen-clien",
+    "predev": "prisma migrate dev",
     "dev": "nodemon src/index.js",
     "prisma:gen-client": "prisma generate",
-    "prisma:migrate": "prisma migrate",
+    "prisma:migrate": "prisma migrate dev",
     "prisma:pull": "prisma db pull"
   },
   "author": "Group 3",
