@@ -1,7 +1,8 @@
 import rateLimit from "express-rate-limit";
-const windowMs = process.env.RATE_LIMIT_WINDOW_MS || 5 * 60 * 1000; // default to 5 minutes
-const limit = process.env.RATE_LIMIT || 10; // default to 10 requests
-
+// Default to 100 requests per minute to accommodate typical user interactions
+// like browsing menu, managing cart, and checkout process
+const windowMs = process.env.RATE_LIMIT_WINDOW_MS || 60 * 1000; // default to 1 minute
+const limit = process.env.RATE_LIMIT || 100; // default to 100 requests
 export const limiter = rateLimit({
   windowMs: windowMs,
   limit: limit,
