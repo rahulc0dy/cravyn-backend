@@ -30,9 +30,6 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  // Discriminator field for inheritance
-  type String
-
   // Relations (Single Table Inheritance)
   customer        Customer?
   deliveryPartner DeliveryPartner?
