@@ -3,34 +3,50 @@ name: Tests
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   e2etests:
-    name: Run E2E Tests
+    name: E2E Tests
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL_V2: postgresql://test_user:test_password@localhost:5432/test_db
+      DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      NODE_ENV: test
+
     steps:
-      # Step 1: Check out the repository code
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
 
-      # Step 3: Install dependencies (if needed) and cache them
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
 
-      # Step 4: Run the tests
+      - name: Run migrations (if applicable)
+        run: npm run prisma:migrate
+
       - name: Run tests
-        env:
-          PORT: 8800
-          NODE_ENV: "test"
         run: npm run test
