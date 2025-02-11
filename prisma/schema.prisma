@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_V2")
+}
+
+enum Role {
+  CUSTOMER
+  DELIVERY_PARTNER
+  RESTAURANT_OWNER
+  RESTAURANT_TEAM
+  MANAGEMENT
+  BUSINESS
+}
+
+enum VehicleType {
+  BIKE
+  CYCLE
+}
+
+model User {
+  id              String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email           String   @unique
+  name            String
+  profileImageUrl String?
+  role            Role
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations (Single Table Inheritance)
+  customer        Customer?
+  deliveryPartner DeliveryPartner?
+  restaurantOwner RestaurantOwner?
+}
+
+model Customer {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  dateOfBirth DateTime
+  phone       BigInt
+  userId      String   @unique @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DeliveryPartner {
+  id           String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  phone        BigInt
+  availability Boolean     @default(false)
+  vehicleType  VehicleType
+  userId       String      @unique @db.Uuid
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RestaurantOwner {
+  id        String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  phone     BigInt
+  panNumber String
+  userId    String @unique @db.Uuid
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

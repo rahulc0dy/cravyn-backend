@@ -5,16 +5,23 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "predev": "prisma migrate dev",
+    "dev": "nodemon src/index.js",
+    "prisma:gen-client": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:pull": "prisma db pull",
+    "prisma:push": "prisma db push"
   },
   "author": "Group 3",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^3.1.7",
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "prisma": "^6.3.1"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.5",
+    "@prisma/client": "^6.3.1",
     "@sentry/node": "^8.54.0",
     "bcrypt": "^5.1.1",
     "chalk": "^5.4.1",
