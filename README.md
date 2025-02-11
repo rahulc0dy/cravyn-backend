@@ -28,13 +28,12 @@ payments.
 
 ## 📋 Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Setup](#setup)
-- [Environment Variables](#environment-variables)
-- [API Endpoints](#api-endpoints)
-- [Usage](#usage)
-- [Technologies Used](#technologies-used)
-- [License](#license)
+- [Prerequisites](#-prerequisites)
+- [Setup](#-setup)
+- [Environment Variables](#-environment-variables)
+- [Usage](#-usage)
+- [Technologies Used](#-technologies-used)
+- [License](#-license)
 - [Contributing](#contributing)
 
 ---
