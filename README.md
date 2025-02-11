@@ -2,10 +2,10 @@
   <img src="media/logo.png" alt="Cravyn Food Ordering Logo" style="padding:10px" width="200">
   <br>
   <a href="https://github.com/rahulc0dy/cravyn-backend">
-    <img src="https://img.shields.io/badge/2.0.0-teal?label=version" alt="Version">
+    <img src="https://img.shields.io/github/package-json/v/rahulc0dy/cravyn-backend?colorA=333333&colorB=teal" alt="Version">
   </a>
-  <a href="https://github.com/rahulc0dy/cravyn-backend">
-    <img src="https://img.shields.io/github/package-json/v/rahulc0dy/cravyn-backend" alt="Version">
+  <a href="https://github.com/rahulc0dy/cravyn-backend/actions/workflows/tests.yml">
+    <img src="https://github.com/rahulc0dy/cravyn-backend/actions/workflows/tests.yml/badge.svg" alt="Version">
   </a>
 </div>
 
