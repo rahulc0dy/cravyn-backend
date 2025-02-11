@@ -34,23 +34,4 @@ const deleteImageFromCloudinary = async (publicId) => {
   }
 };
 
-// Optimize delivery by resizing and applying auto-format and auto-quality
-const optimizeUrl = cloudinary.url("shoes", {
-  fetch_format: "auto",
-  quality: "auto",
-});
-
-// Transform the image: auto-crop to square aspect_ratio
-const autoCropUrl = cloudinary.url("shoes", {
-  crop: "auto",
-  gravity: "auto",
-  width: 500,
-  height: 500,
-});
-
-export {
-  uploadImageOnCloudinary,
-  deleteImageFromCloudinary,
-  optimizeUrl,
-  autoCropUrl,
-};
+export { uploadImageOnCloudinary, deleteImageFromCloudinary };

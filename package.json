@@ -10,14 +10,18 @@
     "prisma:gen-client": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:pull": "prisma db pull",
-    "prisma:push": "prisma db push"
+    "prisma:push": "prisma db push",
+    "test": "vitest --coverage"
   },
   "author": "Group 3",
   "license": "ISC",
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.0.5",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3",
-    "prisma": "^6.3.1"
+    "prisma": "^6.3.1",
+    "supertest": "^7.0.0",
+    "vitest": "^3.0.5"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.5",
