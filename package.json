@@ -3,9 +3,6 @@
   "version": "1.6.2",
   "description": "Backend APIs for cravyn Food Ordering System.",
   "type": "module",
-  "jest": {
-    "transform": {}
-  },
   "main": "index.js",
   "scripts": {
     "predev": "prisma migrate dev",
