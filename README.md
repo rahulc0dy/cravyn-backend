@@ -5,7 +5,7 @@
     <img src="https://img.shields.io/badge/2.0.0-teal?label=version" alt="Version">
   </a>
   <a href="https://github.com/rahulc0dy/cravyn-backend">
-    <img src="https://github.com/rahulc0dy/cravyn-backend/actions/workflows/tests.yml/badge.svg" alt="Version">
+    <img src="https://img.shields.io/github/package-json/v/rahulc0dy/cravyn-backend" alt="Version">
   </a>
 </div>
 
@@ -51,7 +51,7 @@ payments.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/cravyn-backend.git
+   git clone https://github.com/rahulc0dy/cravyn-backend.git
    cd cravyn-backend
    ```
 
@@ -73,7 +73,7 @@ payments.
 
 ## 🛠️ Environment Variables
 
-Create a `.env` file in the root directory with the variables specified in the `.env.sample` file
+Create a `.env` file in the root directory with the variables specified in the [`.env.sample`](.env.sample) file
 
 ---
 
