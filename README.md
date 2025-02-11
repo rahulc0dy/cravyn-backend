@@ -28,14 +28,14 @@ payments.
 
 ## 📋 Table of Contents
 
-- [Prerequisites](#-prerequisites)
-- [Setup](#-setup)
-- [Environment Variables](#-environment-variables)
-- [API Endpoints](#-api-endpoints)
-- [Usage](#-usage)
-- [Technologies Used](#-technologies-used)
-- [License](#-license)
-- [Contributing](#-contributing)
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+- [Environment Variables](#environment-variables)
+- [API Endpoints](#api-endpoints)
+- [Usage](#usage)
+- [Technologies Used](#technologies-used)
+- [License](#license)
+- [Contributing](#contributing)
 
 ---
 
@@ -123,7 +123,7 @@ curl -X POST http://localhost:<PORT>/api/<version>/<user-type>/orders \
 - **Node.js**: JavaScript runtime built on Chrome's V8 engine.
 - **JWT**: JSON Web Tokens for secure authentication.
 - **PostgreSql**: SQL database for storing data.
-- **Prisma** : ODM for MongoDB.
+- **Prisma**: Modern database toolkit and ORM for PostgreSQL and other databases.
 - **Other Libraries**: dotenv, morgan, bcrypt, etc.
 
 ---
