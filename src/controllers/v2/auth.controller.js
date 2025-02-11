@@ -28,18 +28,9 @@ const register = asyncHandler(async (req, res) => {
     });
 
   const { role } = req.query;
-
-  let validatedData;
-  try {
-    validatedData = registerSchema.parse(req.body);
-  } catch (error) {
-    throw new ApiError(
-      STATUS.BAD_REQUEST,
-      error.errors?.[0]?.message || "Invalid input"
-    );
-  }
-
-  const { name, email, password, confirmPassword } = validatedData;
+  const { name, email, password, confirmPassword } = registerSchema.parse(
+    req.body
+  );
 
   const user = {
     email,
