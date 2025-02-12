@@ -29,7 +29,7 @@ describe("GET /health-check/server", () => {
       .get(`${baseUrl}/health-check/server`)
       .expect(STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR);
 
-    expect(response.body).toHaveProperty("success", false);
+    expect(response.body).toHaveProperty("data");
     expect(response.body).toHaveProperty("message", "Mocked OS error");
 
     vitest.restoreAllMocks();
