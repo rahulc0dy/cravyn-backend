@@ -22,7 +22,7 @@ import { upload } from "../../middlewares/shared/multer.middleware.js";
 import {
   verifyRestaurantJwt,
   verifyUserJwt,
-} from "../../middlewares/auth.middleware.js";
+} from "../../middlewares/v1/auth.middleware.js";
 import {
   getRestaurantQueryByRestaurantId,
   raiseRestaurantQuery,
