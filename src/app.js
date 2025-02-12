@@ -35,7 +35,7 @@ app.use("/api/v2", v2Routes);
 app.use((_req, res, _next) => {
   res
     .status(STATUS.CLIENT_ERROR.NOT_FOUND)
-    .json(new ApiResponse({}, "API endpoint not found."));
+    .json(new ApiResponse({}, `API endpoint not found: ${_req.originalUrl}`));
 });
 
 app.use(errorHandler);
