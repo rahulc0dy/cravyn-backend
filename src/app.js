@@ -9,6 +9,7 @@ import { morganMiddleware } from "./middlewares/morgan.middleware.js";
 import "./utils/instrument.js";
 import * as Sentry from "@sentry/node";
 import { limiter } from "./utils/rateLimiter.js";
+import { ApiResponse } from "./utils/apiResponse.js";
 
 const app = express();
 Sentry.setupExpressErrorHandler(app);
@@ -32,10 +33,9 @@ app.use("/api/v1", v1Routes);
 app.use("/api/v2", v2Routes);
 
 app.use((_req, res, _next) => {
-  res.status(STATUS.CLIENT_ERROR.NOT_FOUND).json({
-    data: {},
-    message: "API endpoint not found.",
-  });
+  res
+    .status(STATUS.CLIENT_ERROR.NOT_FOUND)
+    .json(new ApiResponse({}, "API endpoint not found."));
 });
 
 app.use(errorHandler);
