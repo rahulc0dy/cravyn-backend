@@ -18,7 +18,7 @@ import {
   getRestaurantDeliveredOrders,
   updateOrderStatus,
 } from "../../controllers/v1/restaurant.controller.js";
-import { upload } from "../../middlewares/common/multer.middleware.js";
+import { upload } from "../../middlewares/shared/multer.middleware.js";
 import {
   verifyRestaurantJwt,
   verifyUserJwt,

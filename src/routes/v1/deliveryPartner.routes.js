@@ -10,7 +10,7 @@ import {
   getDeliveryPartnerAccount,
 } from "../../controllers/v1/deliveryPartner.controller.js";
 import { verifyUserJwt } from "../../middlewares/auth.middleware.js";
-import { upload } from "../../middlewares/common/multer.middleware.js";
+import { upload } from "../../middlewares/shared/multer.middleware.js";
 
 const router = Router();
 

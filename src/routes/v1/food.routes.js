@@ -9,7 +9,7 @@ import {
   updateFoodDiscount,
 } from "../../controllers/v1/food.controller.js";
 import { verifyRestaurantJwt } from "../../middlewares/auth.middleware.js";
-import { upload } from "../../middlewares/common/multer.middleware.js";
+import { upload } from "../../middlewares/shared/multer.middleware.js";
 
 const router = Router();
 

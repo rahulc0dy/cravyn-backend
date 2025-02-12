@@ -5,7 +5,7 @@ import { errorHandler } from "./utils/errorHandler.js";
 import v1Routes from "./routes/v1/routes.config.js";
 import v2Routes from "./routes/v2/routes.config.js";
 import { STATUS } from "./constants/statusCodes.js";
-import { morganMiddleware } from "./middlewares/common/morgan.middleware.js";
+import { morganMiddleware } from "./middlewares/shared/morgan.middleware.js";
 import "./utils/instrument.js";
 import * as Sentry from "@sentry/node";
 import { limiter } from "./utils/rateLimiter.js";
