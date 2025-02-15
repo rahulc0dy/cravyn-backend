@@ -1,13 +1,13 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
-import { getNonSensitiveCustomerInfoById } from "../database/v1/queries/customer.query.js";
-import { getNonSensitiveManagementTeamInfoById } from "../database/v1/queries/managementTeam.query.js";
-import { getNonSensitiveRestaurantOwnerInfoById } from "../database/v1/queries/restaurantOwner.query.js";
-import { getNonSensitiveBusinessTeamInfoById } from "../database/v1/queries/businessTeam.query.js";
-import { getNonSensitiveDeliveryPartnerInfoById } from "../database/v1/queries/deliveryPartner.query.js";
-import { getRestaurantById } from "../database/v1/queries/restaurant.query.js";
-import ApiError from "../utils/apiError.js";
-import { STATUS } from "../constants/statusCodes.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
+import { getNonSensitiveCustomerInfoById } from "../../database/v1/queries/customer.query.js";
+import { getNonSensitiveManagementTeamInfoById } from "../../database/v1/queries/managementTeam.query.js";
+import { getNonSensitiveRestaurantOwnerInfoById } from "../../database/v1/queries/restaurantOwner.query.js";
+import { getNonSensitiveBusinessTeamInfoById } from "../../database/v1/queries/businessTeam.query.js";
+import { getNonSensitiveDeliveryPartnerInfoById } from "../../database/v1/queries/deliveryPartner.query.js";
+import { getRestaurantById } from "../../database/v1/queries/restaurant.query.js";
+import ApiError from "../../utils/apiError.js";
+import { STATUS } from "../../constants/statusCodes.js";
 
 export const verifyUserJwt = asyncHandler(async (req, res, next) => {
   const token =

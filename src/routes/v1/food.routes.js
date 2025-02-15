@@ -8,8 +8,8 @@ import {
   updateFoodAvailabilityStatus,
   updateFoodDiscount,
 } from "../../controllers/v1/food.controller.js";
-import { verifyRestaurantJwt } from "../../middlewares/auth.middleware.js";
-import { upload } from "../../middlewares/multer.middleware.js";
+import { verifyRestaurantJwt } from "../../middlewares/v1/auth.middleware.js";
+import { upload } from "../../middlewares/shared/multer.middleware.js";
 
 const router = Router();
 

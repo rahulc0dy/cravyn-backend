@@ -16,8 +16,8 @@ import {
   getCustomerOrderHistory,
   cancelOrder,
 } from "../../controllers/v1/customer.controller.js";
-import { verifyUserJwt } from "../../middlewares/auth.middleware.js";
-import { upload } from "../../middlewares/multer.middleware.js";
+import { verifyUserJwt } from "../../middlewares/v1/auth.middleware.js";
+import { upload } from "../../middlewares/shared/multer.middleware.js";
 import {
   getCustomerQueryByCustomerId,
   raiseCustomerQuery,

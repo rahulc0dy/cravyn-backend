@@ -1,22 +1,36 @@
 import { STATUS } from "../constants/statusCodes.js";
+import { ZodError } from "zod";
+import { ApiResponse, DevApiResponse } from "./apiResponse.js";
+
+const isProduction = process.env.NODE_ENV === "production";
 
 const errorHandler = (err, _req, res, _next) => {
-  const isProduction = process.env.NODE_ENV === "production";
+  const statusCode =
+    err.statusCode || STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR;
+  const message = err.message || "Internal Server Error.";
 
-  !isProduction && console.error(err);
+  if (err instanceof ZodError) {
+    res
+      .status(STATUS.CLIENT_ERROR.BAD_REQUEST)
+      .json(new ApiResponse({}, err.errors?.[0]?.message || "Invalid input"));
+  }
 
-  res.status(err.statusCode || STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR).json({
-    success: false,
-    message: err.message || "Internal Server Error.",
-    reason: isProduction ? null : err.reason || "Reason could not be found.",
-    stack: isProduction ? null : err.stack,
-    fileStack: isProduction
-      ? null
-      : err.stack
+  if (isProduction) {
+    res.status(statusCode).json(new ApiResponse({}, message));
+  } else {
+    console.error(err);
+    res.status(statusCode).json(
+      new DevApiResponse(
+        {},
+        message,
+        err.reason ?? "Reason could not be found.",
+        err.stack
           .split("\n")
           .slice(1, 4)
-          .map((item) => item.trim()),
-  });
+          .map((item) => item.trim())
+      )
+    );
+  }
 };
 
 export { errorHandler };

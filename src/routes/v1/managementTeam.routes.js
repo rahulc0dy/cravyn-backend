@@ -8,7 +8,7 @@ import {
   updateManagementTeamAccount,
   getManagementTeamAccount,
 } from "../../controllers/v1/managementTeam.controller.js";
-import { verifyUserJwt } from "../../middlewares/auth.middleware.js";
+import { verifyUserJwt } from "../../middlewares/v1/auth.middleware.js";
 import {
   answerCustomerQuery,
   answerRestaurantQuery,
