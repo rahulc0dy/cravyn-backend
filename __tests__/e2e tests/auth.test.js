@@ -351,4 +351,83 @@ describe("POST /register", () => {
       );
     });
   });
+
+  describe("Restaurant Owner Role Validation", () => {
+    const mockRestaurantOwner = {
+      name: "Alice Smith",
+      email: "alice@example.com",
+      password: "securePassword123",
+      confirmPassword: "securePassword123",
+      phone: "9876543210",
+      panNumber: "ABCDE1234F",
+    };
+
+    test("should return 400 if phone is missing", async () => {
+      const body = { ...mockRestaurantOwner };
+      delete body.phone;
+
+      const response = await request(app)
+        .post(`${URL}?role=RESTAURANT_OWNER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual("Phone number is required.");
+    });
+
+    test("should return 400 if phone is not exactly 10 digits", async () => {
+      const body = { ...mockRestaurantOwner, phone: "12345" };
+
+      const response = await request(app)
+        .post(`${URL}?role=RESTAURANT_OWNER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual(
+        "Phone number must be exactly 10 digits long."
+      );
+    });
+
+    test("should return 400 if PAN number is missing", async () => {
+      const body = { ...mockRestaurantOwner };
+      delete body.panNumber;
+
+      const response = await request(app)
+        .post(`${URL}?role=RESTAURANT_OWNER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual("PAN number is required.");
+    });
+
+    test("should return 400 if PAN number is invalid", async () => {
+      const body = { ...mockRestaurantOwner, panNumber: "1234567890" }; // Invalid PAN format
+
+      const response = await request(app)
+        .post(`${URL}?role=RESTAURANT_OWNER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual("Invalid PAN number format.");
+    });
+
+    test("should register a restaurant owner successfully", async () => {
+      vitest.spyOn(prisma.user, "create").mockImplementation(() => {
+        return { id: "test-id", ...mockRestaurantOwner };
+      });
+
+      const response = await request(app)
+        .post(`${URL}?role=RESTAURANT_OWNER`)
+        .send(mockRestaurantOwner)
+        .expect(STATUS.SUCCESS.CREATED);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual(
+        "User registered successfully with the role: RESTAURANT_OWNER."
+      );
+    });
+  });
 });
