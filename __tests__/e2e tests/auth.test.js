@@ -209,6 +209,19 @@ describe("POST /register", () => {
       );
     });
 
+    test("should return 400 if phone contains non-numeric characters", async () => {
+      const body = { ...mockCustomer, phone: "98A654321B" };
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        "Phone number must contain only digits."
+      );
+    });
+
     test("should return 400 if dateOfBirth is missing.", async () => {
       const body = { ...mockCustomer };
       delete body.dateOfBirth;

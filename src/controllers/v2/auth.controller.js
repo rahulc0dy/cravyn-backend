@@ -32,7 +32,8 @@ const register = asyncHandler(async (req, res) => {
 
   const phoneSchema = z
     .string({ required_error: "Phone number is required." })
-    .length(10, "Phone number must be exactly 10 digits long.");
+    .length(10, "Phone number must be exactly 10 digits long.")
+    .regex(/^\d+$/, "Phone number must contain only digits.");
 
   const { name, email, password, profileImageUrl } = registerSchema.parse(
     req.body
