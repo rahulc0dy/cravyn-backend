@@ -1,5 +1,5 @@
 import request from "supertest";
-import { app } from "../../src/app.js"; // Ensure this is the correct path to your Express app
+import { app } from "../../src/app.js";
 import { STATUS } from "../../src/constants/statusCodes.js";
 import { describe, expect, test, vitest } from "vitest";
 import os from "os";

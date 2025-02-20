@@ -4,6 +4,7 @@ import ApiError from "../../utils/apiError.js";
 import { STATUS } from "../../constants/statusCodes.js";
 import { z } from "zod";
 import { prisma } from "../../utils/prismaClient.js";
+import bcrypt from "bcrypt";
 
 const login = asyncHandler(async (req, res) => {});
 
@@ -152,7 +153,7 @@ const register = asyncHandler(async (req, res) => {
       email,
       name,
       role,
-      password,
+      password: await bcrypt.hash(password, 10),
       profileImageUrl,
       ...roleSpecificData,
     },
