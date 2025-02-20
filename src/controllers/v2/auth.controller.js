@@ -30,6 +30,10 @@ const register = asyncHandler(async (req, res) => {
       path: ["confirmPassword"],
     });
 
+  const phoneSchema = z
+    .string({ required_error: "Phone number is required." })
+    .length(10, "Phone number must be exactly 10 digits long.");
+
   const { name, email, password, profileImageUrl } = registerSchema.parse(
     req.body
   );
@@ -59,9 +63,7 @@ const register = asyncHandler(async (req, res) => {
     case "CUSTOMER": {
       const { phone, dateOfBirth } = z
         .object({
-          phone: z
-            .string({ required_error: "Phone number is required." })
-            .length(10, "Phone number must be exactly 10 digits long."),
+          phone: phoneSchema,
           dateOfBirth: z
             .string({ required_error: "Date of birth is required." })
             .regex(
@@ -84,9 +86,7 @@ const register = asyncHandler(async (req, res) => {
     case "DELIVERY_PARTNER": {
       const { phone, availability, vehicleType } = z
         .object({
-          phone: z
-            .string({ required_error: "Phone number is required." })
-            .length(10, "Phone number must be exactly 10 digits long."),
+          phone: phoneSchema,
           availability: z.boolean({
             required_error: "Availability is required.",
           }),
@@ -111,9 +111,7 @@ const register = asyncHandler(async (req, res) => {
     case "RESTAURANT_OWNER": {
       const { phone, panNumber } = z
         .object({
-          phone: z
-            .string({ required_error: "Phone number is required." })
-            .length(10, "Phone number must be exactly 10 digits long."),
+          phone: phoneSchema,
           panNumber: z
             .string({ required_error: "PAN number is required." })
             .length(10, "PAN number must be exactly 10 characters long.")
