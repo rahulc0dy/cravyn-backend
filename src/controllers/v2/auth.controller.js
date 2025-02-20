@@ -173,11 +173,13 @@ const register = asyncHandler(async (req, res) => {
     },
   });
 
+  const { password: _unused, ...sanitizedUser } = user;
+
   return res
     .status(STATUS.SUCCESS.CREATED)
     .json(
       new ApiResponse(
-        user,
+        sanitizedUser,
         `User registered successfully with the role: ${role}.`
       )
     );
