@@ -13,7 +13,7 @@ describe("POST /register", () => {
     vitest.restoreAllMocks();
   });
 
-  describe("General Validation Errors", () => {
+  describe("General Validation", () => {
     const mockUser = {
       email: "test@example.com",
       name: "Test User",
@@ -170,7 +170,7 @@ describe("POST /register", () => {
     });
   });
 
-  describe("Customer Role Validation Errors", () => {
+  describe("Customer Role Validation", () => {
     const mockCustomer = {
       email: "test@example.com",
       name: "Test User",
@@ -251,6 +251,103 @@ describe("POST /register", () => {
       expect(response.body).toHaveProperty("message");
       expect(response.body.message).toEqual(
         "User registered successfully with the role: CUSTOMER."
+      );
+    });
+  });
+
+  describe("Delivery Partner Role Validation", () => {
+    const mockDeliveryPartner = {
+      name: "John Doe",
+      email: "johndoe@example.com",
+      password: "password123",
+      confirmPassword: "password123",
+      phone: "9876543210",
+      availability: true,
+      vehicleType: "BIKE",
+    };
+
+    test("should return 400 if phone is missing", async () => {
+      const body = { ...mockDeliveryPartner };
+      delete body.phone;
+
+      const response = await request(app)
+        .post(`${URL}?role=DELIVERY_PARTNER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual("Phone number is required.");
+    });
+
+    test("should return 400 if phone is not exactly 10 digits", async () => {
+      const body = { ...mockDeliveryPartner, phone: "12345" };
+
+      const response = await request(app)
+        .post(`${URL}?role=DELIVERY_PARTNER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual(
+        "Phone number must be exactly 10 digits long."
+      );
+    });
+
+    test("should return 400 if availability is missing", async () => {
+      const body = { ...mockDeliveryPartner };
+      delete body.availability;
+
+      const response = await request(app)
+        .post(`${URL}?role=DELIVERY_PARTNER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual("Availability is required.");
+    });
+
+    test("should return 400 if vehicleType is missing", async () => {
+      const body = { ...mockDeliveryPartner };
+      delete body.vehicleType;
+
+      const response = await request(app)
+        .post(`${URL}?role=DELIVERY_PARTNER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual(
+        "Vehicle type is required. Must be one of BIKE, CYCLE."
+      );
+    });
+
+    test("should return 400 if vehicleType is invalid", async () => {
+      const body = { ...mockDeliveryPartner, vehicleType: "CAR" };
+
+      const response = await request(app)
+        .post(`${URL}?role=DELIVERY_PARTNER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual(
+        "Invalid enum value. Expected 'BIKE' | 'CYCLE', received 'CAR'"
+      );
+    });
+
+    test("should register a delivery partner successfully", async () => {
+      vitest.spyOn(prisma.user, "create").mockImplementation(() => {
+        return { id: "test-id", ...mockDeliveryPartner };
+      });
+
+      const response = await request(app)
+        .post(`${URL}?role=DELIVERY_PARTNER`)
+        .send(mockDeliveryPartner)
+        .expect(STATUS.SUCCESS.CREATED);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual(
+        "User registered successfully with the role: DELIVERY_PARTNER."
       );
     });
   });
