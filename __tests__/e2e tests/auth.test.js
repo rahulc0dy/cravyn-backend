@@ -9,22 +9,22 @@ const BASE_URL = "/api/v2";
 describe("POST /register", () => {
   const URL = `${BASE_URL}/register`;
 
+  const mockBaseUser = {
+    email: "test@example.com",
+    name: "Test User",
+    password: "password123",
+    confirmPassword: "password123",
+    phone: "9876543210",
+    dateOfBirth: "01-01-2000",
+  };
+
   afterEach(() => {
     vitest.restoreAllMocks();
   });
 
   describe("General Validation", () => {
-    const mockUser = {
-      email: "test@example.com",
-      name: "Test User",
-      password: "password123",
-      confirmPassword: "password123",
-      phone: "9876543210",
-      dateOfBirth: "01-01-2000",
-    };
-
     test("should return 400 if name is missing.", async () => {
-      const body = { ...mockUser };
+      const body = { ...mockBaseUser };
       delete body.name;
 
       const response = await request(app)
@@ -36,7 +36,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if name is less than 2 characters.", async () => {
-      const body = { ...mockUser, name: "A" };
+      const body = { ...mockBaseUser, name: "A" };
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -50,7 +50,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if email is missing.", async () => {
-      const body = { ...mockUser };
+      const body = { ...mockBaseUser };
       delete body.email;
 
       const response = await request(app)
@@ -62,7 +62,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if email is invalid.", async () => {
-      const body = { ...mockUser, email: "invalid-email" };
+      const body = { ...mockBaseUser, email: "invalid-email" };
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -73,7 +73,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if password is missing.", async () => {
-      const body = { ...mockUser };
+      const body = { ...mockBaseUser };
       delete body.password;
 
       const response = await request(app)
@@ -86,7 +86,7 @@ describe("POST /register", () => {
 
     test("should return 400 if password is less than 6 characters.", async () => {
       const body = {
-        ...mockUser,
+        ...mockBaseUser,
         password: "12345",
         confirmPassword: "12345",
       };
@@ -103,7 +103,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if confirmPassword is missing.", async () => {
-      const body = { ...mockUser };
+      const body = { ...mockBaseUser };
       delete body.confirmPassword;
 
       const response = await request(app)
@@ -118,7 +118,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if password and confirmPassword do not match.", async () => {
-      const body = { ...mockUser, confirmPassword: "wrongpassword" };
+      const body = { ...mockBaseUser, confirmPassword: "wrongpassword" };
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -132,7 +132,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if profileImageUrl is provided but invalid.", async () => {
-      const body = { ...mockUser, profileImageUrl: "invalid-url" };
+      const body = { ...mockBaseUser, profileImageUrl: "invalid-url" };
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -148,7 +148,7 @@ describe("POST /register", () => {
     test("should return 400 if role is missing in query params.", async () => {
       const response = await request(app)
         .post(URL) // No role provided
-        .send(mockUser)
+        .send(mockBaseUser)
         .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
 
       expect(response.body).toHaveProperty(
@@ -160,7 +160,7 @@ describe("POST /register", () => {
     test("should return 400 if role is invalid.", async () => {
       const response = await request(app)
         .post(`${URL}?role=INVALID_ROLE`)
-        .send(mockUser)
+        .send(mockBaseUser)
         .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
 
       expect(response.body).toHaveProperty(
@@ -265,17 +265,18 @@ describe("POST /register", () => {
     });
 
     test("should return 200 if all fields are valid for CUSTOMER role.", async () => {
-      vitest.spyOn(prisma.user, "create").mockImplementation(() => {
-        return { id: "test-id", ...mockCustomer };
-      });
+      vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(undefined);
+      vitest
+        .spyOn(prisma.user, "create")
+        .mockResolvedValue({ id: "test-id", ...mockCustomer });
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
         .send(mockCustomer)
         .expect(STATUS.SUCCESS.CREATED);
 
-      expect(response.body).toHaveProperty("message");
-      expect(response.body.message).toEqual(
+      expect(response.body).toHaveProperty(
+        "message",
         "User registered successfully with the role: CUSTOMER."
       );
     });
@@ -386,9 +387,10 @@ describe("POST /register", () => {
     });
 
     test("should register a delivery partner successfully", async () => {
-      vitest.spyOn(prisma.user, "create").mockImplementation(() => {
-        return { id: "test-id", ...mockDeliveryPartner };
-      });
+      vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(undefined);
+      vitest
+        .spyOn(prisma.user, "create")
+        .mockResolvedValue({ id: "test-id", ...mockDeliveryPartner });
 
       const response = await request(app)
         .post(`${URL}?role=DELIVERY_PARTNER`)
@@ -478,9 +480,10 @@ describe("POST /register", () => {
     });
 
     test("should register a restaurant owner successfully", async () => {
-      vitest.spyOn(prisma.user, "create").mockImplementation(() => {
-        return { id: "test-id", ...mockRestaurantOwner };
-      });
+      vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(undefined);
+      vitest
+        .spyOn(prisma.user, "create")
+        .mockResolvedValue({ id: "test-id", ...mockRestaurantOwner });
 
       const response = await request(app)
         .post(`${URL}?role=RESTAURANT_OWNER`)
@@ -491,6 +494,74 @@ describe("POST /register", () => {
       expect(response.body.message).toEqual(
         "User registered successfully with the role: RESTAURANT_OWNER."
       );
+    });
+  });
+
+  describe("Database & System Error Handling", () => {
+    test("should return 500 if the database connection fails", async () => {
+      vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(undefined);
+      vitest
+        .spyOn(prisma.user, "create")
+        .mockRejectedValue(new Error("Database connection failed."));
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(mockBaseUser)
+        .expect(STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR);
+
+      expect(response.body.message).toBe("Database connection failed.");
+    });
+
+    test("should return 500 if Prisma throws an unexpected error", async () => {
+      vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(undefined);
+      vitest.spyOn(prisma.user, "create").mockImplementation(() => {
+        throw new Error("Unexpected Prisma error.");
+      });
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(mockBaseUser)
+        .expect(STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR);
+
+      expect(response.body.message).toBe("Unexpected Prisma error.");
+    });
+
+    test("should return 400 if trying to register with an already existing email", async () => {
+      vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
+        id: 1,
+        ...mockBaseUser,
+      });
+      vitest
+        .spyOn(prisma.user, "create")
+        .mockResolvedValue({ id: "test-id", ...mockBaseUser });
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(mockBaseUser)
+        .expect(STATUS.CLIENT_ERROR.CONFLICT);
+
+      expect(response.body.message).toBe(
+        "User with this email already exists."
+      );
+    });
+
+    test("should return 500 if the request body contains unexpected data types", async () => {
+      vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(undefined);
+      vitest
+        .spyOn(prisma.user, "create")
+        .mockResolvedValue({ id: "test-id", ...mockBaseUser });
+
+      const invalidUser = {
+        ...mockBaseUser,
+        phone: 9876543210, // Invalid: should be a string
+      };
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(invalidUser)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body.message).toContain("Phone number must be a string.");
     });
   });
 });

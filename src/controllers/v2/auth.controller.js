@@ -31,7 +31,10 @@ const register = asyncHandler(async (req, res) => {
     });
 
   const phoneSchema = z
-    .string({ required_error: "Phone number is required." })
+    .string({
+      required_error: "Phone number is required.",
+      invalid_type_error: "Phone number must be a string.",
+    })
     .length(10, "Phone number must be exactly 10 digits long.")
     .regex(/^\d+$/, "Phone number must contain only digits.");
 
@@ -146,6 +149,17 @@ const register = asyncHandler(async (req, res) => {
         "Invalid role",
         "Role must be one of CUSTOMER, DELIVERY_PARTNER, RESTAURANT_OWNER, RESTAURANT_TEAM, MANAGEMENT, BUSINESS."
       );
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingUser) {
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.CONFLICT,
+      "User with this email already exists."
+    );
   }
 
   const user = await prisma.user.create({
