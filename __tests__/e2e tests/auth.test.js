@@ -9,22 +9,22 @@ const BASE_URL = "/api/v2";
 describe("POST /register", () => {
   const URL = `${BASE_URL}/register`;
 
-  const mockCustomer = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    password: "password123",
-    confirmPassword: "password123",
-    phone: "1234567890",
-    dateOfBirth: "01-01-2000",
-  };
-
   afterEach(() => {
     vitest.restoreAllMocks();
   });
 
   describe("General Validation Errors", () => {
+    const mockUser = {
+      email: "test@example.com",
+      name: "Test User",
+      password: "password123",
+      confirmPassword: "password123",
+      phone: "9876543210",
+      dateOfBirth: "01-01-2000",
+    };
+
     test("should return 400 if name is missing.", async () => {
-      const body = { ...mockCustomer };
+      const body = { ...mockUser };
       delete body.name;
 
       const response = await request(app)
@@ -36,7 +36,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if name is less than 2 characters.", async () => {
-      const body = { ...mockCustomer, name: "A" };
+      const body = { ...mockUser, name: "A" };
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -50,7 +50,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if email is missing.", async () => {
-      const body = { ...mockCustomer };
+      const body = { ...mockUser };
       delete body.email;
 
       const response = await request(app)
@@ -62,7 +62,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if email is invalid.", async () => {
-      const body = { ...mockCustomer, email: "invalid-email" };
+      const body = { ...mockUser, email: "invalid-email" };
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -73,7 +73,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if password is missing.", async () => {
-      const body = { ...mockCustomer };
+      const body = { ...mockUser };
       delete body.password;
 
       const response = await request(app)
@@ -86,7 +86,7 @@ describe("POST /register", () => {
 
     test("should return 400 if password is less than 6 characters.", async () => {
       const body = {
-        ...mockCustomer,
+        ...mockUser,
         password: "12345",
         confirmPassword: "12345",
       };
@@ -103,7 +103,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if confirmPassword is missing.", async () => {
-      const body = { ...mockCustomer };
+      const body = { ...mockUser };
       delete body.confirmPassword;
 
       const response = await request(app)
@@ -118,7 +118,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if password and confirmPassword do not match.", async () => {
-      const body = { ...mockCustomer, confirmPassword: "wrongpassword" };
+      const body = { ...mockUser, confirmPassword: "wrongpassword" };
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -132,7 +132,7 @@ describe("POST /register", () => {
     });
 
     test("should return 400 if profileImageUrl is provided but invalid.", async () => {
-      const body = { ...mockCustomer, profileImageUrl: "invalid-url" };
+      const body = { ...mockUser, profileImageUrl: "invalid-url" };
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -148,7 +148,7 @@ describe("POST /register", () => {
     test("should return 400 if role is missing in query params.", async () => {
       const response = await request(app)
         .post(URL) // No role provided
-        .send(mockCustomer)
+        .send(mockUser)
         .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
 
       expect(response.body).toHaveProperty(
@@ -160,12 +160,97 @@ describe("POST /register", () => {
     test("should return 400 if role is invalid.", async () => {
       const response = await request(app)
         .post(`${URL}?role=INVALID_ROLE`)
-        .send(mockCustomer)
+        .send(mockUser)
         .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
 
       expect(response.body).toHaveProperty(
         "message",
         "Invalid enum value. Expected 'CUSTOMER' | 'DELIVERY_PARTNER' | 'RESTAURANT_OWNER' | 'RESTAURANT_TEAM' | 'MANAGEMENT' | 'BUSINESS', received 'INVALID_ROLE'"
+      );
+    });
+  });
+
+  describe("Customer Role Validation Errors", () => {
+    const mockCustomer = {
+      email: "test@example.com",
+      name: "Test User",
+      password: "password123",
+      confirmPassword: "password123",
+      phone: "9876543210",
+      dateOfBirth: "01-01-2000",
+    };
+
+    test("should return 400 if phone is missing.", async () => {
+      const body = { ...mockCustomer };
+      delete body.phone;
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty(
+        "message",
+        "Phone number is required."
+      );
+    });
+
+    test("should return 400 if phone number is not exactly 10 digits.", async () => {
+      const body = { ...mockCustomer, phone: "12345" };
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty(
+        "message",
+        "Phone number must be exactly 10 digits long."
+      );
+    });
+
+    test("should return 400 if dateOfBirth is missing.", async () => {
+      const body = { ...mockCustomer };
+      delete body.dateOfBirth;
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty(
+        "message",
+        "Date of birth is required."
+      );
+    });
+
+    test("should return 400 if dateOfBirth format is invalid.", async () => {
+      const body = { ...mockCustomer, dateOfBirth: "2000-01-01" }; // Incorrect format
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty(
+        "message",
+        "Invalid date format. Use DD-MM-YYYY."
+      );
+    });
+
+    test("should return 200 if all fields are valid for CUSTOMER role.", async () => {
+      vitest.spyOn(prisma.user, "create").mockImplementation(() => {
+        return { id: "test-id", ...mockCustomer };
+      });
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(mockCustomer)
+        .expect(STATUS.SUCCESS.CREATED);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual(
+        "User registered successfully with the role: CUSTOMER."
       );
     });
   });

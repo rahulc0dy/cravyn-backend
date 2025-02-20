@@ -160,7 +160,7 @@ const register = asyncHandler(async (req, res) => {
   });
 
   return res
-    .status(STATUS.SUCCESS.OK)
+    .status(STATUS.SUCCESS.CREATED)
     .json(
       new ApiResponse(
         user,
