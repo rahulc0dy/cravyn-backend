@@ -14,8 +14,25 @@ describe("POST /register", () => {
     name: "Test User",
     password: "password123",
     confirmPassword: "password123",
+  };
+
+  const mockCustomer = {
+    ...mockBaseUser,
     phone: "9876543210",
     dateOfBirth: "01-01-2000",
+  };
+
+  const mockDeliveryPartner = {
+    ...mockBaseUser,
+    phone: "9876543210",
+    availability: true,
+    vehicleType: "BIKE",
+  };
+
+  const mockRestaurantOwner = {
+    ...mockBaseUser,
+    phone: "9876543210",
+    panNumber: "ABCDE1234F",
   };
 
   afterEach(() => {
@@ -171,15 +188,6 @@ describe("POST /register", () => {
   });
 
   describe("Customer Role Validation", () => {
-    const mockCustomer = {
-      email: "test@example.com",
-      name: "Test User",
-      password: "password123",
-      confirmPassword: "password123",
-      phone: "9876543210",
-      dateOfBirth: "01-01-2000",
-    };
-
     test("should return 400 if phone is missing.", async () => {
       const body = { ...mockCustomer };
       delete body.phone;
@@ -283,16 +291,6 @@ describe("POST /register", () => {
   });
 
   describe("Delivery Partner Role Validation", () => {
-    const mockDeliveryPartner = {
-      name: "John Doe",
-      email: "johndoe@example.com",
-      password: "password123",
-      confirmPassword: "password123",
-      phone: "9876543210",
-      availability: true,
-      vehicleType: "BIKE",
-    };
-
     test("should return 400 if phone is missing", async () => {
       const body = { ...mockDeliveryPartner };
       delete body.phone;
@@ -405,15 +403,6 @@ describe("POST /register", () => {
   });
 
   describe("Restaurant Owner Role Validation", () => {
-    const mockRestaurantOwner = {
-      name: "Alice Smith",
-      email: "alice@example.com",
-      password: "securePassword123",
-      confirmPassword: "securePassword123",
-      phone: "9876543210",
-      panNumber: "ABCDE1234F",
-    };
-
     test("should return 400 if phone is missing", async () => {
       const body = { ...mockRestaurantOwner };
       delete body.phone;
@@ -506,7 +495,7 @@ describe("POST /register", () => {
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
-        .send(mockBaseUser)
+        .send(mockCustomer)
         .expect(STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR);
 
       expect(response.body.message).toBe("Database connection failed.");
@@ -520,7 +509,7 @@ describe("POST /register", () => {
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
-        .send(mockBaseUser)
+        .send(mockCustomer)
         .expect(STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR);
 
       expect(response.body.message).toBe("Unexpected Prisma error.");
@@ -529,15 +518,15 @@ describe("POST /register", () => {
     test("should return 400 if trying to register with an already existing email", async () => {
       vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
         id: 1,
-        ...mockBaseUser,
+        ...mockCustomer,
       });
       vitest
         .spyOn(prisma.user, "create")
-        .mockResolvedValue({ id: "test-id", ...mockBaseUser });
+        .mockResolvedValue({ id: "test-id", ...mockCustomer });
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
-        .send(mockBaseUser)
+        .send(mockCustomer)
         .expect(STATUS.CLIENT_ERROR.CONFLICT);
 
       expect(response.body.message).toBe(
@@ -562,6 +551,28 @@ describe("POST /register", () => {
         .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
 
       expect(response.body.message).toContain("Phone number must be a string.");
+    });
+
+    test("should hash password before storing in database", async () => {
+      vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(undefined);
+
+      let createdUser;
+      vitest
+        .spyOn(prisma.user, "create")
+        .mockImplementation(async ({ data }) => {
+          createdUser = { id: "test-id", ...data };
+          return createdUser;
+        });
+
+      await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(mockCustomer)
+        .expect(STATUS.SUCCESS.CREATED);
+
+      expect(createdUser.password).not.toBe(mockCustomer.password);
+      expect(createdUser.password).toMatch(
+        /^\$2[aby]\$\d{1,2}\$[./A-Za-z0-9]{53}$/
+      ); // bcrypt hash pattern
     });
   });
 });
