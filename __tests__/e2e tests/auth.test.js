@@ -322,7 +322,7 @@ describe("POST /register", () => {
       const body = { ...mockDeliveryPartner, phone: "98A654321B" };
 
       const response = await request(app)
-        .post(`${URL}?role=CUSTOMER`)
+        .post(`${URL}?role=DELIVERY_PARTNER`)
         .send(body)
         .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
 
@@ -434,7 +434,7 @@ describe("POST /register", () => {
       const body = { ...mockRestaurantOwner, phone: "98A654321B" };
 
       const response = await request(app)
-        .post(`${URL}?role=CUSTOMER`)
+        .post(`${URL}?role=RESTAURANT_OWNER`)
         .send(body)
         .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
 
