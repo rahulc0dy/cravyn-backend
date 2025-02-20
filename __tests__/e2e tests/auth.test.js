@@ -251,6 +251,19 @@ describe("POST /register", () => {
       );
     });
 
+    test("should return 400 if dateOfBirth contains invalid characters", async () => {
+      const body = { ...mockCustomer, dateOfBirth: "01-01-20XX" };
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        "Invalid date format. Use DD-MM-YYYY."
+      );
+    });
+
     test("should return 200 if all fields are valid for CUSTOMER role.", async () => {
       vitest.spyOn(prisma.user, "create").mockImplementation(() => {
         return { id: "test-id", ...mockCustomer };
@@ -306,6 +319,19 @@ describe("POST /register", () => {
       );
     });
 
+    test("should return 400 if phone contains non-numeric characters", async () => {
+      const body = { ...mockDeliveryPartner, phone: "98A654321B" };
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        "Phone number must contain only digits."
+      );
+    });
+
     test("should return 400 if availability is missing", async () => {
       const body = { ...mockDeliveryPartner };
       delete body.availability;
@@ -317,6 +343,17 @@ describe("POST /register", () => {
 
       expect(response.body).toHaveProperty("message");
       expect(response.body.message).toEqual("Availability is required.");
+    });
+
+    test("should return 400 if availability is a string instead of boolean", async () => {
+      const body = { ...mockDeliveryPartner, availability: "true" };
+
+      const response = await request(app)
+        .post(`${URL}?role=DELIVERY_PARTNER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body.message).toEqual("Availability must be a boolean.");
     });
 
     test("should return 400 if vehicleType is missing", async () => {
@@ -399,6 +436,19 @@ describe("POST /register", () => {
       expect(response.body).toHaveProperty("message");
       expect(response.body.message).toEqual(
         "Phone number must be exactly 10 digits long."
+      );
+    });
+
+    test("should return 400 if phone contains non-numeric characters", async () => {
+      const body = { ...mockRestaurantOwner, phone: "98A654321B" };
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body.message).toEqual(
+        "Phone number must contain only digits."
       );
     });
 

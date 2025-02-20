@@ -90,6 +90,7 @@ const register = asyncHandler(async (req, res) => {
           phone: phoneSchema,
           availability: z.boolean({
             required_error: "Availability is required.",
+            invalid_type_error: "Availability must be a boolean.",
           }),
           vehicleType: z.enum(["BIKE", "CYCLE"], {
             required_error:
