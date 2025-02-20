@@ -55,8 +55,8 @@ const register = asyncHandler(async (req, res) => {
   let roleSpecificData;
 
   switch (role) {
-    case "CUSTOMER":
-      const { phoneCustomer, dateOfBirth } = z
+    case "CUSTOMER": {
+      const { phone, dateOfBirth } = z
         .object({
           phone: z
             .string({ required_error: "Phone number is required." })
@@ -73,14 +73,15 @@ const register = asyncHandler(async (req, res) => {
       roleSpecificData = {
         customer: {
           create: {
-            phone: phoneCustomer,
+            phone,
             dateOfBirth: new Date(dateOfBirth),
           },
         },
       };
       break;
-    case "DELIVERY_PARTNER":
-      const { phoneDeliveryPartner, availability, vehicleType } = z
+    }
+    case "DELIVERY_PARTNER": {
+      const { phone, availability, vehicleType } = z
         .object({
           phone: z
             .string({ required_error: "Phone number is required." })
@@ -98,17 +99,18 @@ const register = asyncHandler(async (req, res) => {
       roleSpecificData = {
         deliveryPartner: {
           create: {
-            phone: phoneDeliveryPartner,
+            phone,
             availability,
             vehicleType,
           },
         },
       };
       break;
-    case "RESTAURANT_OWNER":
-      const { phoneRestaurantOwner, panNumber } = z
+    }
+    case "RESTAURANT_OWNER": {
+      const { phone, panNumber } = z
         .object({
-          phoneRestaurantOwner: z
+          phone: z
             .string({ required_error: "Phone number is required." })
             .length(10, "Phone number must be exactly 10 digits long."),
           panNumber: z
@@ -121,18 +123,22 @@ const register = asyncHandler(async (req, res) => {
       roleSpecificData = {
         restaurantOwner: {
           create: {
-            phone: phoneRestaurantOwner,
+            phone,
             panNumber,
           },
         },
       };
       break;
-    case "RESTAURANT_TEAM":
+    }
+    case "RESTAURANT_TEAM": {
       break;
-    case "MANAGEMENT":
+    }
+    case "MANAGEMENT": {
       break;
-    case "BUSINESS":
+    }
+    case "BUSINESS": {
       break;
+    }
     default:
       throw new ApiError(
         STATUS.CLIENT_ERROR.BAD_REQUEST,
