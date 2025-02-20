@@ -42,7 +42,7 @@ describe("POST /register", () => {
   describe("General Validation", () => {
     test("should return 400 if name is missing.", async () => {
       const body = { ...mockBaseUser };
-      delete body.name;
+      body.name = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -68,7 +68,7 @@ describe("POST /register", () => {
 
     test("should return 400 if email is missing.", async () => {
       const body = { ...mockBaseUser };
-      delete body.email;
+      body.email = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -91,7 +91,7 @@ describe("POST /register", () => {
 
     test("should return 400 if password is missing.", async () => {
       const body = { ...mockBaseUser };
-      delete body.password;
+      body.password = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -121,7 +121,7 @@ describe("POST /register", () => {
 
     test("should return 400 if confirmPassword is missing.", async () => {
       const body = { ...mockBaseUser };
-      delete body.confirmPassword;
+      body.confirmPassword = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -232,7 +232,7 @@ describe("POST /register", () => {
 
     test("should return 400 if dateOfBirth is missing.", async () => {
       const body = { ...mockCustomer };
-      delete body.dateOfBirth;
+      body.dateOfBirth = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
@@ -293,7 +293,7 @@ describe("POST /register", () => {
   describe("Delivery Partner Role Validation", () => {
     test("should return 400 if phone is missing", async () => {
       const body = { ...mockDeliveryPartner };
-      delete body.phone;
+      body.phone = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=DELIVERY_PARTNER`)
@@ -333,7 +333,7 @@ describe("POST /register", () => {
 
     test("should return 400 if availability is missing", async () => {
       const body = { ...mockDeliveryPartner };
-      delete body.availability;
+      body.availability = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=DELIVERY_PARTNER`)
@@ -357,7 +357,7 @@ describe("POST /register", () => {
 
     test("should return 400 if vehicleType is missing", async () => {
       const body = { ...mockDeliveryPartner };
-      delete body.vehicleType;
+      body.vehicleType = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=DELIVERY_PARTNER`)
@@ -405,7 +405,7 @@ describe("POST /register", () => {
   describe("Restaurant Owner Role Validation", () => {
     test("should return 400 if phone is missing", async () => {
       const body = { ...mockRestaurantOwner };
-      delete body.phone;
+      body.phone = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=RESTAURANT_OWNER`)
@@ -445,7 +445,7 @@ describe("POST /register", () => {
 
     test("should return 400 if PAN number is missing", async () => {
       const body = { ...mockRestaurantOwner };
-      delete body.panNumber;
+      body.panNumber = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=RESTAURANT_OWNER`)
