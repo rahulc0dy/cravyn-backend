@@ -497,6 +497,53 @@ describe("POST /register", () => {
     });
   });
 
+  describe("Restaurant Team Role Validation", () => {
+    test("should register a restaurant team member successfully", async () => {
+      vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(undefined);
+      vitest
+        .spyOn(prisma.user, "create")
+        .mockResolvedValue({ id: "test-id", ...mockBaseUser });
+
+      const response = await request(app)
+        .post(`${URL}?role=RESTAURANT_TEAM`)
+        .send(mockBaseUser)
+        .expect(STATUS.SUCCESS.CREATED);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual(
+        "User registered successfully with the role: RESTAURANT_TEAM."
+      );
+    });
+  });
+
+  describe("Management Team Role Validation", () => {
+    test("should not register a management team member", async () => {
+      const response = await request(app)
+        .post(`${URL}?role=MANAGEMENT`)
+        .send(mockBaseUser)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual(
+        "Management team member cannot self register. To get added as a management team member, contact the admin."
+      );
+    });
+  });
+
+  describe("Business Team Role Validation", () => {
+    test("should not register a business team member", async () => {
+      const response = await request(app)
+        .post(`${URL}?role=BUSINESS`)
+        .send(mockBaseUser)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toEqual(
+        "Business team member cannot self register. To get added as a business team member, contact the admin."
+      );
+    });
+  });
+
   describe("Database & System Error Handling", () => {
     test("should return 500 if the database connection fails", async () => {
       vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(undefined);

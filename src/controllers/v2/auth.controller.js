@@ -71,17 +71,17 @@ const register = asyncHandler(async (req, res) => {
       break;
     }
     case "MANAGEMENT": {
-      break;
-    }
-    case "BUSINESS": {
-      break;
-    }
-    default:
       throw new ApiError(
         STATUS.CLIENT_ERROR.BAD_REQUEST,
-        "Invalid role",
-        "Role must be one of CUSTOMER, DELIVERY_PARTNER, RESTAURANT_OWNER, RESTAURANT_TEAM, MANAGEMENT, BUSINESS."
+        "Management team member cannot self register. To get added as a management team member, contact the admin."
       );
+    }
+    case "BUSINESS": {
+      throw new ApiError(
+        STATUS.CLIENT_ERROR.BAD_REQUEST,
+        "Business team member cannot self register. To get added as a business team member, contact the admin."
+      );
+    }
   }
 
   const existingUser = await prisma.user.findUnique({
