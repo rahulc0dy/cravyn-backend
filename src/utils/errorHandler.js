@@ -10,16 +10,16 @@ const errorHandler = (err, _req, res, _next) => {
   const message = err.message || "Internal Server Error.";
 
   if (err instanceof ZodError) {
-    res
+    return res
       .status(STATUS.CLIENT_ERROR.BAD_REQUEST)
       .json(new ApiResponse({}, err.errors?.[0]?.message || "Invalid input"));
   }
 
   if (isProduction) {
-    res.status(statusCode).json(new ApiResponse({}, message));
+    return res.status(statusCode).json(new ApiResponse({}, message));
   } else {
     console.error(err);
-    res.status(statusCode).json(
+    return res.status(statusCode).json(
       new DevApiResponse(
         {},
         message,
