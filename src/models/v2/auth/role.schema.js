@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ROLES } from "../../../constants/roles";
+import { ROLES } from "../../../constants/roles.js";
 
 const roleSchema = z.object({
   role: z.enum(Object.values(ROLES), {

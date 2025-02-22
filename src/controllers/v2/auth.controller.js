@@ -9,8 +9,64 @@ import { roleSchema } from "../../models/v2/auth/role.schema.js";
 import { customerSchema } from "../../models/v2/auth/customer.schema.js";
 import { deliveryPartnerSchema } from "../../models/v2/auth/deliveryPartner.schema.js";
 import { restaurantOwnerSchema } from "../../models/v2/auth/restaurantOwner.schema.js";
+import { loginSchema } from "../../models/v2/auth/login.schema.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../utils/v2/tokenGenerator.js";
+import { cookieOptions } from "../../constants/cookieOptions.js";
 
-const login = asyncHandler(async (req, res) => {});
+const login = asyncHandler(async (req, res) => {
+  const { email, password } = loginSchema.parse(req.body);
+
+  // Find user by email
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.UNAUTHORIZED,
+      "Email address is not registered."
+    );
+  }
+
+  // Validate password
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.UNAUTHORIZED,
+      "Password is incorrect. Try again!"
+    );
+  }
+
+  // Generate authentication tokens
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  // Store the refresh token in the database
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { refreshToken },
+  });
+
+  // Remove password before sending response
+  const { password: _unused, ...sanitizedUser } = user;
+
+  return res
+    .status(STATUS.SUCCESS.OK)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .json(
+      new ApiResponse(
+        {
+          ...sanitizedUser, // contains refresh token
+          accessToken,
+        },
+        "User logged in successfully."
+      )
+    );
+});
 
 const register = asyncHandler(async (req, res) => {
   const { name, email, password, profileImageUrl } = registerSchema.parse(
@@ -106,7 +162,7 @@ const register = asyncHandler(async (req, res) => {
     },
   });
 
-  const { password: _unused, ...sanitizedUser } = user;
+  const { password: _unused, refreshToken: _null, ...sanitizedUser } = user;
 
   return res
     .status(STATUS.SUCCESS.CREATED)

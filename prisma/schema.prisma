@@ -28,6 +28,7 @@ model User {
   profileImageUrl String?
   role            Role
   password        String
+  refreshToken    String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
