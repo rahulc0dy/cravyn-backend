@@ -5,77 +5,27 @@ import { STATUS } from "../../constants/statusCodes.js";
 import { z } from "zod";
 import { prisma } from "../../utils/prismaClient.js";
 import bcrypt from "bcrypt";
+import { registerSchema } from "../../models/v2/auth/register.schema.js";
+import { phoneSchema } from "../../models/v2/auth/phone.schema.js";
+import { roleSchema } from "../../models/v2/auth/role.schema.js";
+import { customerSchema } from "../../models/v2/auth/customer.schema.js";
+import { deliveryPartnerSchema } from "../../models/v2/auth/deliveryPartner.schema.js";
+import { restaurantOwnerSchema } from "../../models/v2/auth/restaurantOwner.schema.js";
 
 const login = asyncHandler(async (req, res) => {});
 
 const register = asyncHandler(async (req, res) => {
-  const registerSchema = z
-    .object({
-      name: z
-        .string({ required_error: "Name is required." })
-        .min(2, "Name must be at least 2 characters long."),
-      email: z
-        .string({ required_error: "Email is required." })
-        .email("Invalid email address."),
-      password: z
-        .string({ required_error: "Password is required." })
-        .min(6, "Password must be at least 6 characters long."),
-      confirmPassword: z.string({
-        required_error: "Confirm password is required.",
-      }),
-      profileImageUrl: z.string().url("Invalid profile image URL.").optional(),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-      message: "Passwords do not match.",
-      path: ["confirmPassword"],
-    });
-
-  const phoneSchema = z
-    .string({
-      required_error: "Phone number is required.",
-      invalid_type_error: "Phone number must be a string.",
-    })
-    .length(10, "Phone number must be exactly 10 digits long.")
-    .regex(/^\d+$/, "Phone number must contain only digits.");
-
   const { name, email, password, profileImageUrl } = registerSchema.parse(
     req.body
   );
 
-  const { role } = z
-    .object({
-      role: z.enum(
-        [
-          "CUSTOMER",
-          "DELIVERY_PARTNER",
-          "RESTAURANT_OWNER",
-          "RESTAURANT_TEAM",
-          "MANAGEMENT",
-          "BUSINESS",
-        ],
-        {
-          required_error:
-            "Role is required. Must be one of CUSTOMER, DELIVERY_PARTNER, RESTAURANT_OWNER, RESTAURANT_TEAM, MANAGEMENT, BUSINESS.",
-        }
-      ),
-    })
-    .parse(req.query);
+  const { role } = roleSchema.parse(req.query);
 
   let roleSpecificData;
 
   switch (role) {
     case "CUSTOMER": {
-      const { phone, dateOfBirth } = z
-        .object({
-          phone: phoneSchema,
-          dateOfBirth: z
-            .string({ required_error: "Date of birth is required." })
-            .regex(
-              /^\d{2}-\d{2}-\d{4}$/,
-              "Invalid date format. Use DD-MM-YYYY."
-            ),
-        })
-        .parse(req.body);
+      const { phone, dateOfBirth } = customerSchema.parse(req.body);
 
       roleSpecificData = {
         customer: {
@@ -85,22 +35,13 @@ const register = asyncHandler(async (req, res) => {
           },
         },
       };
+
       break;
     }
     case "DELIVERY_PARTNER": {
-      const { phone, availability, vehicleType } = z
-        .object({
-          phone: phoneSchema,
-          availability: z.boolean({
-            required_error: "Availability is required.",
-            invalid_type_error: "Availability must be a boolean.",
-          }),
-          vehicleType: z.enum(["BIKE", "CYCLE"], {
-            required_error:
-              "Vehicle type is required. Must be one of BIKE, CYCLE.",
-          }),
-        })
-        .parse(req.body);
+      const { phone, availability, vehicleType } = deliveryPartnerSchema.parse(
+        req.body
+      );
 
       roleSpecificData = {
         deliveryPartner: {
@@ -111,18 +52,11 @@ const register = asyncHandler(async (req, res) => {
           },
         },
       };
+
       break;
     }
     case "RESTAURANT_OWNER": {
-      const { phone, panNumber } = z
-        .object({
-          phone: phoneSchema,
-          panNumber: z
-            .string({ required_error: "PAN number is required." })
-            .length(10, "PAN number must be exactly 10 characters long.")
-            .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN number format."),
-        })
-        .parse(req.body);
+      const { phone, panNumber } = restaurantOwnerSchema.parse(req.body);
 
       roleSpecificData = {
         restaurantOwner: {
@@ -132,6 +66,7 @@ const register = asyncHandler(async (req, res) => {
           },
         },
       };
+
       break;
     }
     case "RESTAURANT_TEAM": {
