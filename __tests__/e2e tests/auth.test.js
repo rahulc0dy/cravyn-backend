@@ -190,7 +190,7 @@ describe("POST /register", () => {
   describe("Customer Role Validation", () => {
     test("should return 400 if phone is missing.", async () => {
       const body = { ...mockCustomer };
-      delete body.phone;
+      body.phone = undefined;
 
       const response = await request(app)
         .post(`${URL}?role=CUSTOMER`)
