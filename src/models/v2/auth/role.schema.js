@@ -1,20 +1,10 @@
 import { z } from "zod";
+import { ROLES } from "../../../constants/roles";
 
 const roleSchema = z.object({
-  role: z.enum(
-    [
-      "CUSTOMER",
-      "DELIVERY_PARTNER",
-      "RESTAURANT_OWNER",
-      "RESTAURANT_TEAM",
-      "MANAGEMENT",
-      "BUSINESS",
-    ],
-    {
-      required_error:
-        "Role is required. Must be one of CUSTOMER, DELIVERY_PARTNER, RESTAURANT_OWNER, RESTAURANT_TEAM, MANAGEMENT, BUSINESS.",
-    }
-  ),
+  role: z.enum(Object.values(ROLES), {
+    required_error: `Role is required. Must be one of ${Object.values(ROLES).join(", ")}.`,
+  }),
 });
 
 export { roleSchema };
