@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { phoneSchema } from "./phone.schema";
+import { phoneSchema } from "./phone.schema.js";
 
 const restaurantOwnerSchema = z.object({
   phone: phoneSchema,

@@ -259,6 +259,17 @@ describe("POST /register", () => {
       );
     });
 
+    test("should return 400 if dateOfBirth is invalid.", async () => {
+      const body = { ...mockCustomer, dateOfBirth: "01-20-2000" }; // Invalid date
+
+      const response = await request(app)
+        .post(`${URL}?role=CUSTOMER`)
+        .send(body)
+        .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+      expect(response.body).toHaveProperty("message", "Invalid date.");
+    });
+
     test("should return 400 if dateOfBirth contains invalid characters", async () => {
       const body = { ...mockCustomer, dateOfBirth: "01-01-20XX" };
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { phoneSchema } from "./phone.schema";
+import { phoneSchema } from "./phone.schema.js";
 
 const deliveryPartnerSchema = z.object({
   phone: phoneSchema,
