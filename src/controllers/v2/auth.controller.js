@@ -20,7 +20,7 @@ const login = asyncHandler(async (req, res) => {
   const { email, password } = loginSchema.parse(req.body);
 
   // Find user by email
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { email },
   });
 
@@ -45,7 +45,7 @@ const login = asyncHandler(async (req, res) => {
   const refreshToken = generateRefreshToken(user);
 
   // Store the refresh token in the database
-  await prisma.user.update({
+  user = await prisma.user.update({
     where: { id: user.id },
     data: { refreshToken },
   });

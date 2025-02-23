@@ -3,8 +3,222 @@ import { app } from "../../src/app.js";
 import { STATUS } from "../../src/constants/statusCodes.js";
 import { afterEach, describe, expect, test, vitest } from "vitest";
 import { prisma } from "../../src/utils/prismaClient.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+vitest.mock("../../src/utils/v2/tokenGenerator.js", () => ({
+  generateAccessToken: vitest.fn(() => "mock-access-token"),
+  generateRefreshToken: vitest.fn(() => "mock-refresh-token"),
+}));
+
+import { generateAccessToken } from "../../src/utils/v2/tokenGenerator.js";
 
 const BASE_URL = "/api/v2";
+
+describe("POST /login", () => {
+  const URL = `${BASE_URL}/login`;
+
+  const mockBaseUser = {
+    email: "test@example.com",
+    password: "password123",
+  };
+
+  const mockAccessToken = "mock-access-token";
+  const mockRefreshToken = "mock-refresh-token";
+
+  afterEach(() => {
+    vitest.restoreAllMocks();
+  });
+
+  test("should return 400 if email is missing", async () => {
+    const body = { ...mockBaseUser };
+    body.email = undefined;
+
+    const response = await request(app)
+      .post(URL)
+      .send(body)
+      .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+    expect(response.body).toHaveProperty("message", "Email is required.");
+  });
+
+  test("should return 400 if email is invalid", async () => {
+    const body = { ...mockBaseUser, email: "invalid-email" };
+
+    const response = await request(app)
+      .post(URL)
+      .send(body)
+      .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+    expect(response.body).toHaveProperty("message", "Invalid email address.");
+  });
+
+  test("should return 400 if password is missing", async () => {
+    const body = { ...mockBaseUser };
+    body.password = undefined;
+
+    const response = await request(app)
+      .post(URL)
+      .send(body)
+      .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+    expect(response.body).toHaveProperty("message", "Password is required.");
+  });
+
+  test("should return 400 if password is less than 6 characters", async () => {
+    const body = {
+      ...mockBaseUser,
+      password: "12345",
+    };
+
+    const response = await request(app)
+      .post(URL)
+      .send(body)
+      .expect(STATUS.CLIENT_ERROR.BAD_REQUEST);
+
+    expect(response.body).toHaveProperty(
+      "message",
+      "Password must be at least 6 characters long."
+    );
+  });
+
+  test("should return 401 if email is not registered", async () => {
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(undefined);
+
+    const body = { ...mockBaseUser };
+
+    const response = await request(app)
+      .post(URL)
+      .send(body)
+      .expect(STATUS.CLIENT_ERROR.UNAUTHORIZED);
+
+    expect(response.body).toHaveProperty(
+      "message",
+      "Email address is not registered."
+    );
+  });
+
+  test("should return 401 if password is incorrect", async () => {
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
+      ...mockBaseUser,
+      password: await bcrypt.hash("Correct Password", 10), // Correct hashed password from DB
+    });
+
+    const body = { ...mockBaseUser, password: "Incorrect Password" };
+
+    const response = await request(app)
+      .post(URL)
+      .send(body)
+      .expect(STATUS.CLIENT_ERROR.UNAUTHORIZED);
+
+    expect(response.body).toHaveProperty(
+      "message",
+      "Password is incorrect. Try again!"
+    );
+  });
+
+  test("should return 200 and generate tokens and set cookies", async () => {
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
+      ...mockBaseUser,
+      password: await bcrypt.hash("password123", 10), // Correct hashed password from DB
+    });
+    vitest.spyOn(prisma.user, "update").mockResolvedValue({
+      ...mockBaseUser,
+      refreshToken: "mock-refresh-token",
+    });
+
+    const response = await request(app)
+      .post(URL)
+      .send(mockBaseUser)
+      .expect(STATUS.SUCCESS.OK);
+
+    expect(response.body).toHaveProperty("data");
+    expect(response.body.data).toHaveProperty("accessToken");
+    expect(response.body.data).toHaveProperty("refreshToken");
+    expect(response.body.message).toEqual("User logged in successfully.");
+
+    const cookies = response.headers["set-cookie"];
+    expect(cookies).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("accessToken="),
+        expect.stringContaining("refreshToken="),
+      ])
+    );
+  });
+
+  test("should handle case-insensitive email login", async () => {
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
+      ...mockBaseUser,
+      password: await bcrypt.hash("password123", 10),
+    });
+    vitest.spyOn(prisma.user, "update").mockResolvedValue({
+      ...mockBaseUser,
+      refreshToken: "mock-refresh-token",
+    });
+
+    const response = await request(app)
+      .post(URL)
+      .send({ ...mockBaseUser, email: "TEST@EXAMPLE.COM" })
+      .expect(STATUS.SUCCESS.OK);
+
+    expect(response.body).toHaveProperty(
+      "message",
+      "User logged in successfully."
+    );
+  });
+
+  test("should return 500 if database connection fails", async () => {
+    vitest
+      .spyOn(prisma.user, "findUnique")
+      .mockRejectedValue(new Error("Database connection error."));
+
+    const response = await request(app)
+      .post(URL)
+      .send(mockBaseUser)
+      .expect(STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR);
+
+    expect(response.body).toHaveProperty(
+      "message",
+      "Database connection error."
+    );
+  });
+
+  test("should return 500 if bcrypt.compare throws an error", async () => {
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
+      ...mockBaseUser,
+      password: await bcrypt.hash("password123", 10),
+    });
+
+    vitest
+      .spyOn(bcrypt, "compare")
+      .mockRejectedValue(new Error("Bcrypt Error."));
+
+    const response = await request(app)
+      .post(URL)
+      .send(mockBaseUser)
+      .expect(STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR);
+
+    expect(response.body).toHaveProperty("message", "Bcrypt Error.");
+  });
+
+  test("should return 500 if refresh token storage fails", async () => {
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
+      ...mockBaseUser,
+      password: await bcrypt.hash("password123", 10),
+    });
+
+    vitest
+      .spyOn(prisma.user, "update")
+      .mockRejectedValue(new Error("Database write error."));
+
+    const response = await request(app)
+      .post(URL)
+      .send(mockBaseUser)
+      .expect(STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR);
+
+    expect(response.body).toHaveProperty("message", "Database write error.");
+  });
+});
 
 describe("POST /register", () => {
   const URL = `${BASE_URL}/register`;
