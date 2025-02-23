@@ -733,7 +733,7 @@ describe("POST /register", () => {
 
       expect(response.body).toHaveProperty("message");
       expect(response.body.message).toEqual(
-        "Management team member cannot self register. To get added as a management team member, contact the admin."
+        "MANAGEMENT team members cannot self register. Contact the admin to get added."
       );
     });
   });
@@ -747,7 +747,7 @@ describe("POST /register", () => {
 
       expect(response.body).toHaveProperty("message");
       expect(response.body.message).toEqual(
-        "Business team member cannot self register. To get added as a business team member, contact the admin."
+        "BUSINESS team members cannot self register. Contact the admin to get added."
       );
     });
   });

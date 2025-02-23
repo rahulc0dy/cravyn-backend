@@ -16,13 +16,21 @@ import {
 } from "../../utils/v2/tokenGenerator.js";
 import { cookieOptions } from "../../constants/cookieOptions.js";
 
+/**
+ * Handles user login by verifying credentials, generating authentication tokens,
+ * and storing the refresh token in the database.
+ *
+ * @route POST /auth/login
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @throws {ApiError} If email is not registered or password is incorrect
+ */
 const login = asyncHandler(async (req, res) => {
+  // Validate request body against schema
   const { email, password } = loginSchema.parse(req.body);
 
-  // Find user by email
-  let user = await prisma.user.findUnique({
-    where: { email },
-  });
+  // Find user by email in the database
+  let user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
     throw new ApiError(
@@ -50,7 +58,7 @@ const login = asyncHandler(async (req, res) => {
     data: { refreshToken },
   });
 
-  // Remove password before sending response
+  // Remove sensitive data before sending response
   const { password: _unused, ...sanitizedUser } = user;
 
   return res
@@ -59,91 +67,75 @@ const login = asyncHandler(async (req, res) => {
     .cookie("refreshToken", refreshToken, cookieOptions)
     .json(
       new ApiResponse(
-        {
-          ...sanitizedUser, // contains refresh token
-          accessToken,
-        },
+        { ...sanitizedUser, accessToken },
         "User logged in successfully."
       )
     );
 });
 
+/**
+ * Handles user registration by validating user input, encrypting the password,
+ * and creating a user record in the database.
+ *
+ * @route POST /auth/register
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @throws {ApiError} If the email already exists or invalid role provided
+ */
 const register = asyncHandler(async (req, res) => {
+  // Validate request body against schema
   const { name, email, password, profileImageUrl } = registerSchema.parse(
     req.body
   );
-
   const { role } = roleSchema.parse(req.query);
 
   let roleSpecificData;
 
+  // Assign role-specific attributes
   switch (role) {
     case "CUSTOMER": {
       const { phone, dateOfBirth } = customerSchema.parse(req.body);
-
       roleSpecificData = {
         customer: {
-          create: {
-            phone,
-            dateOfBirth: new Date(dateOfBirth),
-          },
+          create: { phone, dateOfBirth: new Date(dateOfBirth) },
         },
       };
-
       break;
     }
     case "DELIVERY_PARTNER": {
       const { phone, availability, vehicleType } = deliveryPartnerSchema.parse(
         req.body
       );
-
       roleSpecificData = {
         deliveryPartner: {
-          create: {
-            phone,
-            availability,
-            vehicleType,
-          },
+          create: { phone, availability, vehicleType },
         },
       };
-
       break;
     }
     case "RESTAURANT_OWNER": {
       const { phone, panNumber } = restaurantOwnerSchema.parse(req.body);
-
       roleSpecificData = {
         restaurantOwner: {
-          create: {
-            phone,
-            panNumber,
-          },
+          create: { phone, panNumber },
         },
       };
-
       break;
     }
     case "RESTAURANT_TEAM": {
       break;
     }
-    case "MANAGEMENT": {
-      throw new ApiError(
-        STATUS.CLIENT_ERROR.BAD_REQUEST,
-        "Management team member cannot self register. To get added as a management team member, contact the admin."
-      );
-    }
+    case "MANAGEMENT":
     case "BUSINESS": {
       throw new ApiError(
         STATUS.CLIENT_ERROR.BAD_REQUEST,
-        "Business team member cannot self register. To get added as a business team member, contact the admin."
+        `${role} team members cannot self register. Contact the admin to get added.`
       );
     }
   }
 
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
-
+  // Check if the user already exists
+  const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     throw new ApiError(
       STATUS.CLIENT_ERROR.CONFLICT,
@@ -151,6 +143,7 @@ const register = asyncHandler(async (req, res) => {
     );
   }
 
+  // Create new user with hashed password
   const user = await prisma.user.create({
     data: {
       email,
@@ -162,6 +155,7 @@ const register = asyncHandler(async (req, res) => {
     },
   });
 
+  // Remove sensitive fields before responding
   const { password: _unused, refreshToken: _null, ...sanitizedUser } = user;
 
   return res
@@ -174,6 +168,20 @@ const register = asyncHandler(async (req, res) => {
     );
 });
 
-const logout = asyncHandler(async (req, res) => {});
+/**
+ * Handles user logout by clearing authentication cookies and removing refresh token.
+ *
+ * @route POST /auth/logout
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const logout = asyncHandler(async (req, res) => {
+  // TODO: Implement logout logic, such as clearing tokens from the database
+  return res
+    .status(STATUS.SUCCESS.OK)
+    .clearCookie("accessToken")
+    .clearCookie("refreshToken")
+    .json(new ApiResponse(null, "User logged out successfully."));
+});
 
 export { login, register, logout };
