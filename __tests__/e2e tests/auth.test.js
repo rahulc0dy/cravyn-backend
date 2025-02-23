@@ -4,14 +4,11 @@ import { STATUS } from "../../src/constants/statusCodes.js";
 import { afterEach, describe, expect, test, vitest } from "vitest";
 import { prisma } from "../../src/utils/prismaClient.js";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 
 vitest.mock("../../src/utils/v2/tokenGenerator.js", () => ({
   generateAccessToken: vitest.fn(() => "mock-access-token"),
   generateRefreshToken: vitest.fn(() => "mock-refresh-token"),
 }));
-
-import { generateAccessToken } from "../../src/utils/v2/tokenGenerator.js";
 
 const BASE_URL = "/api/v2";
 
