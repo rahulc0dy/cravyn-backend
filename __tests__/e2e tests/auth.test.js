@@ -20,9 +20,6 @@ describe("POST /login", () => {
     password: "password123",
   };
 
-  const mockAccessToken = "mock-access-token";
-  const mockRefreshToken = "mock-refresh-token";
-
   afterEach(() => {
     vitest.restoreAllMocks();
   });
