@@ -4,13 +4,14 @@ import { STATUS } from "../../src/constants/statusCodes.js";
 import { afterEach, describe, expect, test, vitest } from "vitest";
 import { prisma } from "../../src/utils/prismaClient.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 vitest.mock("../../src/utils/v2/tokenGenerator.js", () => ({
   generateAccessToken: vitest.fn(() => "mock-access-token"),
   generateRefreshToken: vitest.fn(() => "mock-refresh-token"),
 }));
 
-const BASE_URL = "/api/v2";
+const BASE_URL = "/api/v2/auth";
 
 describe("POST /login", () => {
   const URL = `${BASE_URL}/login`;
@@ -840,5 +841,78 @@ describe("POST /register", () => {
         /^\$2[aby]\$\d{1,2}\$[./A-Za-z0-9]{53}$/
       ); // bcrypt hash pattern
     });
+  });
+});
+
+describe("POST /auth/logout", () => {
+  const URL = `${BASE_URL}/logout`;
+
+  const mockBaseUser = {
+    id: "user-id-123",
+    email: "test@example.com",
+    refreshToken: "mock-refresh-token",
+  };
+
+  afterEach(() => {
+    vitest.restoreAllMocks();
+  });
+
+  test("should return 200 and clear cookies on successful logout", async () => {
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
+      ...mockBaseUser,
+      refreshToken: "mock-refresh-token",
+    });
+    vitest.spyOn(prisma.user, "update").mockResolvedValue({
+      ...mockBaseUser,
+      refreshToken: null,
+    });
+    vitest.spyOn(jwt, "verify").mockReturnValue({ id: "user-id-123" });
+
+    const response = await request(app)
+      .post(URL)
+      .set("Authorization", "Bearer mock-access-token") // Simulate auth
+      .expect(STATUS.SUCCESS.OK);
+
+    expect(response.body).toHaveProperty(
+      "message",
+      "User logged out successfully."
+    );
+
+    const cookies = response.headers["set-cookie"];
+    expect(cookies).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("accessToken=;"),
+        expect.stringContaining("refreshToken=;"),
+      ])
+    );
+  });
+
+  test("should return 401 if user is not authenticated", async () => {
+    const response = await request(app)
+      .post(URL)
+      .expect(STATUS.CLIENT_ERROR.UNAUTHORIZED);
+
+    expect(response.body).toHaveProperty(
+      "message",
+      "Authorization token is required."
+    );
+  });
+
+  test("should return 500 if database operation fails", async () => {
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
+      ...mockBaseUser,
+      refreshToken: "mock-refresh-token",
+    });
+    vitest
+      .spyOn(prisma.user, "update")
+      .mockRejectedValue(new Error("Database write error."));
+    vitest.spyOn(jwt, "verify").mockReturnValue({ id: "user-id-123" });
+
+    const response = await request(app)
+      .post(URL)
+      .set("Authorization", "Bearer mock-access-token") // Simulate auth
+      .expect(STATUS.SERVER_ERROR.INTERNAL_SERVER_ERROR);
+
+    expect(response.body).toHaveProperty("message", "Database write error.");
   });
 });

@@ -176,12 +176,17 @@ const register = asyncHandler(async (req, res) => {
  * @param {Object} res - Express response object
  */
 const logout = asyncHandler(async (req, res) => {
-  // TODO: Implement logout logic, such as clearing tokens from the database
+  // Store the refresh token in the database
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { refreshToken: null },
+  });
+
   return res
     .status(STATUS.SUCCESS.OK)
     .clearCookie("accessToken")
     .clearCookie("refreshToken")
-    .json(new ApiResponse(null, "User logged out successfully."));
+    .json(new ApiResponse({}, "User logged out successfully."));
 });
 
 export { login, register, logout };
