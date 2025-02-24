@@ -189,4 +189,70 @@ const logout = asyncHandler(async (req, res) => {
     .json(new ApiResponse({}, "User logged out successfully."));
 });
 
-export { login, register, logout };
+/**
+ * This function verifies the provided refresh token, generates a new access token,
+ * and updates the refresh token in the database. The new tokens are then sent
+ * back as HTTP-only cookies.
+ *
+ * @route POST /auth/refresh-token
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  // Extract refresh token from cookies or request body
+  const incomingRefreshToken =
+    req.cookies?.refreshToken || req.body.refreshToken;
+  if (!incomingRefreshToken) {
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.BAD_REQUEST,
+      "Refresh token is required."
+    );
+  }
+
+  // Verify the refresh token using JWT
+  const decodedToken = jwt.verify(
+    incomingRefreshToken,
+    process.env.REFRESH_TOKEN_SECRET
+  );
+  const userId = decodedToken?.id;
+
+  // Fetch user details from the database
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.NOT_FOUND,
+      "Unable to reinstate session.",
+      "User not found."
+    );
+  }
+
+  // Ensure the stored refresh token matches the provided one
+  if (incomingRefreshToken !== user.refreshToken) {
+    throw new ApiError(
+      STATUS.CLIENT_ERROR.UNAUTHORIZED,
+      "Unable to reinstate session.",
+      "Tokens do not match."
+    );
+  }
+
+  // Generate new access and refresh tokens
+  const accessToken = generateAccessToken(user);
+  const newRefreshToken = generateRefreshToken(user);
+
+  // Set new tokens in HTTP-only cookies and return response
+  return res
+    .status(STATUS.SUCCESS.OK)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", newRefreshToken, cookieOptions)
+    .json(
+      new ApiResponse(
+        {
+          accessToken,
+          refreshToken: newRefreshToken,
+        },
+        "Session successfully reinitialized."
+      )
+    );
+});
+
+export { login, register, logout, refreshAccessToken };
