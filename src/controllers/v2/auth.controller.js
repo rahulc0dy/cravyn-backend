@@ -15,6 +15,7 @@ import {
   generateRefreshToken,
 } from "../../utils/v2/tokenGenerator.js";
 import { cookieOptions } from "../../constants/cookieOptions.js";
+import jwt from "jsonwebtoken";
 
 /**
  * Handles user login by verifying credentials, generating authentication tokens,
@@ -238,6 +239,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   // Generate new access and refresh tokens
   const accessToken = generateAccessToken(user);
   const newRefreshToken = generateRefreshToken(user);
+
+  // Update refresh token in database
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { refreshToken: newRefreshToken },
+  });
 
   // Set new tokens in HTTP-only cookies and return response
   return res
