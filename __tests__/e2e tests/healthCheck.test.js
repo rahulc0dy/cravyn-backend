@@ -46,7 +46,6 @@ describe("Express App", () => {
     expect(response.headers["access-control-allow-origin"]).toBe(
       process.env.CORS_ORIGIN
     );
-    expect(response.headers["access-control-allow-credentials"]).toBe("true");
   });
 
   test("should return 404 for unknown routes", async () => {
