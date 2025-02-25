@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import ApiError from "../../utils/apiError.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
+import ApiError from "../../utils/shared/apiError.js";
 import { STATUS } from "../../constants/statusCodes.js";
-import { prisma } from "../../utils/prismaClient.js";
+import { prisma } from "../../utils/v2/prismaClient.js";
 
 /**
  * Middleware to verify JWT token and authenticate the user.

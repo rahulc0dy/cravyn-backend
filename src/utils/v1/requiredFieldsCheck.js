@@ -1,4 +1,4 @@
-import ApiError from "./apiError.js";
+import ApiError from "../shared/apiError.js";
 
 /**
  * Utility function to validate required fields.

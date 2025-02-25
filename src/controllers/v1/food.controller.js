@@ -1,5 +1,5 @@
-import { ApiResponse } from "../../utils/apiResponse.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
 import {
   createFoodItem,
   deleteFoodItemById,
@@ -10,9 +10,9 @@ import {
   updateFoodItemDiscountById,
 } from "../../database/v1/queries/foodItem.query.js";
 import { getRestaurantById } from "../../database/v1/queries/restaurant.query.js";
-import { uploadImageOnCloudinary } from "../../utils/cloudinary.js";
+import { uploadImageOnCloudinary } from "../../utils/shared/cloudinary.js";
 import fs from "fs";
-import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
+import { checkRequiredFields } from "../../utils/v1/requiredFieldsCheck.js";
 
 const getFood = asyncHandler(async (req, res) => {
   const restaurantId = req.restaurant?.restaurant_id;

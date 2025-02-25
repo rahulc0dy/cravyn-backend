@@ -1,4 +1,4 @@
-import { STATUS } from "../constants/statusCodes.js";
+import { STATUS } from "../../constants/statusCodes.js";
 import { ZodError } from "zod";
 import { ApiResponse, DevApiResponse } from "./apiResponse.js";
 

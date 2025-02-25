@@ -1,8 +1,8 @@
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/apiResponse.js";
-import ApiError from "../../utils/apiError.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
+import ApiError from "../../utils/shared/apiError.js";
 import { STATUS } from "../../constants/statusCodes.js";
-import { prisma } from "../../utils/prismaClient.js";
+import { prisma } from "../../utils/v2/prismaClient.js";
 import bcrypt from "bcrypt";
 import { registerSchema } from "../../models/v2/auth/register.schema.js";
 import { roleSchema } from "../../models/v2/auth/role.schema.js";

@@ -1,6 +1,6 @@
-import { sendMail } from "../../utils/nodemailer.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/apiResponse.js";
+import { sendMail } from "../../utils/shared/nodemailer.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
 import {
   getCustomerByEmail,
   updateCustomerPassword,

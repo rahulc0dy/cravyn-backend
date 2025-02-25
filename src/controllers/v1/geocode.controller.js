@@ -1,6 +1,9 @@
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/apiResponse.js";
-import { getReverseGeocodeUrl, getGeocodeUrl } from "../../utils/geocodeUrl.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
+import {
+  getGeocodeUrl,
+  getReverseGeocodeUrl,
+} from "../../utils/shared/geocodeUrl.js";
 
 const getAddress = asyncHandler(async (req, res) => {
   const { latitude, longitude } = req.query;

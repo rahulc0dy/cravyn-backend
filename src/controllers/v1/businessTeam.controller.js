@@ -1,10 +1,10 @@
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/apiResponse.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
 import bcrypt from "bcrypt";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../../utils/tokenGenerator.js";
+} from "../../utils/v1/tokenGenerator.js";
 import {
   createBusinessTeam,
   deleteBusinessTeam,
@@ -26,8 +26,8 @@ import {
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../../constants/cookieOptions.js";
 import { STATUS } from "../../constants/statusCodes.js";
-import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
-import ApiError from "../../utils/apiError.js";
+import { checkRequiredFields } from "../../utils/v1/requiredFieldsCheck.js";
+import ApiError from "../../utils/shared/apiError.js";
 
 const getBusinessTeamAccount = asyncHandler(async (req, res) => {
   if (!req.businessTeam || !req.businessTeam.id)

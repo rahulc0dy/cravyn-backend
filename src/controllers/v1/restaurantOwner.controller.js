@@ -1,10 +1,10 @@
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/apiResponse.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
 import bcrypt from "bcrypt";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../../utils/tokenGenerator.js";
+} from "../../utils/v1/tokenGenerator.js";
 import {
   createRestaurantOwner,
   deleteRestaurantOwner,
@@ -19,7 +19,7 @@ import {
 } from "../../database/v1/queries/restaurantOwner.query.js";
 import jwt from "jsonwebtoken";
 import { cookieOptions } from "../../constants/cookieOptions.js";
-import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
+import { checkRequiredFields } from "../../utils/v1/requiredFieldsCheck.js";
 import { getNonSensitiveRestaurantInfoById } from "../../database/v1/queries/restaurant.query.js";
 
 const getRestaurantOwnerAccount = asyncHandler(async (req, res) => {

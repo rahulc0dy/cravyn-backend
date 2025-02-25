@@ -2,7 +2,7 @@ import request from "supertest";
 import { app } from "../../src/app.js";
 import { STATUS } from "../../src/constants/statusCodes.js";
 import { afterEach, describe, expect, test, vitest } from "vitest";
-import { prisma } from "../../src/utils/prismaClient.js";
+import { prisma } from "../../src/utils/v2/prismaClient.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 

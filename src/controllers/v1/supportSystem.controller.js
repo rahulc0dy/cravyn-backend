@@ -1,4 +1,4 @@
-import { asyncHandler } from "../../utils/asyncHandler.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
 import {
   createCustomerQuery,
   createRestaurantQuery,
@@ -15,7 +15,7 @@ import {
   setCustomerQueryAnswer,
   setRestaurantQueryAnswer,
 } from "../../database/v1/queries/supportSystem.query.js";
-import { ApiResponse } from "../../utils/apiResponse.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
 import { STATUS } from "../../constants/statusCodes.js";
 
 const getDashboardData = asyncHandler(async (req, res) => {
