@@ -39,7 +39,9 @@ describe("GET /health-check/server", () => {
 
 describe("Express App", () => {
   test("should have CORS enabled with correct settings", async () => {
-    const response = await request(app).get(baseUrl).send();
+    const response = await request(app)
+      .get(`${baseUrl}/health-check/server`)
+      .send();
 
     expect(response.headers["access-control-allow-origin"]).toBe(
       process.env.CORS_ORIGIN
