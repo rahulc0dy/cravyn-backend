@@ -3,6 +3,7 @@ import { app } from "../../src/app.js";
 import { STATUS } from "../../src/constants/statusCodes.js";
 import { describe, expect, test, vitest } from "vitest";
 import os from "os";
+import { ApiResponse } from "../../src/utils/shared/apiResponse.js";
 
 const baseUrl = "/api/v2";
 
@@ -33,5 +34,34 @@ describe("GET /health-check/server", () => {
     expect(response.body).toHaveProperty("message", "Mocked OS error");
 
     vitest.restoreAllMocks();
+  });
+});
+
+describe("Express App", () => {
+  test("should have CORS enabled with correct settings", async () => {
+    const response = await request(app).get(baseUrl).send();
+
+    expect(response.headers["access-control-allow-origin"]).toBe(
+      process.env.CORS_ORIGIN
+    );
+    expect(response.headers["access-control-allow-credentials"]).toBe("true");
+  });
+
+  test("should return 404 for unknown routes", async () => {
+    const response = await request(app).get("/unknown-route").send();
+
+    expect(response.status).toBe(STATUS.CLIENT_ERROR.NOT_FOUND);
+    expect(response.body).toEqual(
+      new ApiResponse({}, `API endpoint not found: /unknown-route`)
+    );
+  });
+
+  test("should handle JSON parsing errors", async () => {
+    const response = await request(app)
+      .post("/api/v1/some-endpoint") // Change as per your API
+      .set("Content-Type", "application/json")
+      .send("invalid-json");
+
+    expect(response.status).toBe(STATUS.CLIENT_ERROR.BAD_REQUEST);
   });
 });

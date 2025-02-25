@@ -11,7 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:pull": "prisma db pull",
     "prisma:push": "prisma db push",
-    "test": "vitest --coverage --fail-fast"
+    "test": "vitest --coverage"
   },
   "author": "Group 3",
   "license": "ISC",
