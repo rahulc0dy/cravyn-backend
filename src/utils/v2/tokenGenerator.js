@@ -1,5 +1,14 @@
 import jwt from "jsonwebtoken";
 
+/**
+ * Generates an access token for a user.
+ *
+ * @param {Object} user - The user object.
+ * @param {string} user.id - The user's unique identifier.
+ * @param {string} user.email - The user's email address.
+ * @param {string} user.name - The user's name.
+ * @returns {string} - The generated JWT access token.
+ */
 const generateAccessToken = function (user) {
   return jwt.sign(
     {
@@ -14,6 +23,13 @@ const generateAccessToken = function (user) {
   );
 };
 
+/**
+ * Generates a refresh token for a user.
+ *
+ * @param {Object} user - The user object.
+ * @param {string} user.id - The user's unique identifier.
+ * @returns {string} - The generated JWT refresh token.
+ */
 const generateRefreshToken = function (user) {
   return jwt.sign(
     {

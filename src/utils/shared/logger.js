@@ -4,6 +4,10 @@ import chalk from "chalk";
 const LOG_LEVEL = process.env.LOG_LEVEL || "info";
 const { timestamp, combine, printf, json } = format;
 
+/**
+ * Winston log format for JSON logs.
+ * Logs messages with a timestamp in JSON format.
+ */
 const jsonLogFormat = combine(
   timestamp(),
   printf(({ level, message, timestamp }) => {
@@ -12,6 +16,10 @@ const jsonLogFormat = combine(
   json()
 );
 
+/**
+ * Winston log format for console logs.
+ * Uses Chalk to style log levels for better readability.
+ */
 const consoleLogFormat = combine(
   timestamp(),
   printf(({ level, message, timestamp }) => {
@@ -38,6 +46,10 @@ const consoleLogFormat = combine(
   })
 );
 
+/**
+ * List of Winston transports for logging.
+ * Logs to console and optionally to a file in development.
+ */
 const transportsList = [
   new transports.Console({
     format: consoleLogFormat,
@@ -53,16 +65,25 @@ if (process.env.NODE_ENV === "development") {
   );
 }
 
+/**
+ * Winston logger instance for application-wide logging.
+ */
 const logger = createLogger({
   level: LOG_LEVEL,
   format: combine(timestamp()),
   transports: transportsList,
 });
 
+/**
+ * Handles uncaught exceptions and logs the error.
+ */
 process.on("uncaughtException", (err) => {
   logger.error(`Uncaught Exception: ${err.message}`, { stack: err.stack });
 });
 
+/**
+ * Handles unhandled promise rejections and logs the error.
+ */
 process.on("unhandledRejection", (reason, promise) => {
   logger.error(`Unhandled Rejection: ${reason}`);
 });
