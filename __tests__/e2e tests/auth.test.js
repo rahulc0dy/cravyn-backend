@@ -916,3 +916,62 @@ describe("POST /auth/logout", () => {
     expect(response.body).toHaveProperty("message", "Database write error.");
   });
 });
+
+describe("POST /auth/refresh-token", () => {
+  const URL = `${BASE_URL}/refresh-token`;
+
+  afterEach(() => {
+    vitest.restoreAllMocks();
+  });
+
+  test("should return 400 if no refresh token is provided", async () => {
+    const response = await request(app).post(URL).send({});
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Refresh token is required.");
+  });
+
+  test("should return 404 if user is not found", async () => {
+    vitest.spyOn(jwt, "verify").mockResolvedValue({ id: "user-id" });
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue(null);
+
+    const response = await request(app)
+      .post(URL)
+      .send({ refreshToken: "valid-refresh-token" });
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe("Unable to reinstate session.");
+  });
+
+  test("should return 401 if refresh token does not match", async () => {
+    vitest.spyOn(jwt, "verify").mockResolvedValue({ id: "user-id" });
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
+      id: "user-id",
+      refreshToken: "different-token",
+    });
+
+    const response = await request(app)
+      .post(URL)
+      .send({ refreshToken: "valid-refresh-token" });
+
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe("Unable to reinstate session.");
+  });
+
+  test("should refresh tokens and set cookies on success", async () => {
+    vitest.spyOn(jwt, "verify").mockResolvedValue({ id: "user-id" });
+    vitest.spyOn(prisma.user, "findUnique").mockResolvedValue({
+      id: "user-id",
+      refreshToken: "valid-refresh-token",
+    });
+    vitest.spyOn(prisma.user, "update").mockResolvedValue({});
+
+    const response = await request(app)
+      .post(URL)
+      .send({ refreshToken: "valid-refresh-token" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.accessToken).toBe("mock-access-token");
+    expect(response.body.data.refreshToken).toBe("mock-refresh-token");
+    expect(response.headers["set-cookie"]).toBeDefined();
+  });
+});
