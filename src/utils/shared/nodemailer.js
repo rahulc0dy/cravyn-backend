@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { otpMailTemplate } from "../models/email.model.js";
+import { otpMailTemplate } from "../../models/shared/email.model.js";
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",

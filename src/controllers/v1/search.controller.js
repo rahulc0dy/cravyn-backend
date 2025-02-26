@@ -1,5 +1,5 @@
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/apiResponse.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
 import { fuzzySearchFoodItem } from "../../database/v1/queries/foodItem.query.js";
 import { fuzzySearchRestaurant } from "../../database/v1/queries/restaurant.query.js";
 

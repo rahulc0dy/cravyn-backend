@@ -10,7 +10,7 @@ import {
   getDashboardData,
   getRestaurantSales,
 } from "../../controllers/v1/businessTeam.controller.js";
-import { verifyUserJwt } from "../../middlewares/auth.middleware.js";
+import { verifyUserJwt } from "../../middlewares/v1/auth.middleware.js";
 
 const router = Router();
 

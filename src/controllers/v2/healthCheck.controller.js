@@ -1,7 +1,7 @@
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/apiResponse.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
 import os from "os";
-import ApiError from "../../utils/apiError.js";
+import ApiError from "../../utils/shared/apiError.js";
 import { STATUS } from "../../constants/statusCodes.js";
 
 const serverHealthCheck = asyncHandler(async (req, res) => {

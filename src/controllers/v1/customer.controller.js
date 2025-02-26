@@ -1,10 +1,10 @@
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { ApiResponse } from "../../utils/apiResponse.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
 import bcrypt from "bcrypt";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../../utils/tokenGenerator.js";
+} from "../../utils/v1/tokenGenerator.js";
 import {
   cancelOrderById,
   createCustomer,
@@ -25,20 +25,20 @@ import {
 } from "../../database/v1/queries/customer.query.js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
-import { uploadImageOnCloudinary } from "../../utils/cloudinary.js";
+import { uploadImageOnCloudinary } from "../../utils/shared/cloudinary.js";
 import { cookieOptions } from "../../constants/cookieOptions.js";
 import { STATUS } from "../../constants/statusCodes.js";
-import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
+import { checkRequiredFields } from "../../utils/v1/requiredFieldsCheck.js";
 import {
   deleteCartByCustomerId,
   getCartByCustomerId,
 } from "../../database/v1/queries/cart.query.js";
-import { calculateCartSummary } from "../../utils/cartUtils.js";
+import { calculateCartSummary } from "../../utils/v1/cartUtils.js";
 import {
   createOrder,
   createOrderList,
 } from "../../database/v1/queries/order.query.js";
-import ApiError from "../../utils/apiError.js";
+import ApiError from "../../utils/shared/apiError.js";
 
 const getCustomerAccount = asyncHandler(async (req, res) => {
   if (!req.customer || !req.customer.id) {

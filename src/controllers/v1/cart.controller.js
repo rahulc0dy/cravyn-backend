@@ -6,11 +6,11 @@ import {
   removeItemFromCartByIds,
 } from "../../database/v1/queries/cart.query.js";
 import { getRestaurantIdByItemId } from "../../database/v1/queries/foodItem.query.js";
-import { ApiResponse } from "../../utils/apiResponse.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
-import { calculateCartSummary } from "../../utils/cartUtils.js";
-import ApiError from "../../utils/apiError.js";
-import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
+import { calculateCartSummary } from "../../utils/v1/cartUtils.js";
+import ApiError from "../../utils/shared/apiError.js";
+import { checkRequiredFields } from "../../utils/v1/requiredFieldsCheck.js";
 import { STATUS } from "../../constants/statusCodes.js";
 
 const getCart = asyncHandler(async (req, res) => {

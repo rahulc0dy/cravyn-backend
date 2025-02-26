@@ -1,5 +1,5 @@
-import { ApiResponse } from "../../utils/apiResponse.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
+import { ApiResponse } from "../../utils/shared/apiResponse.js";
+import { asyncHandler } from "../../utils/shared/asyncHandler.js";
 import {
   createRestaurant,
   deleteRestaurantById,
@@ -18,24 +18,24 @@ import bcrypt from "bcrypt";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../../utils/tokenGenerator.js";
+} from "../../utils/v1/tokenGenerator.js";
 import jwt from "jsonwebtoken";
 import {
   deleteImageFromCloudinary,
   uploadImageOnCloudinary,
-} from "../../utils/cloudinary.js";
+} from "../../utils/shared/cloudinary.js";
 import fs from "fs";
 import {
   fuzzySearchRestaurantFoodItem,
   getFoodsByRestaurantId,
 } from "../../database/v1/queries/foodItem.query.js";
-import { getGeocodeUrl } from "../../utils/geocodeUrl.js";
+import { getGeocodeUrl } from "../../utils/shared/geocodeUrl.js";
 import {
   getOrdersByRestaurantId,
   updateOrderStatusByOrderId,
 } from "../../database/v1/queries/order.query.js";
 import { cookieOptions } from "../../constants/cookieOptions.js";
-import { checkRequiredFields } from "../../utils/requiredFieldsCheck.js";
+import { checkRequiredFields } from "../../utils/v1/requiredFieldsCheck.js";
 
 const getRestaurantsList = asyncHandler(async (req, res) => {
   const { limit, offset, verifyStatus } = req.query;
