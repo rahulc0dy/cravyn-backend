@@ -21,6 +21,21 @@ enum VehicleType {
   CYCLE
 }
 
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+enum ChatStatus {
+  OPEN // The chat has been started but not yet responded to
+  IN_PROGRESS // A support agent is actively handling the issue
+  RESOLVED // The issue has been resolved successfully
+  CLOSED // The chat is closed after resolution or inactivity
+}
+
 model User {
   id              String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   email           String   @unique
@@ -36,6 +51,8 @@ model User {
   customer        Customer?
   deliveryPartner DeliveryPartner?
   restaurantOwner RestaurantOwner?
+
+  chats Chat[]
 }
 
 model Customer {
@@ -61,4 +78,26 @@ model RestaurantOwner {
   panNumber String
   userId    String @unique @db.Uuid
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Chat {
+  id       String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  messages Message[]
+  status   ChatStatus @default(OPEN)
+
+  // Many-to-Many relation for participants
+  participants User[]
+}
+
+model Message {
+  id          String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  content     String?
+  messageType MessageType
+  seenStatus  Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+
+  senderId String @db.Uuid
+  chatId   String @db.Uuid
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
 }
