@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-import { app } from "./app.js";
-import { createSocketServer } from "./utils/v2/socketServer.js";
+import { app, socketConnectHandler } from "./app.js";
+import { Server } from "socket.io";
 
 dotenv.config({
   path: "./.env",
@@ -12,4 +12,11 @@ const server = app.listen(port, () => {
   console.log(`Server is running at PORT: ${port}`);
 });
 
-createSocketServer(server);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CORS_ORIGIN,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  },
+});
+
+io.on("connection", socketConnectHandler);

@@ -10,6 +10,7 @@ import "./utils/shared/instrument.js";
 import * as Sentry from "@sentry/node";
 import { limiter } from "./utils/shared/rateLimiter.js";
 import { ApiResponse } from "./utils/shared/apiResponse.js";
+import { socketConnectionRouter } from "./routes/v2/chat.routes.js";
 
 const app = express();
 Sentry.setupExpressErrorHandler(app);
@@ -40,4 +41,4 @@ app.use((_req, res, _next) => {
 
 app.use(errorHandler);
 
-export { app };
+export { app, socketConnectionRouter as socketConnectHandler };

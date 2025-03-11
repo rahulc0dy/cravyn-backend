@@ -5,7 +5,6 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "predev": "prisma migrate dev",
     "dev": "nodemon src/index.js",
     "prisma:gen-client": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

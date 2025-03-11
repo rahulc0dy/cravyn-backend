@@ -1,15 +1,12 @@
-import { getSocketServerIo } from "../../utils/v2/socketServer.js";
+import logger from "../../utils/shared/logger.js";
 
-const io = getSocketServerIo();
+const chatRoutes = () => {};
 
-io.on("connection", (socket) => {
-  console.log(`New client connected: ${socket.id}`);
-
-  socket.on("message", (msg) => {
-    console.log("new msgsldfjsldfj");
+const socketConnectionRouter = (socket) => {
+  logger.info(`Socket connected: ${socket.id}`);
+  socket.on("disconnect", (socket) => {
+    console.log(socket);
   });
+};
 
-  socket.on("disconnect", () => {
-    console.log(`Client disconnected: ${socket.id}`);
-  });
-});
+export { socketConnectionRouter };
