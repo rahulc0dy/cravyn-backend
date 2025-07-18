@@ -24,7 +24,18 @@ export default function registerChatEvents(socket, io) {
 
   // Typing indicator
   socket.on(SOCKET_EVENTS.CHAT.TYPING, (data) => {
-    typing(data, socket);
+    try {
+      if (!data.chatId || !data.username) {
+        throw new Error("Chat ID or username is missing");
+      }
+      typing(data, socket);
+    } catch (error) {
+      logger.error(`Error in typing event: ${error.message}`);
+
+      socket.emit(SOCKET_EVENTS.CHAT.ERROR, {
+        error: "Could not send typing indicator",
+      });
+    }
   });
 
   // Join chat room
